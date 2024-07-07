@@ -1,14 +1,13 @@
 # [dbt™ (Data Build Tool) ](https://www.getdbt.com/)
 ---
 
-* [Introduction]()  
-* [Modern data Stack in the AI Era]()  
-* [slowly changing dimensions SCD]()  
-* [dbt™ Overview]()
-
-* [PROJECT OVERVIEW (Analytics Engineering with Airbnb)]()
-  * [resources]()
-  * [snowflake]()
+1. [Introduction]()  
+2. [Modern data Stack in the AI Era]()  
+3. [slowly changing dimensions SCD]()  
+4. [dbt™ Overview]()
+5. [PROJECT OVERVIEW (Analytics Engineering with Airbnb)]()
+   1. [resources]()
+   2. [snowflake]()
 
 ---
 #### Introduction
