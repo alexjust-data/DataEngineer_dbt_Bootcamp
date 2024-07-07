@@ -1,11 +1,10 @@
 # [dbt™ (Data Build Tool) ](https://www.getdbt.com/)
+---
 
-- dbt is a tool for transforming data within a data warehouse.
-
-[Introduction]()
-[Modern data Stack in the AI Era]()
-[slowly changing dimensions SCD]()
-[dbt™ Overview]()
+* [Introduction]()  
+* [Modern data Stack in the AI Era]()  
+* [slowly changing dimensions SCD]()  
+* [dbt™ Overview]()
 
 * [PROJECT OVERVIEW (Analytics Engineering with Airbnb)]()
   * [resources]()
