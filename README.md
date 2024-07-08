@@ -9,7 +9,7 @@
    1. [resources]()
    2. [snowflake]()
    3. [dbt setup]()
-   4. [VSC extension : `vscode-dbt-power-user`]()
+   4. [VSC extension]() : `vscode-dbt-power-user`
 
 ---
 ### Introduction
