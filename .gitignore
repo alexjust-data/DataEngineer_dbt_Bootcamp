@@ -8,7 +8,6 @@ dbt_dagster_project/tmp*
 
 logs/
 dbt_env/
-img/
 
 **/__pycache__/
 *.pyc
