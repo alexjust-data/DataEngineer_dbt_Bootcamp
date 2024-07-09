@@ -748,22 +748,13 @@ Similar live here in the models folder and you can organize your models into sub
 So now Dbt knows that I want to have a view created called src_listings. And this is the definition of the view. So this is my first term placeholder and we will discuss later how you can manage this to be a table. But by default, all our models are going to be views. Save it´s and now let's execute DVT.
 
 ```sh
-├── dbt_project.yml
-├── logs
-│   └── dbt.log
 ├── macros
 ├── models
 │   └── src
 │       └── src_listings.sql
-├── package-lock.yml
-├── packages.yml
-├── seeds
-├── snapshots
-├── target
-│   ├── manifest.json
-│   └── partial_parse.msgpack
-└── tests
 ```
+
+dbt run  
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt run  
