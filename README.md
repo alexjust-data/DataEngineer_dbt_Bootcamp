@@ -603,3 +603,214 @@ packages:
 
 #### Data Flow - Overview
 
+INPUT DATA MODEL
+
+![](img/27.png)
+
+Three of these are directly connected to Airbnb. First, the `listing`. Then, the Airbnb `reviews`, which are linked to the `listings` through the `listing ID`. Additionally, there are the Airbnb `hosts`, who are also connected to the listings table via the `host ID`. We also have an additional table, which we will upload, called `full_moon_dates`. With the help of this table, you will have the opportunity to examine how full moon phases affect Airbnb reviews.
+
+![](img/28.png)
+
+raw listing
+
+![](img/29.png)
+
+raw host
+
+![](img/30.png)
+
+raw reviews
+
+![](img/31.png)
+
+
+**Data flow overview**
+
+So here is the data flow we are going to build. As you see in green, we have three input tables: `Costs, listings, and reviews`. We will import these input tables and make minor modifications in our first layer, the `src (source)` layer. We will then clean these tables and create our dimension tables `dim` and the `fct_reviews` fact table. Additionally, we will use an external table and send data to Snowflake via dbt. With the help of dbt, we will create a few so-called `mart_fullmoon_reviews` tables, which will be used by an executive dashboard. As we do this, we will also create a set of tests, which you can see here in the square.
+ 
+![](img/33.png)
+
+![](img/35.png)
+
+
+And let's go and start building our first three mortars, SSD hosts, associate listings and SSD reviews.
+
+#### MODELS
+
+* Understand the data flow of our project
+* Understand the concept of Models in dbt
+* Create three basic models:
+  * src_listings
+  * src_reviews: guided exercises
+  * src_hosts: individual lab
+
+**Models Overview**
+
+
+* Models are the basic building block of your business logic
+*  Materialized as tables, views, etc...
+*  They live in SQL files in the `models` folder
+*  Models can reference each other and use templates and macros
+  
+Models are the basic building blocks of your business logic and the foundational elements of a dbt project. You can think of models as SQL queries that materialize as tables or views, but there is much more to them. For now, what you need to know about models is that they are stored as SQL files in the models folder. They are not just simple SQL SELECT statements; they can include additional features. For example, a model can reference other models, allowing dbt to understand the semantic dependencies between them. You can also use different scripts and macros within your models. Now, let's see how they work in action.
+
+**Common Table Expression (CTE)**
+
+CTEs help us write readable and maintainable SQL code. By definition, they are temporary, named result sets that exist only for the duration of a single query. CTEs are great because the result remains in memory during the execution of the query (e.g., SELECT, INSERT, UPDATE, DELETE, or MERGE). The syntax of a CTE looks something like this:
+
+```SQL
+# Syntax
+WITH name_of_the_result_set (column_names) AS (
+    cte_query
+)
+<reference_the_CTE>
+```
+
+The column names are optional and used to set up aliases for the column names that come out of the CTE. A CTE is a SELECT statement, and in reality, it is a temporary result set that can be referenced within the FROM clause of a query, just like any other table. The reference to the CTE is where we execute and use our common table expression.
+
+Let's say we extracted raw data from the source systems via Airbnb. The data is 100% uncleaned, and we want to perform transformations on it. In step one, we create a CTE named `raw_listings`. Then in step two, we have an inner query that selects all columns from the source `listings` table. Finally, in step three, which is an outer query, we reference the CTE `raw_listings`.
+
+In this outer query, we select specific columns from the source, performing simple transformations such as renaming the `id` column to `listing_id` to make it more descriptive.
+
+SQL
+Copy code
+
+```SQL
+# exemple
+-- STEP 1
+WITH raw_listings AS (
+
+    -- STEP 2
+    SELECT * FROM [source].[listings]
+)
+
+-- STEP 3
+SELECT
+    id AS listing_id,
+    listing_url,
+    name AS listing_name,
+    room_type,
+    minimum_nights,
+    host_id,
+    price AS price_str,
+    created_at,
+    updated_at
+FROM raw_listings;
+```
+
+Although a CTE has similar functionality to a view, CTEs are not stored in metadata. We prefer CTEs because they are extremely readable, easy to maintain, and make complex queries more understandable. Furthermore, a query can be divided into separate, simple, logical building blocks, which can then be used to build more complex queries.
+
+Lastly, CTEs can also be defined in functions, stored procedures, triggers, or even views. You will use CTEs many times throughout the course, so you will see plenty of examples soon.
+
+**Creating our first model: Airbnb listings**
+
+![](img/36.png)
+
+As you can see in our raw layer, we have three input tables: `raw_listings`, `raw_hosts`, and `raw_reviews`. Now, it's time to create our first staging layer. In this layer, we will prefix every staging table or view with the `src` tag. Our goal here is to build three models: one for listings, one for hosts, and one for reviews. These models will be views built on top of the raw data in the `raw_listings`, `raw_hosts`, and `raw_reviews` tables. 
+
+We will make some minor changes to these tables, such as renaming columns, as a first step in cleansing our data. In this section, we will implement the src_listings model together. Then, you will have the chance to implement the necessary src_reviews model through a guided lab and assess the src_hosts model as an individual task.
+
+Let's go ahead and take a look.
+
+---
+
+So let's implement our first select statement where we are changing these column names. And it's a standard practice in the analytics community to use CTE common table expressions For all of our input sources. I will create a comfortable expression which points to the role listing stable.
+
+![](img/38.png)
+
+So now it's time to integrate Discovery into DBT. And let's create our first one.
+
+Similar live here in the models folder and you can organize your models into subfolders or you can just keep them at the top level. It really depends on how you like to organize your structure. I would suggest you to organize it into subfolders layer by layer. So let's create our first layer. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ mkdir -p models/src
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch models/src/src_listings.sql     # Create src_listings.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano models/src/src_listings.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/src/src_listings.sql 
+
+  WITH raw_listings AS (
+      SELECT * FROM AIRBNB.RAW.RAW_LISTINGS
+  )
+  SELECT
+      id AS listing_id,
+      name AS listing_name,
+      listing_url,
+      room_type,
+      minimum_nights,
+      host_id,
+      price AS price_str,
+      created_at,
+      updated_at
+  FROM
+      raw_listings;
+```
+
+So now Dbt knows that I want to have a view created called src_listings. And this is the definition of the view. So this is my first term placeholder and we will discuss later how you can manage this to be a table. But by default, all our models are going to be views. Save it´s and now let's execute DVT.
+
+```sh
+├── dbt_project.yml
+├── logs
+│   └── dbt.log
+├── macros
+├── models
+│   └── src
+│       └── src_listings.sql
+├── package-lock.yml
+├── packages.yml
+├── seeds
+├── snapshots
+├── target
+│   ├── manifest.json
+│   └── partial_parse.msgpack
+└── tests
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run  
+
+18:31:52  Running with dbt=1.7.17
+18:31:53  Registered adapter: snowflake=1.7.1
+18:31:53  [WARNING]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
+There are 1 unused configuration paths:
+- models.dbt_learn.example
+18:31:53  Found 1 model, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+18:31:53  
+18:31:59  Concurrency: 1 threads (target='dev')
+18:31:59  
+18:31:59  1 of 1 START sql view model DEV.src_listings ................................... [RUN]
+18:32:00  1 of 1 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.76s]
+18:32:00  
+18:32:00  Finished running 1 view model in 0 hours 0 minutes and 7.52 seconds (7.52s).
+18:32:00  
+18:32:00  Completed successfully
+18:32:00  
+18:32:00  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+[WARNING]: Eliminate the folfer `examples` from `dbt_project.yml `
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano dbt_project.yml 
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run              
+18:35:45  Running with dbt=1.7.17
+18:35:45  Registered adapter: snowflake=1.7.1
+18:35:45  Found 1 model, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+18:35:45  
+18:35:48  Concurrency: 1 threads (target='dev')
+18:35:48  
+18:35:48  1 of 1 START sql view model DEV.src_listings ................................... [RUN]
+18:35:49  1 of 1 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.57s]
+18:35:49  
+18:35:49  Finished running 1 view model in 0 hours 0 minutes and 4.18 seconds (4.18s).
+18:35:49  
+18:35:49  Completed successfully
+18:35:49  
+18:35:49  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+Let's take a look in Snowflake. Refresh and look the view
+
+![](img/39.png)
+
+
+7:55 section video 40.
