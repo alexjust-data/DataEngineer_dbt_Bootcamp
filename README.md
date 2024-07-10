@@ -558,20 +558,7 @@ total 0
 drwxr-xr-x   3 alex  staff   96 Jul  8 19:14 .
 drwxr-xr-x  12 alex  staff  384 Jul  8 19:34 ..
 drwxr-xr-x   5 alex  staff  160 Jul  8 19:14 example
-(dbt_env) ➜  dbt_learn git:(main) ✗ rm -r models/example
 ```
-
-#### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
-
-![](img/21.png)
-
-![](img/22.png)
-
-![](img/23.png)
-
-![](img/24.png)
-
-When you are creating a new dbt project and you don't have a `packages.yml `file nor know what dependencies you might need, you can start with an empty packages.yml file. Then, as you develop your project and discover which additional packages might be useful, you can add those dependencies to the file.
 
 ```sh
 my_new_project/
@@ -588,8 +575,23 @@ my_new_project/
 ├── dbt_project.yml
 ├── packages.yml
 └── README.md
+```
 
 ```
+(dbt_env) ➜  dbt_learn git:(main) ✗ rm -r models/example
+```
+
+#### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
+
+![](img/21.png)
+
+![](img/22.png)
+
+![](img/23.png)
+
+![](img/24.png)
+
+When you are creating a new dbt project and you don't have a `packages.yml `file nor know what dependencies you might need, you can start with an empty packages.yml file. Then, as you develop your project and discover which additional packages might be useful, you can add those dependencies to the file.
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat packages.yml
@@ -708,11 +710,11 @@ Lastly, CTEs can also be defined in functions, stored procedures, triggers, or e
 
 As you can see in our raw layer, we have three input tables: `raw_listings`, `raw_hosts`, and `raw_reviews`. Now, it's time to create our first staging layer. In this layer, we will prefix every staging table or view with the `src` tag. Our goal here is to build three models: one for listings, one for hosts, and one for reviews. These models will be views built on top of the raw data in the `raw_listings`, `raw_hosts`, and `raw_reviews` tables. 
 
-We will make some minor changes to these tables, such as renaming columns, as a first step in cleansing our data. In this section, we will implement the src_listings model together. Then, you will have the chance to implement the necessary src_reviews model through a guided lab and assess the src_hosts model as an individual task.
-
-Let's go ahead and take a look.
+We will make some minor changes to these tables, such as renaming columns, as a first step in cleansing our data. In this section, we will implement the src_listings model together. Then, you will have the chance to implement the necessary src_reviews model through a guided lab and assess the src_hosts model as an individual task
 
 ---
+Creating a new model in the `models/src/` folder called `src_rlisting.sql`:
+
 
 So let's implement our first select statement where we are changing these column names. And it's a standard practice in the analytics community to use CTE common table expressions For all of our input sources. I will create a comfortable expression which points to the role listing stable.
 
@@ -725,6 +727,16 @@ Similar live here in the models folder and you can organize your models into sub
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ mkdir -p models/src
 (dbt_env) ➜  dbt_learn git:(main) ✗ touch models/src/src_listings.sql     # Create src_listings.sql
+```
+
+```sh
+├── macros
+├── models
+│   └── src
+│       └── src_listings.sql
+```
+
+```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano models/src/src_listings.sql
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/src/src_listings.sql 
 
@@ -742,40 +754,32 @@ Similar live here in the models folder and you can organize your models into sub
       created_at,
       updated_at
   FROM
-      raw_listings;
+      raw_listings
 ```
 
 So now Dbt knows that I want to have a view created called src_listings. And this is the definition of the view. So this is my first term placeholder and we will discuss later how you can manage this to be a table. But by default, all our models are going to be views. Save it´s and now let's execute DVT.
-
-```sh
-├── macros
-├── models
-│   └── src
-│       └── src_listings.sql
-```
 
 dbt run  
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt run  
-
-18:31:52  Running with dbt=1.7.17
-18:31:53  Registered adapter: snowflake=1.7.1
-18:31:53  [WARNING]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
-There are 1 unused configuration paths:
-- models.dbt_learn.example
-18:31:53  Found 1 model, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
-18:31:53  
-18:31:59  Concurrency: 1 threads (target='dev')
-18:31:59  
-18:31:59  1 of 1 START sql view model DEV.src_listings ................................... [RUN]
-18:32:00  1 of 1 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.76s]
-18:32:00  
-18:32:00  Finished running 1 view model in 0 hours 0 minutes and 7.52 seconds (7.52s).
-18:32:00  
-18:32:00  Completed successfully
-18:32:00  
-18:32:00  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+  18:31:52  Running with dbt=1.7.17
+  18:31:53  Registered adapter: snowflake=1.7.1
+  18:31:53  [WARNING]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
+  There are 1 unused configuration paths:
+  - models.dbt_learn.example
+  18:31:53  Found 1 model, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  18:31:53  
+  18:31:59  Concurrency: 1 threads (target='dev')
+  18:31:59  
+  18:31:59  1 of 1 START sql view model DEV.src_listings ................................... [RUN]
+  18:32:00  1 of 1 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.76s]
+  18:32:00  
+  18:32:00  Finished running 1 view model in 0 hours 0 minutes and 7.52 seconds (7.52s).
+  18:32:00  
+  18:32:00  Completed successfully
+  18:32:00  
+  18:32:00  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
 ```
 
 [WARNING]: Eliminate the folfer `examples` from `dbt_project.yml `
@@ -783,20 +787,20 @@ There are 1 unused configuration paths:
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano dbt_project.yml 
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt run              
-18:35:45  Running with dbt=1.7.17
-18:35:45  Registered adapter: snowflake=1.7.1
-18:35:45  Found 1 model, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
-18:35:45  
-18:35:48  Concurrency: 1 threads (target='dev')
-18:35:48  
-18:35:48  1 of 1 START sql view model DEV.src_listings ................................... [RUN]
-18:35:49  1 of 1 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.57s]
-18:35:49  
-18:35:49  Finished running 1 view model in 0 hours 0 minutes and 4.18 seconds (4.18s).
-18:35:49  
-18:35:49  Completed successfully
-18:35:49  
-18:35:49  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+  18:35:45  Running with dbt=1.7.17
+  18:35:45  Registered adapter: snowflake=1.7.1
+  18:35:45  Found 1 model, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  18:35:45  
+  18:35:48  Concurrency: 1 threads (target='dev')
+  18:35:48  
+  18:35:48  1 of 1 START sql view model DEV.src_listings ................................... [RUN]
+  18:35:49  1 of 1 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.57s]
+  18:35:49  
+  18:35:49  Finished running 1 view model in 0 hours 0 minutes and 4.18 seconds (4.18s).
+  18:35:49  
+  18:35:49  Completed successfully
+  18:35:49  
+  18:35:49  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
 ```
 
 Let's take a look in Snowflake. Refresh and look the view
@@ -804,4 +808,288 @@ Let's take a look in Snowflake. Refresh and look the view
 ![](img/39.png)
 
 
-7:55 section video 40.
+---
+Creating a new model in the `models/src/` folder called `src_reviews.sql`:
+* Use a CTE to reference the AIRBNB.RAW.RAW_REVIEWS table
+* SELECT every column and every record, and rename the following columns:
+  * date to review_date
+  * comments to review_text
+  * sentiment to review_sentiment
+* Execute `dbt run` and verify that your model has been created
+
+![](img/40.png)
+
+```sh
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ touch dbt_learn/models/src/src_reviews.sql
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ nano dbt_learn/models/src/src_reviews.sql 
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ cat dbt_learn/models/src/src_reviews.sql
+
+  WITH raw_reviews AS (
+      SELECT * FROM AIRBNB.RAW.RAW_REVIEWS
+  )
+  SELECT
+      listing_id,
+      date AS review_date,
+      reviewer_name,
+      comments AS review_text,
+      sentiment AS review_sentiment
+  FROM
+      raw_reviews
+```
+
+dbt run  
+
+```sh
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ cd dbt_learn 
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run     
+  04:43:21  Running with dbt=1.7.17
+  04:43:21  Registered adapter: snowflake=1.7.1
+  04:43:21  Found 2 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  04:43:21  
+  04:43:24  Concurrency: 1 threads (target='dev')
+  04:43:24  
+  04:43:24  1 of 2 START sql view model DEV.src_listings ................................... [RUN]
+  04:43:25  1 of 2 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.32s]
+  04:43:25  2 of 2 START sql view model DEV.src_reviews .................................... [RUN]
+  04:43:26  2 of 2 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.27s]
+  04:43:26  
+  04:43:26  Finished running 2 view models in 0 hours 0 minutes and 5.23 seconds (5.23s).
+  04:43:26  
+  04:43:26  Completed successfully
+  04:43:26  
+  04:43:26  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 TOTAL=2
+```
+
+![](img/41.png)
+
+---
+Creating a new model in the `models/src/` folder called `src_hosts.sql`:
+* Use a CTE to reference the AIRBNB.RAW.RAW_HOSTS table
+* SELECT every column and every record, and rename the following columns:
+    * id AS host_id,
+    * NAME AS host_name,
+* Execute `dbt run` and verify that your model has been created
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch models/src/src_hosts.sql            
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano models/src/src_hosts.sql 
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/src/src_hosts.sql
+  WITH raw_hosts AS (
+      SELECT * FROM AIRBNB.RAW.RAW_HOSTS
+  )
+  SELECT
+      id AS host_id,
+      NAME AS host_name,
+      is_superhost,
+      created_at,
+      updated_at
+  FROM
+      raw_hosts
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+  05:13:40  Running with dbt=1.7.17
+  05:13:40  Registered adapter: snowflake=1.7.1
+  05:13:41  Found 3 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  05:13:41  
+  05:13:43  Concurrency: 1 threads (target='dev')
+  05:13:43  
+  05:13:43  1 of 3 START sql view model DEV.src_hosts ...................................... [RUN]
+  05:13:44  1 of 3 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.37s]
+  05:13:44  2 of 3 START sql view model DEV.src_listings ................................... [RUN]
+  05:13:46  2 of 3 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.31s]
+  05:13:46  3 of 3 START sql view model DEV.src_reviews .................................... [RUN]
+  05:13:47  3 of 3 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.26s]
+  05:13:47  
+  05:13:47  Finished running 3 view models in 0 hours 0 minutes and 6.49 seconds (6.49s).
+  05:13:47  
+  05:13:47  Completed successfully
+  05:13:47  
+  05:13:47  Done. PASS=3 WARN=0 ERROR=0 SKIP=0 TOTAL=3
+```
+
+
+---
+video 41
+
+---
+
+#### Materializations
+
+* Understand how models can be connected
+* Understand the four built-in materializations
+* Understand how materializations can be configured on the file and project level
+* Use dbt run with extra parameters
+  
+Materializations are different race, how your models can be stored and managed in the data warehouse. There are 4th materializations
+
+![](/img/43.png)
+
+* A view is the default materialization in dbt. When you select the "view" materialization, dbt will create a database view for your model. Views are virtual tables that display the results of a stored query. They are lightweight because they don’t store data themselves but instead fetch data dynamically whenever queried.
+* Choosing "table" as your materialization will make dbt create a physical table in your database. Every time you run dbt run, this table will be recreated from scratch. This is useful for models that you query frequently and where performance is important, but it is not ideal for models that are updated incrementally or are only used once.
+* The "incremental" materialization is designed for scenarios where you need to add new rows to a table without recreating it from scratch every time. This is particularly useful for event data or other types of fact tables where data is continuously appended. However, it is not suitable for updating existing records.
+* An "ephemeral" model in dbt is not materialized into a physical table or view. Instead, it exists only within the context of a dbt run and is used as a Common Table Expression (CTE) in the downstream models. This means that the data is never stored in the database but is used to streamline complex queries within dbt. This is useful for intermediate calculations or transformations that don’t need to be stored permanently.
+
+
+With a `view`, you want to use it when you need a lightweight representation of your data and don’t need to recreate a table at every execution. However, avoid using views if you need to read from the same `view` multiple times in quick succession, as each access will require the underlying query to be executed, potentially impacting performance.
+
+For efficient repeated access, consider using the `table` materialization. The downside is that it needs to be recreated every time you run your pipeline, which can take extra time. However, once created, the data is readily available, making subsequent reads fast.
+
+For data that is `incrementally` updated, such as event data (e.g., orders in an e-commerce system or reviews), the incremental materialization is ideal. This method allows you to append new data without recreating the entire table, optimizing performance and storage.
+
+Finally, if you need an intermediate step between models without publishing it to the data warehouse, the `ephemeral` materialization is useful. Ephemeral models exist only within the context of a dbt run as Common Table Expressions (CTEs) and do not create physical tables or views in your database, making them ideal for temporary calculations and transformations.
+
+| Materialization | Use it when...                                               | Don’t use it when...                                             | Explanation                                                                                         |
+|-----------------|--------------------------------------------------------------|------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| **View**        | You want a lightweight representation and don’t reuse data often | You need to read from the same model several times                | A view creates a virtual table that fetches data dynamically whenever queried.                      |
+| **Table**       | You read from this model repeatedly                           | Building single-use models or your model is populated incrementally | A table creates a physical table that is recreated from scratch every time `dbt run` is executed.   |
+| **Incremental** | Fact tables or appending to tables                           | You want to update historical records                             | An incremental table adds new rows without recreating the entire table, ideal for event/fact data.  |
+| **Ephemeral**   | You need an alias to your data                               | You need to read from the same model several times                | An ephemeral model exists only during a dbt run as a CTE, not materialized in the database.         |
+
+
+
+So we will see an example to all of those in the upcoming lessons.
+
+**Model Dependencies and dbt's ref tag**
+
+We are going to build out a new layer, the core layer, core layer comes with a bunch of chambers. From `src_listing` we are going to create `dim_lisitng_cleansed`, etc
+
+![](img/47.png)
+
+And you're going to create our final dimension table by joining these two tables together.
+
+![](img/48.png)
+
+you will see how we can define dependencies between models and how we can create different materializations and apply them in snowflake.
+
+IN snowflakw look you and make sure that you have de views `SRC_HOST`, `SRC_LISTINGS` AND `SRC_REVIEWS`.
+
+---
+
+For `dimension` tables we are to create a new folder in models 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ mkdir -p models/dim                       
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch models/dim/dim_listings_cleansed.sql
+```
+
+Here, I want to build on top of the SLC listings there and the additional dim_listings_clear . 
+
+```SQL
+WITH src_liting AS (
+    SELECT * FROM {{ ref('src_listings') }}
+)
+
+SELECT ...
+```
+
+`ref('src_listing')` This is a bdt specific template tag in SQL, which does dbt to substitute this template with the name sql_listing.sql, Technically speaking, it is a [jinja template](https://palletsprojects.com/p/jinja/) tag. The main idea behind Jinjr is that you can define these templates where I have us and also some control structures like loops and conditional statements and ginger passes for you, DVT heavily relies on jinjar.
+
+If you look at the preview of the SRC_LISTINGS Snowflake table, you will notice that several instances in the MINIMUM_NIGHTS column contain zeros. And this is a problem i the data, thre is the minimun of nigths is 1 night that needs to bo booked in order to reserve this Airbnb. And also the price now gold price SDR. It is in a string format, So let's just pass this into our numeric form.
+
+![](/img/45.png)
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_cleansed.sql 
+
+  WITH src_liting AS (
+      SELECT * FROM {{ ref('src_listings') }}
+  )
+  SELECT
+    listing_id,
+    listing_name,
+    room_type,
+    CASE
+      WHEN minimum_nights = 0 THEN 1
+      ELSE minimum_nights
+    END AS minimum_nights,
+    host_id,
+    REPLACE(
+      price_str,
+      '$'
+    ) :: NUMBER(
+      10,
+      2
+    ) AS price,
+    created_at,
+    updated_at
+  FROM
+    src_listings
+```
+
+dbt run
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+  07:41:12  Running with dbt=1.7.17
+  07:41:12  Registered adapter: snowflake=1.7.1
+  07:41:13  Found 4 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  07:41:13  
+  07:41:18  Concurrency: 1 threads (target='dev')
+  07:41:18  
+  07:41:18  1 of 4 START sql view model DEV.src_hosts ...................................... [RUN]
+  07:41:20  1 of 4 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.37s]
+  07:41:20  2 of 4 START sql view model DEV.src_listings ................................... [RUN]
+  07:41:21  2 of 4 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.31s]
+  07:41:21  3 of 4 START sql view model DEV.src_reviews .................................... [RUN]
+  07:41:22  3 of 4 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.22s]
+  07:41:22  4 of 4 START sql view model DEV.dim_listings_cleansed .......................... [RUN]
+  07:41:24  4 of 4 OK created sql view model DEV.dim_listings_cleansed ..................... [SUCCESS 1 in 1.30s]
+  07:41:24  
+  07:41:24  Finished running 4 view models in 0 hours 0 minutes and 11.11 seconds (11.11s).
+  07:41:24  
+  07:41:24  Completed successfully
+  07:41:24  
+  07:41:24  Done. PASS=4 WARN=0 ERROR=0 SKIP=0 TOTAL=4
+```
+
+![](/img/46.png)
+
+---
+
+Create a new model in the `models/dim/` folder called `dim_hosts_cleansed.sql`.
+* Use a CTE to reference the `src_hosts` model
+* SELECT every column and every record, and add a cleansing step to
+host_name:
+  * If host_name is not null, keep the original value
+  * If host_name is null, replace it with the value ‘Anonymous’
+  * Use the NVL(column_name, default_null_value) function
+* Execute `dbt run` and verify that your model has been created
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_cleansed.sql
+  WITH src_liting AS (
+      SELECT * FROM {{ ref('src_listings') }}
+  )
+  SELECT
+    listing_id,
+    listing_name,
+    room_type,
+    CASE
+      WHEN minimum_nights = 0 THEN 1
+      ELSE minimum_nights
+    END AS minimum_nights,
+    host_id,
+    REPLACE(
+      price_str,
+      '$'
+    ) :: NUMBER(
+      10,
+      2
+    ) AS price,
+    created_at,
+    updated_at
+  FROM
+    src_listings
+```
+
+Explanation:
+* CTE (Common Table Expression): defined `src_hosts` to reference the model.
+* Cleansing Step: The `host_name` column is cleansed by using the NVL function to replace NULL values with 'Anonymous'.
+* Columns Selection: Every column from the `src_hosts` table is selected with the host_name column being modified for cleansing.
+
+---
+
+
+
