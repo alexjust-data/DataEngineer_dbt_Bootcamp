@@ -128,7 +128,7 @@ To bring it home: With DBT, you will build production-grade data pipelines. What
 
 Since DBT interpolates the locations of all the models it generates, it allows you to create different environments like development or production, and you can effortlessly switch between the two. In terms of performance, DBT will take your models (i.e., SQL SELECT statements), understand the dependencies between them, craft a dependency order, and parallelize the way your models are built. And it will run arbitrary subgraph.
 
-### PROJECT OVERVIEW (Analytics Engineering with Airbnb)
+## PROJECT OVERVIEW (Analytics Engineering with Airbnb)
 
 You will act as if you were an analytics engineer at Airbnb. You’re responsible for all the data flow in Berlin, Germany. This role comes with a lot of responsibilities, so you will need to import your data into a data warehouse and then make this data available for tools like DBT. Then, you will need to clean the data, perform several transformations on it, and export it to BI tools. 
 
@@ -180,13 +180,13 @@ These are probably the basic requirements. As you progress in building out your 
 
 These are some of the main requirements of a data analytics tool, and DBT is great for managing these.
  
-#### resources
+### resources
 
 * [single markdown file](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero/blob/main/_course_resources/course-resources.md)
 * [dbt project's GitHub page](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero)
 
 
-#### snowflake 👉🏻 [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
+### snowflake 👉🏻 [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
 
 * SnoeFow edition : Standard
 * Provider : AWS Web Service
@@ -203,7 +203,8 @@ Snowflake :
 
 ![](img/18.png)
 
-**Snowflake user creation**
+#### Snowflake user creation
+
 Copy these SQL statements into a Snowflake Worksheet, select all and execute them (i.e. pressing the play button).
 
 If you see a Grant partially executed: privileges [REFERENCE_USAGE] not granted. message when you execute GRANT ALL ON DATABASE AIRBNB to ROLE transform, that's just an info message and you can ignore it.
@@ -247,7 +248,7 @@ GRANT ALL ON FUTURE TABLES IN SCHEMA AIRBNB.RAW to ROLE TRANSFORM;
 
 Select all and press the play button or pest control, enter.
 
-**Snowflake data import**
+#### Snowflake data import
 
 Copy these SQL statements into a Snowflake Worksheet, select all and execute them (i.e. pressing the play button).
 
@@ -350,7 +351,7 @@ Python 3.11.6
 (dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ pip install dbt-snowflake==1.7.1
 ```
 
-#### dbt setup
+### dbt setup
 
 First, you will need to create a DBT configuration folder. The idea is that you got to have a dot DB folder in your home folder.
 
@@ -581,7 +582,7 @@ my_new_project/
 (dbt_env) ➜  dbt_learn git:(main) ✗ rm -r models/example
 ```
 
-#### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
+### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
 
 ![](img/21.png)
 
@@ -637,7 +638,7 @@ So here is the data flow we are going to build. As you see in green, we have thr
 
 And let's go and start building our first three mortars, SSD hosts, associate listings and SSD reviews.
 
-#### MODELS
+### MODELS
 
 * Understand the data flow of our project
 * Understand the concept of Models in dbt
@@ -656,7 +657,7 @@ And let's go and start building our first three mortars, SSD hosts, associate li
   
 Models are the basic building blocks of your business logic and the foundational elements of a dbt project. You can think of models as SQL queries that materialize as tables or views, but there is much more to them. For now, what you need to know about models is that they are stored as SQL files in the models folder. They are not just simple SQL SELECT statements; they can include additional features. For example, a model can reference other models, allowing dbt to understand the semantic dependencies between them. You can also use different scripts and macros within your models. Now, let's see how they work in action.
 
-**Common Table Expression (CTE)**
+#### Common Table Expression (CTE)
 
 CTEs help us write readable and maintainable SQL code. By definition, they are temporary, named result sets that exist only for the duration of a single query. CTEs are great because the result remains in memory during the execution of the query (e.g., SELECT, INSERT, UPDATE, DELETE, or MERGE). The syntax of a CTE looks something like this:
 
@@ -704,7 +705,7 @@ Although a CTE has similar functionality to a view, CTEs are not stored in metad
 
 Lastly, CTEs can also be defined in functions, stored procedures, triggers, or even views. You will use CTEs many times throughout the course, so you will see plenty of examples soon.
 
-**Creating our first model: Airbnb listings**
+#### Creating our first model: Airbnb listings
 
 ![](img/36.png)
 
@@ -915,7 +916,7 @@ video 41
 
 ---
 
-#### Materializations
+### Materializations
 
 * Understand how models can be connected
 * Understand the four built-in materializations
@@ -951,7 +952,7 @@ Finally, if you need an intermediate step between models without publishing it t
 
 So we will see an example to all of those in the upcoming lessons.
 
-**Model Dependencies and dbt's ref tag**
+#### Model Dependencies and dbt's ref tag
 
 We are going to build out a new layer, the core layer, core layer comes with a bunch of chambers. From `src_listing` we are going to create `dim_lisitng_cleansed`, etc
 
@@ -976,6 +977,8 @@ For `dimension` tables we are to create a new folder in models
 
 Here, I want to build on top of the SLC listings there and the additional dim_listings_clear . 
 
+I have created this file above VSCode app with de extension dbt and jinja configuration.
+
 ```SQL
 WITH src_liting AS (
     SELECT * FROM {{ ref('src_listings') }}
@@ -989,6 +992,8 @@ SELECT ...
 If you look at the preview of the SRC_LISTINGS Snowflake table, you will notice that several instances in the MINIMUM_NIGHTS column contain zeros. And this is a problem i the data, thre is the minimun of nigths is 1 night that needs to bo booked in order to reserve this Airbnb. And also the price now gold price SDR. It is in a string format, So let's just pass this into our numeric form.
 
 ![](/img/45.png)
+
+I have created this file above VSCode app with de extension dbt and jinja configuration.
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_cleansed.sql 
@@ -1044,6 +1049,8 @@ dbt run
   07:41:24  Done. PASS=4 WARN=0 ERROR=0 SKIP=0 TOTAL=4
 ```
 
+![](/img/49.png)
+
 ![](/img/46.png)
 
 ---
@@ -1058,30 +1065,20 @@ host_name:
 * Execute `dbt run` and verify that your model has been created
 
 ```sh
-(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_cleansed.sql
-  WITH src_liting AS (
-      SELECT * FROM {{ ref('src_listings') }}
-  )
-  SELECT
-    listing_id,
-    listing_name,
-    room_type,
-    CASE
-      WHEN minimum_nights = 0 THEN 1
-      ELSE minimum_nights
-    END AS minimum_nights,
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_hosts_cleansed.sql
+-- models/dim/dim_hosts_cleansed.sql
+
+WITH src_hosts AS (
+    SELECT * FROM {{ ref('src_hosts') }}
+)
+SELECT 
     host_id,
-    REPLACE(
-      price_str,
-      '$'
-    ) :: NUMBER(
-      10,
-      2
-    ) AS price,
+    NVL(host_name, 'Anonymous') AS host_name,
+    is_superhost,
     created_at,
     updated_at
-  FROM
-    src_listings
+FROM
+    src_hosts
 ```
 
 Explanation:
@@ -1089,7 +1086,342 @@ Explanation:
 * Cleansing Step: The `host_name` column is cleansed by using the NVL function to replace NULL values with 'Anonymous'.
 * Columns Selection: Every column from the `src_hosts` table is selected with the host_name column being modified for cleansing.
 
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+  10:47:32  Running with dbt=1.7.17
+  10:47:32  Registered adapter: snowflake=1.7.1
+  10:47:32  Found 5 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  10:47:32  
+  10:47:36  Concurrency: 1 threads (target='dev')
+  10:47:36  
+  10:47:36  1 of 5 START sql view model DEV.src_hosts ...................................... [RUN]
+  10:47:38  1 of 5 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.39s]
+  10:47:38  2 of 5 START sql view model DEV.src_listings ................................... [RUN]
+  10:47:39  2 of 5 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.36s]
+  10:47:39  3 of 5 START sql view model DEV.src_reviews .................................... [RUN]
+  10:47:40  3 of 5 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.23s]
+  10:47:40  4 of 5 START sql view model DEV.dim_hosts_cleansed ............................. [RUN]
+  10:47:42  4 of 5 OK created sql view model DEV.dim_hosts_cleansed ........................ [SUCCESS 1 in 1.29s]
+  10:47:42  5 of 5 START sql view model DEV.dim_listings_cleansed .......................... [RUN]
+  10:47:43  5 of 5 OK created sql view model DEV.dim_listings_cleansed ..................... [SUCCESS 1 in 1.34s]
+  10:47:43  
+  10:47:43  Finished running 5 view models in 0 hours 0 minutes and 10.55 seconds (10.55s).
+  10:47:43  
+  10:47:43  Completed successfully
+  10:47:43  
+  10:47:43  Done. PASS=5 WARN=0 ERROR=0 SKIP=0 TOTAL=5
+```
+
 ---
 
+#### Table type materialization & Project-level Materialization config
 
 
+So far, the only materialization we used is the view materialization, so the default. So we have now these five views in Snowflake.  So we have now these five views in Snowflake 
+* `DIM_HOSTS_CLEANSED`, 
+* `DIM_LISTINGS_CLEANSED`, 
+* `SRC_HOSTS`, 
+* `RC_LISTINGS`, 
+* `SRC_REVIEWS`
+
+But first of all, let's be explicit about our default militarization. So what I'd like to  to open how the Dbt project YAML file and come to the end. The DBT project is the file where you can set subfolder and global configurations. I want to specify that my militarization is for you I can add the new line and just saying `+materialized: view` in `dbt_project.yml`
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano dbt_project.yml 
+
+# this lines
+models:
+  dbt_learn:
+        +materialized: view # add this line
+```
+
+* `dbt_learn:` This specifies a sub-section within the models configuration. The dbt_learn key corresponds to a specific directory or group of models within your project. In this case, it refers to models located in the dbt_learn directory.
+* `+materialized: view` : This line is an added configuration setting for the models in the dbt_learn directory. +materialized is a dbt directive that specifies the materialization strategy for these models. 
+* `view` means that dbt will create a database view for each model in the dbt_learn directory. Views are virtual tables that are defined by a query but do not store data physically.
+
+In this case, you would want the sources `src_hosts`, `src_listings`, and `src_reviews` to be materialized as views because they involve very lightweight transformations and probably won't be accessed directly very often. However, for `dim_hosts_cleansed` and `dim_listings_cleanset`, which are already cleansed and stable, they will be accessed quite often. Therefore, it makes sense for these to be materialized differently, possibly as tables, to optimize performance for frequent queries.
+
+```sh
+├── models
+│   ├── dim
+│   │   ├── dim_hosts_cleansed.sql
+│   │   └── dim_listings_cleansed.sql
+│   └── src
+│       ├── src_hosts.sql
+│       ├── src_listings.sql
+│       └── src_reviews.sql
+```
+
+So I want to make sure that these configurations align with our performance estimates. So will come now and define it as:
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano dbt_project.yml 
+
+# this lines
+models:
+  dbt_learn:
+        +materialized: view 
+        dim: # add this line
+          +materialized: table # add this line
+```
+
+By adding these lines, you are differentiating the materialization between different types of models in your project:
+
+Views for Lightweight Models (src): The src_hosts, src_listings, and src_reviews models are materialized as views because they involve very lightweight transformations and probably won't be accessed directly very often.
+
+Tables for Cleansed Models (dim): The dim_hosts_cleansed and dim_listings_cleansed models, which are already cleansed and stable, will be materialized as tables because they will be accessed frequently. Materializing them as tables optimizes the performance of frequent queries.
+
+* `dim` : Specifies another subsection within dbt_learn. The key dim corresponds to specific models within the dim subdirectory in dbt_learn.
+
+* `+materialized: table` : This line is an added configuration for the models in the dim subdirectory within the dbt_learn directory.
+table means that dbt will create a physical table for each model in the dim subdirectory. Tables store data physically, which generally improves the performance of frequent queries.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+  15:42:07  Running with dbt=1.7.17
+  15:42:08  Registered adapter: snowflake=1.7.1
+  15:42:08  Found 5 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  15:42:08  
+  15:42:15  Concurrency: 1 threads (target='dev')
+  15:42:15  
+  15:42:15  1 of 5 START sql view model DEV.src_hosts ...................................... [RUN]
+  15:42:16  1 of 5 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.52s]
+  15:42:16  2 of 5 START sql view model DEV.src_listings ................................... [RUN]
+  15:42:18  2 of 5 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.52s]
+  15:42:18  3 of 5 START sql view model DEV.src_reviews .................................... [RUN]
+  15:42:19  3 of 5 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.28s]
+  15:42:19  4 of 5 START sql table model DEV.dim_hosts_cleansed ............................ [RUN]
+  15:42:22  4 of 5 OK created sql table model DEV.dim_hosts_cleansed ....................... [SUCCESS 1 in 2.92s]
+  15:42:22  5 of 5 START sql table model DEV.dim_listings_cleansed ......................... [RUN]
+  15:42:24  5 of 5 OK created sql table model DEV.dim_listings_cleansed .................... [SUCCESS 1 in 2.37s]
+  15:42:24  
+  15:42:24  Finished running 3 view models, 2 table models in 0 hours 0 minutes and 15.78 seconds (15.78s).
+  15:42:24  
+  15:42:24  Completed successfully
+  15:42:24  
+  15:42:24  Done. PASS=5 WARN=0 ERROR=0 SKIP=0 TOTAL=5
+```
+and look in the snowflake:
+
+![](/img/50.png)
+
+#### Incremental materialization
+
+Here we have associate reviews, which you are already familiar with, which has a listing idea, review  dates, reviewer name, reviewer tests and also the sentiment.
+
+![](/img/51.png)
+
+Now we are performing our two steps in the following order:
+* Cleansing: We ensure that only reviews containing actual text are included in our effective table.
+* Incremental Updates: We make sure that these reviews are updated incrementally rather than being recreated during each dbt run.
+
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ mkdir -p models/fct
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch models/fct/fct_reviews.sql
+```
+
+OK, so first, let's create a standard table without any increment.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/fct/fct_reviews.sql
+
+WITH src_reviews AS (
+    SELECT * FROM {{ ref("src_reviews") }}
+)
+SELECT * FROM src_reviews
+WHERE review_text is not null%  
+```
+Now, we want to change this to use incremental materialization. To do this, we will use Jinja syntax in dbt to configure our model for incremental updates. Here is the configuration:
+
+```sh
+{{
+    config(
+    materialized = 'incremental',
+    on_schema_change='fail'
+    )
+}}
+WITH src_reviews AS (
+    SELECT * FROM {{ ref("src_reviews") }}
+)
+SELECT * FROM src_reviews
+WHERE review_text is not null
+```
+
+`Config`uration Block:
+* `materialized = 'incremental'`: This setting configures the model to use incremental materialization. In dbt, incremental models only process and add new or updated data since the last run, rather than rebuilding the entire table. This is useful for large datasets where full refreshes are time-consuming and resource-intensive.
+* `on_schema_change='fail'`: This setting specifies the action dbt should take if there is a change in the schema of the source table. Setting this to 'fail' means that the incremental model will fail if there is a schema change detected in the source data. This is a safety measure to prevent unexpected issues caused by schema changes.
+
+Up until now, all views and tables were recreated every time we executed `dbt run`. However, with incremental materialization, we maintain a stable table (fct_reviews) that is updated incrementally. If there is a schema change upstream, we need to be aware of it and react accordingly. By setting on_schema_change to 'fail', we ensure that any unexpected schema changes will cause the model to fail, prompting us to address the issue before proceeding.
+
+But I also need to tell DVT how to increment. I need to tell DVT, what are the new records right? How it knows from record that it's new are not.  And here I can go and simply create a jinjar if statements for this. 
+
+```SQL
+{% if is_incremental() %}
+  AND review_date > (select max(review_date) from {{ this }})
+{% endif %}
+```
+* This section uses Jinja templating to add conditional logic to the query. The `is_incremental()` function checks if the model is running in incremental mode. 
+* If the model is running incrementally, the condition `AND review_date > (select max(review_date) from {{ this }})` is added to the WHERE clause. 
+  * `review_date > (select max(review_date) from {{ this }}):` This ensures that only new records with a review_date greater than the maximum review_date already present in the target table (represented by {{ this }}) are included in the incremental run.
+
+Now, notice for a second how much freedom this leaves you because. Here, if you want to have some more sophisticated logic, like working on an updated feared or anything doing with IDs, whatever. You're free to express it here in SQL.
+
+```SQL
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/fct/fct_reviews.sql
+  {{
+      config(
+      materialized = 'incremental',
+      on_schema_change='fail'
+      )
+  }}
+  WITH src_reviews AS (
+      SELECT * FROM {{ ref("src_reviews") }}
+  )
+  SELECT * FROM src_reviews
+  WHERE review_text is not null
+  {% if is_incremental() %}
+    AND review_date > (select max(review_date) from {{ this }})
+  {% endif %}
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+16:27:01  Running with dbt=1.7.17
+16:27:02  Registered adapter: snowflake=1.7.1
+16:27:02  Found 6 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+16:27:02  
+16:27:05  Concurrency: 1 threads (target='dev')
+16:27:05  
+16:27:05  1 of 6 START sql view model DEV.src_hosts ...................................... [RUN]
+16:27:06  1 of 6 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.57s]
+16:27:06  2 of 6 START sql view model DEV.src_listings ................................... [RUN]
+16:27:08  2 of 6 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.42s]
+16:27:08  3 of 6 START sql view model DEV.src_reviews .................................... [RUN]
+16:27:09  3 of 6 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.41s]
+16:27:09  4 of 6 START sql table model DEV.dim_hosts_cleansed ............................ [RUN]
+16:27:12  4 of 6 OK created sql table model DEV.dim_hosts_cleansed ....................... [SUCCESS 1 in 2.65s]
+16:27:12  5 of 6 START sql table model DEV.dim_listings_cleansed ......................... [RUN]
+16:27:14  5 of 6 OK created sql table model DEV.dim_listings_cleansed .................... [SUCCESS 1 in 2.12s]
+16:27:14  6 of 6 START sql incremental model DEV.fct_reviews ............................. [RUN]
+16:27:19  6 of 6 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 1 in 5.60s]
+16:27:19  
+16:27:19  Finished running 3 view models, 2 table models, 1 incremental model in 0 hours 0 minutes and 17.56 seconds (17.56s).
+16:27:19  
+16:27:19  Completed successfully
+16:27:19  
+16:27:19  Done. PASS=6 WARN=0 ERROR=0 SKIP=0 TOTAL=6
+```
+
+
+![](/img/52.png)
+
+
+Let's create an incremental load now. For an incremental load, we need some incremental data, right? First of all, let's take a look at the reviews for listing ID 3176.
+
+![](/img/53.png)
+
+We have a bunch of reviews here, so let's execute a command to add new reviews.
+
+```SQL
+INSERT INTO AIRBNB.RAW.RAW_REVIEWS VALUES (3176, CURRENT_TIMESTAMP(),
+'Zoltan','excallent stay!', 'positive');
+```
+
+This INSERT command adds a new review to the RAW_REVIEWS table in the RAW schema of the AIRBNB database. It includes the listing ID 3176, the current timestamp as the review date, "Zoltan" as the reviewer's name, "Excellent stay!" as the review text, and "positive" as the sentiment.
+
+![](/img/54.png)
+
+And now with dbt run, we pick up and recreate the first reviews and and the two dimensional tables and execute an incremental load on the six model, the fact reviews.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+    16:39:49  Running with dbt=1.7.17
+    16:39:50  Registered adapter: snowflake=1.7.1
+    16:39:50  Found 6 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+    16:39:50  
+    16:39:53  Concurrency: 1 threads (target='dev')
+    16:39:53  
+    16:39:53  1 of 6 START sql view model DEV.src_hosts ...................................... [RUN]
+    16:39:54  1 of 6 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.43s]
+    16:39:54  2 of 6 START sql view model DEV.src_listings ................................... [RUN]
+    16:39:55  2 of 6 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.40s]
+    16:39:55  3 of 6 START sql view model DEV.src_reviews .................................... [RUN]
+    16:39:57  3 of 6 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.21s]
+    16:39:57  4 of 6 START sql table model DEV.dim_hosts_cleansed ............................ [RUN]
+    16:39:58  4 of 6 OK created sql table model DEV.dim_hosts_cleansed ....................... [SUCCESS 1 in 1.83s]
+    16:39:58  5 of 6 START sql table model DEV.dim_listings_cleansed ......................... [RUN]
+    16:40:01  5 of 6 OK created sql table model DEV.dim_listings_cleansed .................... [SUCCESS 1 in 2.20s]
+    16:40:01  6 of 6 START sql incremental model DEV.fct_reviews ............................. [RUN]
+    16:40:05  6 of 6 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 1 in 4.01s]
+    16:40:05  
+    16:40:05  Finished running 3 view models, 2 table models, 1 incremental model in 0 hours 0 minutes and 14.74 seconds (14.74s).
+    16:40:05  
+    16:40:05  Completed successfully
+    16:40:05  
+    16:40:05  Done. PASS=6 WARN=0 ERROR=0 SKIP=0 TOTAL=6
+```
+
+OK, so it says that it's incremental the one motor.
+
+```SQL
+SELECT * FROM AIRBNB.DEV.FCT_REVIEWS WHERE listing_id=3176;
+```
+
+![](/img/55.png)
+
+Now, just one more trick before we go to our next session: what happens if you want to rebuild the entire table? You can do this by running the command `dbt run --full-refresh`.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run --full-refresh
+  16:49:59  Running with dbt=1.7.17
+  16:50:00  Registered adapter: snowflake=1.7.1
+  16:50:00  Found 6 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  16:50:00  
+  16:50:03  Concurrency: 1 threads (target='dev')
+  16:50:03  
+  16:50:03  1 of 6 START sql view model DEV.src_hosts ...................................... [RUN]
+  16:50:04  1 of 6 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.51s]
+  16:50:04  2 of 6 START sql view model DEV.src_listings ................................... [RUN]
+  16:50:06  2 of 6 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.38s]
+  16:50:06  3 of 6 START sql view model DEV.src_reviews .................................... [RUN]
+  16:50:07  3 of 6 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.40s]
+  16:50:07  4 of 6 START sql table model DEV.dim_hosts_cleansed ............................ [RUN]
+  16:50:09  4 of 6 OK created sql table model DEV.dim_hosts_cleansed ....................... [SUCCESS 1 in 2.17s]
+  16:50:09  5 of 6 START sql table model DEV.dim_listings_cleansed ......................... [RUN]
+  16:50:11  5 of 6 OK created sql table model DEV.dim_listings_cleansed .................... [SUCCESS 1 in 2.05s]
+  16:50:11  6 of 6 START sql incremental model DEV.fct_reviews ............................. [RUN]
+  16:50:16  6 of 6 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 1 in 5.10s]
+  16:50:16  
+  16:50:16  Finished running 3 view models, 2 table models, 1 incremental model in 0 hours 0 minutes and 16.42 seconds (16.42s).
+  16:50:16  
+  16:50:16  Completed successfully
+  16:50:16  
+  16:50:16  Done. PASS=6 WARN=0 ERROR=0 SKIP=0 TOTAL=6
+```
+
+Now Every incremental table has been rebuilt.
+
+Now, I won't see any change here, of course, because this will bring me to the same state. However, if you ever change the schema of a source file or table, performing a full refresh will recreate the incremental or table models from scratch. This ensures that all schema changes are properly reflected in your models.
+
+
+#### Ephemeral materialization
+
+
+The type of materialization for all of the tables we've created so far is shown in the diagram. We still need to create the dim_listings_with_hosts, which will be our final dimension table, so we will do that now.
+
+![](img/48.png)
+
+If you think about it, as an Airbnb analytics engineer, once we are done with processing, we end up with two main tables: fct_reviews and dim_listings_with_hosts. These tables combine all the necessary data, such as listings joined with host information and review details.
+
+Since these tables are our final, stable tables that we frequently access for analytics, we can keep them stable by materializing them as tables or views. This means, for example, if we have dim_listings_cleansed and dim_hosts_cleansed materialized as views, we don't need to create additional tables out of them because we will only read from these views.
+
+By using views for dim_listings_cleansed and dim_hosts_cleansed, we can simplify our data processing pipeline and ensure that we have up-to-date data without the need for redundant table creation.
+
+![](img/56.png)
+
+* `Ephemeral Materialization`: This refers to the practice of using temporary tables or views that do not persistently store data but are instead generated dynamically when needed.
+* `Stable Tables`: The fct_reviews and dim_listings_with_hosts are considered stable because they combine all necessary data and are accessed frequently for analytics.
+* `Using Views`: By materializing dim_listings_cleansed and dim_hosts_cleansed as views, we avoid creating unnecessary tables and keep our data processing pipeline efficient.
+  
+This improved explanation clarifies the purpose and benefits of using ephemeral materialization and highlights the key points in the data processing workflow.

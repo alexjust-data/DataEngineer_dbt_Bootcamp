@@ -1,4 +1,3 @@
-(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_hosts_cleansed.sql
 -- models/dim/dim_hosts_cleansed.sql
 
 WITH src_hosts AS (
