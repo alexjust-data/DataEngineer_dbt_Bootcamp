@@ -650,7 +650,13 @@ INPUT DATA MODEL
 
 ![](img/27.png)
 
-Three of these are directly connected to Airbnb. First, the `listing`. Then, the Airbnb `reviews`, which are linked to the `listings` through the `listing ID`. Additionally, there are the Airbnb `hosts`, who are also connected to the listings table via the `host ID`. We also have an additional table, which we will upload, called `full_moon_dates`. With the help of this table, you will have the opportunity to examine how full moon phases affect Airbnb reviews.
+Three of these are directly connected to Airbnb. 
+* First, the `listing`. 
+* Then, the Airbnb `reviews`, which are linked to the `listings` through the `listing ID`.
+* Additionally, there are the Airbnb `hosts`, who are also connected to the listings table via the `host ID`. 
+* We also have an additional table, which we will upload, called `full_moon_dates`. With the help of this table, you will have the opportunity to examine how full moon phases affect Airbnb reviews.
+
+Previously, we have created [these tables](#snowflake-data-import)
 
 ![](img/28.png)
 
