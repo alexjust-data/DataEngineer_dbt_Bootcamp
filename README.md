@@ -15,7 +15,7 @@
   - [Models](#models)
     - [Common Table Expression (CTE)](#common-table-expression-cte)
     - [Creating our first model: Airbnb listings](#creating-our-first-model-airbnb-listings)
-    - [Materializations](#materializations)
+  - [Materializations](#materializations)
     - [Model Dependencies and dbt's ref tag](#model-dependencies-and-dbts-ref-tag)
     - [Table type materialization \& Project-level Materialization config](#table-type-materialization--project-level-materialization-config)
     - [Incremental materialization](#incremental-materialization)
@@ -772,6 +772,9 @@ Similar live here in the models folder and you can organize your models into sub
 │       └── src_listings.sql
 ```
 
+* `name AS listing_name`,
+* `price AS price_str`,
+
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano models/src/src_listings.sql
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/src/src_listings.sql 
@@ -922,12 +925,8 @@ Creating a new model in the `models/src/` folder called `src_hosts.sql`:
 ```
 
 
----
-video 41
 
----
-
-#### Materializations
+### Materializations
 
 * Understand how models can be connected
 * Understand the four built-in materializations
@@ -1620,3 +1619,6 @@ So that's it now. These are ephemeral models, right?
 07:27:52  Done. PASS=2 WARN=0 ERROR=1 SKIP=1 TOTAL=4
 
 ```
+
+
+6' Ephemeral materialization
