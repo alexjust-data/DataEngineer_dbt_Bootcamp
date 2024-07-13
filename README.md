@@ -631,15 +631,16 @@ packages:
 
 So here is the data flow we are going to build. 
 
-![](img/33.png)
-
 As you see in green, we have three input tables: `Costs, listings, and reviews`.   
 * We will import these input tables and make minor modifications in our first layer, the `src (source)` layer.  
 * We will then clean these tables and create our dimension tables `dim` and the `fct_reviews` fact table. 
 * Additionally, we will use an external table and send data to Snowflake via dbt. 
 * With the help of dbt, we will create a few so-called `mart_fullmoon_reviews` tables, which will be used by an executive dashboard. As we do this, we will also create a set of tests, which you can see here in the square.
 
-![](img/35.png)
+![](img/33.png)
+
+
+![](img/48.png)
 
 
 And let's go and start building our first three mortars, SSD hosts, associate listings and SSD reviews.
