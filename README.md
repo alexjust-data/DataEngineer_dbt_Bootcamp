@@ -1142,6 +1142,17 @@ So far, the only materialization we used is the view materialization, so the def
 * `RC_LISTINGS`, 
 * `SRC_REVIEWS`
 
+```sh
+├── models
+│   ├── dim
+│   │   ├── dim_hosts_cleansed.sql
+│   │   └── dim_listings_cleansed.sql
+│   └── src
+│       ├── src_hosts.sql
+│       ├── src_listings.sql
+│       └── src_reviews.sql
+```
+
 But first of all, let's be explicit about our default militarization. 
 
 So what I'd like to open how the `dbt_project.yml` file and come to the end.  The `dbt_project.yml` is the file where you can set subfolder and global configurations. I want to specify that my militarization is for you. I can add the new line and just saying `+materialized: view` in `dbt_project.yml`
@@ -1159,20 +1170,9 @@ models:
 * `+materialized: view` : This line is an added configuration setting for the models in the dbt_learn directory. +materialized is a dbt directive that specifies the materialization strategy for these models. 
 * `view` means that dbt will create a database view for each model in the dbt_learn directory. Views are virtual tables that are defined by a query but do not store data physically.
 
-In this case, you would want the sources `src_hosts`, `src_listings`, and `src_reviews` to be materialized as views because they involve very lightweight transformations and probably won't be accessed directly very often. 
+In this case, you would want the sources `src_hosts`, `src_listings`, and `src_reviews` to be materialized as views because they involve very transformations and probably won't be accessed directly very often. 
 
 However, for `dim_hosts_cleansed` and `dim_listings_cleanset`, which are already cleansed and stable, they will be accessed quite often. Therefore, it makes sense for these to be materialized differently, possibly as tables, to optimize performance for frequent queries.
-
-```sh
-├── models
-│   ├── dim
-│   │   ├── dim_hosts_cleansed.sql
-│   │   └── dim_listings_cleansed.sql
-│   └── src
-│       ├── src_hosts.sql
-│       ├── src_listings.sql
-│       └── src_reviews.sql
-```
 
 So I want to make sure that these configurations align with our performance estimates. So will come now and define it as:
 
