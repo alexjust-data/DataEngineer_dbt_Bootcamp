@@ -10,7 +10,7 @@
     - [Snowflake user creation](#snowflake-user-creation)
     - [Snowflake data import](#snowflake-data-import)
   - [dbt setup](#dbt-setup)
-  - [VSC extension : vscode-dbt-power-user](#vsc-extension--vscode-dbt-power-user)
+    - [VSC extension : vscode-dbt-power-user](#vsc-extension--vscode-dbt-power-user)
   - [Data Flow - Overview](#data-flow---overview)
   - [MODELS](#models)
     - [Common Table Expression (CTE)](#common-table-expression-cte)
@@ -592,7 +592,7 @@ my_new_project/
 (dbt_env) ➜  dbt_learn git:(main) ✗ rm -r models/example
 ```
 
-### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
+#### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
 
 ![](img/21.png)
 
