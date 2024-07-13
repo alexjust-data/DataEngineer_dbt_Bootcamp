@@ -1,5 +1,13 @@
 # [dbt™ (Data Build Tool) ](https://www.getdbt.com/)
 
+OBJECTIVES  
+* Data-maturity model
+* dbt and data architectures
+* Data warehouses, data lakes, and lakehouses
+* ETL and ELT procedures
+* dbt fundamentals
+* Analytics Engineering
+
 - [dbt™ (Data Build Tool) ](#dbt-data-build-tool-)
     - [Introduction](#introduction)
     - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
@@ -24,14 +32,6 @@
 
 ---
 ### Introduction
-
-OBJECTIVES  
-* Data-maturity model
-* dbt and data architectures
-* Data warehouses, data lakes, and lakehouses
-* ETL and ELT procedures
-* dbt fundamentals
-* Analytics Engineering
   
 ![](img/1.png)
 
