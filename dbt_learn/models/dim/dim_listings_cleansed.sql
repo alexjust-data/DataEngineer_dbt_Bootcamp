@@ -1,7 +1,13 @@
-WITH src_liting AS (
+-- models/dim/dim_listings_cleansed.sql
+{{
+  config(
+    materialized = 'view'
+    )
+}} 
+WITH src_listings AS (
     SELECT * FROM {{ ref('src_listings') }}
 )
-SELECT
+SELECT 
   listing_id,
   listing_name,
   room_type,
