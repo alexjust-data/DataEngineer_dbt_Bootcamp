@@ -640,7 +640,8 @@ As you see in green, we have three input tables: `Costs, listings, and reviews`.
 ![](img/33.png)
 
 
-![](img/48.png)
+
+![](img/35.png)
 
 
 And let's go and start building our first three mortars, SSD hosts, associate listings and SSD reviews.
