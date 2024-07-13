@@ -1,17 +1,5 @@
 > **[dbt™ (Data Build Tool) ](https://www.getdbt.com/)**
 
-OBJECTIVES  
-* Data-maturity model
-* dbt and data architectures
-* Data warehouses, data lakes, and lakehouses
-* ETL and ELT procedures
-* dbt fundamentals
-* Analytics Engineering
-
-  - [Introduction](#introduction)
-  - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
-  - [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
-  - [dbt™ Overview](#dbt-overview)
 - [Introduction](#introduction)
 - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
 - [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
@@ -35,6 +23,14 @@ OBJECTIVES
 
 ---
 ### Introduction
+
+OBJECTIVES  
+* Data-maturity model
+* dbt and data architectures
+* Data warehouses, data lakes, and lakehouses
+* ETL and ELT procedures
+* dbt fundamentals
+* Analytics Engineering
   
 ![](img/1.png)
 
