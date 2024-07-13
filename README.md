@@ -3,7 +3,7 @@
 
 1. [Introduction](#introduction)  
 2. [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)  
-3. [slowly changing dimensions SCD]()  
+3. [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)  
 4. [dbt™ Overview]()
 5. [PROJECT OVERVIEW (Analytics Engineering with Airbnb)]()
    1. [resources]()
