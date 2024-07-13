@@ -21,10 +21,10 @@
     - [Incremental materialization](#incremental-materialization)
     - [Ephemeral materialization](#ephemeral-materialization)
   - [Seeds and Sources](#seeds-and-sources)
-  - [Sources](#sources)
-  - [Sources Freshness](#sources-freshness)
+    - [Seeds](#seeds)
+    - [Sources](#sources)
+    - [Sources Freshness](#sources-freshness)
   - [Snapshots](#snapshots)
-    - [Snapshots Overview](#snapshots-overview)
 
 ---
 ## Introduction
@@ -1846,7 +1846,8 @@ LEARNING OBJECTIVES
 * Understand source-freshness
 * Integrate sources into our project
 
-SOURCES AND SEEDS OVERVIEW
+**Seeds and Sources OVERVIEW**
+
 * Seeds are local files that you upload to the data warehouse from dbt
 * Sources is an abstraction layer on the top of your input tables
 * Source freshness can be checked automatically
@@ -1858,7 +1859,7 @@ When you do modeling in DBT, your input data can come from two sources.
 
 If the data is already in the data warehouse, it is called a source in DBT. DBT provides tools for defining seeds and sources and ensuring that your sources are up-to-date and alerting you to stale or outdated sources. Let's see how this works in practice.
 
----
+#### Seeds
 
 Seeds are smaller datasets that live in the seeds folder as CSV files. First, ensure that your dbt_project.yml file specifies the seeds folder correctly. 
 
@@ -1977,7 +1978,7 @@ Now we are ready to implement our fourth layer, which will be our Mart layer. Th
 
 ![](/img/65.png)
 
-### Sources
+#### Sources
 
 Let's convert our raw tables into sources. Sources are an abstraction on top of your input data, providing extra features like data freshness checks. Additionally, as you will see later in the documentation, sources appear as special entities. This process will not change the actual behavior of DBT or the queries it executes, but it will make our project more structured.
 
@@ -2093,7 +2094,7 @@ I will not execute this with dbt run, because we have another command just for c
 19:26:06  
 ```
 
-### Sources Freshness
+#### Sources Freshness
 
 In a production setting, you probably want to have some kind of monitoring in place to ensure that your data ingestion works on schedule and correctly. One way to do this is to check the last timestamp of the ingested data. If the ingested data is somewhat stale, it should trigger a warning, and if it is significantly delayed, it should trigger an error. DBT has a built-in functionality called source freshness to help with this.
 
@@ -2156,7 +2157,7 @@ LEARNING OBJECTIVES
 * Understand snapshot strategies
 * Learn how to create snapshots on top of our listings and hosts models
 
-#### Snapshots Overview
+**Snapshots Overview**
 
 Let's take a look at how snapshots are implemented in DBT. First, a quick recap of how Slowly Changing Dimensions work. This demo will focus on Type II Slowly Changing Dimensions.
 
