@@ -686,11 +686,15 @@ Objectives:
 
 
 * Models are the basic building block of your business logic
-*  Materialized as tables, views, etc...
-*  They live in SQL files in the `models` folder
-*  Models can reference each other and use templates and macros
+* Materialized as tables, views, etc...
+* They live in SQL files in the `models` folder
+* Models can reference each other and use templates and macros
   
-Models are the basic building blocks of your business logic and the foundational elements of a dbt project. You can think of models as SQL queries that materialize as tables or views, but there is much more to them. For now, what you need to know about models is that they are stored as SQL files in the models folder. They are not just simple SQL SELECT statements; they can include additional features. For example, a model can reference other models, allowing dbt to understand the semantic dependencies between them. You can also use different scripts and macros within your models. Now, let's see how they work in action.
+Models are the basic building blocks of your business logic and the foundational elements of a dbt project.  
+You can think of models as SQL queries that materialize as tables or views, but there is much more to them.  
+For now, what you need to know about models is that they are stored as SQL files in the models folder. 
+
+They are not just simple SQL SELECT statements; they can include additional features. For example, a model can reference other models, allowing dbt to understand the semantic dependencies between them. You can also use different scripts and macros within your models. Now, let's see how they work in action.
 
 #### Common Table Expression (CTE)
 
