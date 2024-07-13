@@ -22,7 +22,7 @@
     - [Ephemeral materialization](#ephemeral-materialization)
   - [Seeds and Sources](#seeds-and-sources)
   - [Sources](#sources)
-    - [Source Freshness](#source-freshness)
+  - [Sources Freshness](#sources-freshness)
   - [Snapshots](#snapshots)
     - [Snapshots Overview](#snapshots-overview)
 
@@ -2093,7 +2093,7 @@ I will not execute this with dbt run, because we have another command just for c
 19:26:06  
 ```
 
-#### Source Freshness
+### Sources Freshness
 
 In a production setting, you probably want to have some kind of monitoring in place to ensure that your data ingestion works on schedule and correctly. One way to do this is to check the last timestamp of the ingested data. If the ingested data is somewhat stale, it should trigger a warning, and if it is significantly delayed, it should trigger an error. DBT has a built-in functionality called source freshness to help with this.
 
