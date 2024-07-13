@@ -1,5 +1,4 @@
 # [dbt™ (Data Build Tool) ](https://www.getdbt.com/)
----
 
 - [dbt™ (Data Build Tool) ](#dbt-data-build-tool-)
     - [Introduction](#introduction)
