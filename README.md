@@ -1,4 +1,4 @@
-# [dbt™ (Data Build Tool) ](https://www.getdbt.com/)
+> **[dbt™ (Data Build Tool) ](https://www.getdbt.com/)**
 
 OBJECTIVES  
 * Data-maturity model
@@ -8,27 +8,30 @@ OBJECTIVES
 * dbt fundamentals
 * Analytics Engineering
 
-- [dbt™ (Data Build Tool) ](#dbt-data-build-tool-)
-    - [Introduction](#introduction)
-    - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
-    - [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
-    - [dbt™ Overview](#dbt-overview)
-  - [PROJECT OVERVIEW (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
-    - [resources](#resources)
-    - [snowflake 👉🏻 link](#snowflake--link)
-      - [Snowflake user creation](#snowflake-user-creation)
-      - [Snowflake data import](#snowflake-data-import)
-    - [dbt setup](#dbt-setup)
-    - [VSC extension : vscode-dbt-power-user](#vsc-extension--vscode-dbt-power-user)
-      - [Data Flow - Overview](#data-flow---overview)
-    - [MODELS](#models)
-      - [Common Table Expression (CTE)](#common-table-expression-cte)
-      - [Creating our first model: Airbnb listings](#creating-our-first-model-airbnb-listings)
+  - [Introduction](#introduction)
+  - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
+  - [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
+  - [dbt™ Overview](#dbt-overview)
+- [Introduction](#introduction)
+- [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
+- [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
+- [dbt™ Overview](#dbt-overview)
+- [PROJECT OVERVIEW (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
+  - [resources](#resources)
+  - [snowflake 👉🏻 link](#snowflake--link)
+    - [Snowflake user creation](#snowflake-user-creation)
+    - [Snowflake data import](#snowflake-data-import)
+  - [dbt setup](#dbt-setup)
+  - [VSC extension : vscode-dbt-power-user](#vsc-extension--vscode-dbt-power-user)
+  - [Data Flow - Overview](#data-flow---overview)
+  - [MODELS](#models)
+    - [Common Table Expression (CTE)](#common-table-expression-cte)
+    - [Creating our first model: Airbnb listings](#creating-our-first-model-airbnb-listings)
     - [Materializations](#materializations)
-      - [Model Dependencies and dbt's ref tag](#model-dependencies-and-dbts-ref-tag)
-      - [Table type materialization \& Project-level Materialization config](#table-type-materialization--project-level-materialization-config)
-      - [Incremental materialization](#incremental-materialization)
-      - [Ephemeral materialization](#ephemeral-materialization)
+    - [Model Dependencies and dbt's ref tag](#model-dependencies-and-dbts-ref-tag)
+    - [Table type materialization \& Project-level Materialization config](#table-type-materialization--project-level-materialization-config)
+    - [Incremental materialization](#incremental-materialization)
+    - [Ephemeral materialization](#ephemeral-materialization)
 
 ---
 ### Introduction
@@ -139,7 +142,7 @@ To bring it home: With DBT, you will build production-grade data pipelines. What
 
 Since DBT interpolates the locations of all the models it generates, it allows you to create different environments like development or production, and you can effortlessly switch between the two. In terms of performance, DBT will take your models (i.e., SQL SELECT statements), understand the dependencies between them, craft a dependency order, and parallelize the way your models are built. And it will run arbitrary subgraph.
 
-## PROJECT OVERVIEW (Analytics Engineering with Airbnb)
+### PROJECT OVERVIEW (Analytics Engineering with Airbnb)
 
 You will act as if you were an analytics engineer at Airbnb. You’re responsible for all the data flow in Berlin, Germany. This role comes with a lot of responsibilities, so you will need to import your data into a data warehouse and then make this data available for tools like DBT. Then, you will need to clean the data, perform several transformations on it, and export it to BI tools. 
 
@@ -191,13 +194,13 @@ These are probably the basic requirements. As you progress in building out your 
 
 These are some of the main requirements of a data analytics tool, and DBT is great for managing these.
  
-### resources
+#### resources
 
 * [single markdown file](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero/blob/main/_course_resources/course-resources.md)
 * [dbt project's GitHub page](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero)
 
 
-### snowflake 👉🏻 [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
+#### snowflake 👉🏻 [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
 
 * SnoeFow edition : Standard
 * Provider : AWS Web Service
@@ -214,7 +217,7 @@ Snowflake :
 
 ![](img/18.png)
 
-#### Snowflake user creation
+##### Snowflake user creation
 
 Copy these SQL statements into a Snowflake Worksheet, select all and execute them (i.e. pressing the play button).
 
@@ -259,7 +262,7 @@ GRANT ALL ON FUTURE TABLES IN SCHEMA AIRBNB.RAW to ROLE TRANSFORM;
 
 Select all and press the play button or pest control, enter.
 
-#### Snowflake data import
+##### Snowflake data import
 
 Copy these SQL statements into a Snowflake Worksheet, select all and execute them (i.e. pressing the play button).
 
@@ -362,7 +365,7 @@ Python 3.11.6
 (dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ pip install dbt-snowflake==1.7.1
 ```
 
-### dbt setup
+#### dbt setup
 
 First, you will need to create a DBT configuration folder. The idea is that you got to have a dot DB folder in your home folder.
 
@@ -593,7 +596,7 @@ my_new_project/
 (dbt_env) ➜  dbt_learn git:(main) ✗ rm -r models/example
 ```
 
-### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
+#### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
 
 ![](img/21.png)
 
@@ -649,7 +652,7 @@ So here is the data flow we are going to build. As you see in green, we have thr
 
 And let's go and start building our first three mortars, SSD hosts, associate listings and SSD reviews.
 
-### MODELS
+#### MODELS
 
 * Understand the data flow of our project
 * Understand the concept of Models in dbt
@@ -668,7 +671,7 @@ And let's go and start building our first three mortars, SSD hosts, associate li
   
 Models are the basic building blocks of your business logic and the foundational elements of a dbt project. You can think of models as SQL queries that materialize as tables or views, but there is much more to them. For now, what you need to know about models is that they are stored as SQL files in the models folder. They are not just simple SQL SELECT statements; they can include additional features. For example, a model can reference other models, allowing dbt to understand the semantic dependencies between them. You can also use different scripts and macros within your models. Now, let's see how they work in action.
 
-#### Common Table Expression (CTE)
+##### Common Table Expression (CTE)
 
 CTEs help us write readable and maintainable SQL code. By definition, they are temporary, named result sets that exist only for the duration of a single query. CTEs are great because the result remains in memory during the execution of the query (e.g., SELECT, INSERT, UPDATE, DELETE, or MERGE). The syntax of a CTE looks something like this:
 
@@ -716,7 +719,7 @@ Although a CTE has similar functionality to a view, CTEs are not stored in metad
 
 Lastly, CTEs can also be defined in functions, stored procedures, triggers, or even views. You will use CTEs many times throughout the course, so you will see plenty of examples soon.
 
-#### Creating our first model: Airbnb listings
+##### Creating our first model: Airbnb listings
 
 ![](img/36.png)
 
@@ -927,7 +930,7 @@ video 41
 
 ---
 
-### Materializations
+##### Materializations
 
 * Understand how models can be connected
 * Understand the four built-in materializations
@@ -963,7 +966,7 @@ Finally, if you need an intermediate step between models without publishing it t
 
 So we will see an example to all of those in the upcoming lessons.
 
-#### Model Dependencies and dbt's ref tag
+##### Model Dependencies and dbt's ref tag
 
 We are going to build out a new layer, the core layer, core layer comes with a bunch of chambers. From `src_listing` we are going to create `dim_lisitng_cleansed`, etc
 
@@ -1125,7 +1128,7 @@ Explanation:
 
 ---
 
-#### Table type materialization & Project-level Materialization config
+##### Table type materialization & Project-level Materialization config
 
 
 So far, the only materialization we used is the view materialization, so the default. So we have now these five views in Snowflake.  So we have now these five views in Snowflake 
@@ -1216,7 +1219,7 @@ and look in the snowflake:
 
 ![](/img/50.png)
 
-#### Incremental materialization
+##### Incremental materialization
 
 Here we have associate reviews, which you are already familiar with, which has a listing idea, review  dates, reviewer name, reviewer tests and also the sentiment.
 
@@ -1416,7 +1419,7 @@ Now Every incremental table has been rebuilt.
 Now, I won't see any change here, of course, because this will bring me to the same state. However, if you ever change the schema of a source file or table, performing a full refresh will recreate the incremental or table models from scratch. This ensures that all schema changes are properly reflected in your models.
 
 
-#### Ephemeral materialization
+##### Ephemeral materialization
 
 
 The type of materialization for all of the tables we've created so far is shown in the diagram. We still need to create the dim_listings_with_hosts, which will be our final dimension table, so we will do that now.
