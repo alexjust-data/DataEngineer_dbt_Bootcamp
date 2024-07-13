@@ -1229,9 +1229,9 @@ and look in the snowflake:
 
 #### Incremental materialization
 
-Here we have associate reviews, which you are already familiar with, which has a listing idea, review  dates, reviewer name, reviewer tests and also the sentiment.
+Here we have associate **reviews**, which you are already familiar with, which has a `listing idea`, `review  dates`, `reviewer name`, `reviewer tests` and also the `sentiment`.
 
-![](/img/51.png)
+![](/img/60.png)
 
 Now we are performing our two steps in the following order:
 * Cleansing: We ensure that only reviews containing actual text are included in our effective table.
