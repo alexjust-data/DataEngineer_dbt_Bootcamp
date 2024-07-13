@@ -1192,10 +1192,8 @@ By adding these lines, you are differentiating the materialization between diffe
 * `Views` for **Lightweight Models (src)**: The `src_hosts`, `src_listings`, and `src_reviews` models are materialized as views because they involve very lightweight transformations and probably won't be accessed directly very often.
 
 * `Tables` for *Cleansed Models (dim)**: The `dim_hosts_cleansed` and `dim_listings_cleansed` models, which are already cleansed and stable, will be materialized as tables because they will be accessed frequently. Materializing them as tables optimizes the performance of frequent queries.
-
-* `dim` : Specifies another subsection within dbt_learn. The key dim corresponds to specific models within the dim subdirectory in dbt_learn.
-
-* `+materialized: table` : This line is an added configuration for the models in the dim subdirectory within the dbt_learn directory.
+  * `dim` : Specifies another subsection within dbt_learn. The key dim corresponds to specific models within the dim subdirectory in dbt_learn.
+  * `+materialized: table` : This line is an added configuration for the models in the dim subdirectory within the dbt_learn directory.
 table means that dbt will create a physical table for each model in the dim subdirectory. Tables store data physically, which generally improves the performance of frequent queries.
 
 ```sh
