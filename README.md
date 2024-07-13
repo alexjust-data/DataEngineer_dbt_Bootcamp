@@ -386,7 +386,6 @@ You have the information here:
 -- -- Create our database and schemas
 -- CREATE DATABASE IF NOT EXISTS AIRBNB;
 -- CREATE SCHEMA IF NOT EXISTS AIRBNB.RAW;
-
 ```
 `dbt_learn` is the name of my project.
 
@@ -433,22 +432,19 @@ You have the information here:
 As you see here, it says we have now a DBT profiles YAML created and this stores `.dbt/profiles.yml`.
 
 ```sh
-(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ ls -la
-total 56
-drwxr-xr-x@  9 alex  staff    288 Jul  8 19:19 .
-drwx------@ 28 alex  staff    896 Jul  8 18:42 ..
-drwxr-xr-x  12 alex  staff    384 Jul  7 10:41 .git
--rw-r--r--   1 alex  staff    150 Jul  8 19:20 .gitignore
--rw-r--r--   1 alex  staff  23479 Jul  8 18:35 README.md
-drwxr-xr-x   6 alex  staff    192 Jul  8 18:57 dbt_env
-drwxr-xr-x  11 alex  staff    352 Jul  8 19:14 dbt_learn
-drwxr-xr-x  21 alex  staff    672 Jul  8 18:47 img
-drwxr-xr-x   3 alex  staff     96 Jul  8 19:15 logs
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) tree -L 1
+.
+├── README.md
+├── dbt_env
+├── dbt_learn
+├── img
+└── logs
 ```
 
 `dbt debug` Makes a connection to your database, and it also checks some of the configuration files and it just, so let's execute DB to debug.
 
 ```sh
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) cd dbt_learn
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt debug
       17:34:25  Running with dbt=1.7.17
       17:34:25  dbt version: 1.7.17
@@ -498,23 +494,20 @@ drwxr-xr-x   3 alex  staff     96 Jul  8 19:15 logs
 And here you will see that we have several fathers and also five in your beautiful daughter, which is quite a DBT project.
 
 ```sh
-(dbt_env) ➜  dbt_learn git:(main) ✗ ls -la
-total 24
-drwxr-xr-x  12 alex  staff   384 Jul  8 19:34 .
-drwxr-xr-x@  9 alex  staff   288 Jul  8 19:19 ..
--rw-r--r--   1 alex  staff    29 Jul  8 19:14 .gitignore
--rw-r--r--   1 alex  staff   571 Jul  8 19:14 README.md
-drwxr-xr-x   3 alex  staff    96 Jul  8 19:14 analyses
--rw-r--r--   1 alex  staff  1241 Jul  8 19:19 dbt_project.yml
-drwxr-xr-x   3 alex  staff    96 Jul  8 19:34 logs
-drwxr-xr-x   3 alex  staff    96 Jul  8 19:14 macros
-drwxr-xr-x   3 alex  staff    96 Jul  8 19:14 models
-drwxr-xr-x   3 alex  staff    96 Jul  8 19:14 seeds
-drwxr-xr-x   3 alex  staff    96 Jul  8 19:14 snapshots
-drwxr-xr-x   3 alex  staff    96 Jul  8 19:14 tests
+(dbt_env) ➜  dbt_learn git:(main) tree -L 1   
+.
+├── README.md
+├── analyses
+├── dbt_project.yml
+├── logs
+├── macros
+├── models
+├── seeds
+├── snapshots
+└── tests
 ```
 
-``dbt_project.yml` is our global configuration for this project. So these are standard project level configurations and here are our model level configuration.
+`dbt_project.yml` is our global configuration for this project. So these are standard project level configurations and here are our model level configuration.
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat dbt_project.yml 
