@@ -1,15 +1,27 @@
 # [dbt™ (Data Build Tool) ](https://www.getdbt.com/)
 ---
 
-1. [Introduction](#introduction)  
-2. [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)  
-3. [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)  
-4. [dbt™ Overview]()
-5. [PROJECT OVERVIEW (Analytics Engineering with Airbnb)]()
-   1. [resources]()
-   2. [snowflake]()
-   3. [dbt setup]()
-   4. [VSC extension]() : `vscode-dbt-power-user`
+- [dbt™ (Data Build Tool) ](#dbt-data-build-tool-)
+    - [Introduction](#introduction)
+    - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
+    - [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
+    - [dbt™ Overview](#dbt-overview)
+  - [PROJECT OVERVIEW (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
+    - [resources](#resources)
+    - [snowflake 👉🏻 link](#snowflake--link)
+      - [Snowflake user creation](#snowflake-user-creation)
+      - [Snowflake data import](#snowflake-data-import)
+    - [dbt setup](#dbt-setup)
+    - [VSC extension : vscode-dbt-power-user](#vsc-extension--vscode-dbt-power-user)
+      - [Data Flow - Overview](#data-flow---overview)
+    - [MODELS](#models)
+      - [Common Table Expression (CTE)](#common-table-expression-cte)
+      - [Creating our first model: Airbnb listings](#creating-our-first-model-airbnb-listings)
+    - [Materializations](#materializations)
+      - [Model Dependencies and dbt's ref tag](#model-dependencies-and-dbts-ref-tag)
+      - [Table type materialization \& Project-level Materialization config](#table-type-materialization--project-level-materialization-config)
+      - [Incremental materialization](#incremental-materialization)
+      - [Ephemeral materialization](#ephemeral-materialization)
 
 ---
 ### Introduction
