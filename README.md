@@ -1,8 +1,8 @@
 # [dbt™ (Data Build Tool) ](https://www.getdbt.com/)
 ---
 
-1. [Introduction]()  
-2. [Modern data Stack in the AI Era]()  
+1. [Introduction](#introduction)  
+2. [Modern data Stack in the AI Era](modern-data-stack-in-the-ai-era)  
 3. [slowly changing dimensions SCD]()  
 4. [dbt™ Overview]()
 5. [PROJECT OVERVIEW (Analytics Engineering with Airbnb)]()
@@ -1424,4 +1424,188 @@ By using views for dim_listings_cleansed and dim_hosts_cleansed, we can simplify
 * `Stable Tables`: The fct_reviews and dim_listings_with_hosts are considered stable because they combine all necessary data and are accessed frequently for analytics.
 * `Using Views`: By materializing dim_listings_cleansed and dim_hosts_cleansed as views, we avoid creating unnecessary tables and keep our data processing pipeline efficient.
   
-This improved explanation clarifies the purpose and benefits of using ephemeral materialization and highlights the key points in the data processing workflow.
+
+We still need to create the dimension table `dim_listings_with_hosts`, which will be our final dimension table. So, we will do that. If you think about it from the perspective of an Airbnb analytics engineer, after we are done with the cleansed listings and hosts, we will have two main tables here:
+
+1. `fct_reviews`
+2. `dim_listings_with_hosts`
+
+These two tables will be our final tables in the core layer, which we will use repeatedly for analytics. Since `dim_listings_cleansed` and `dim_hosts_cleansed` are intermediate views needed only for reading and processing, there is no need to convert them into permanent tables. These views are used only during the creation of our final table `dim_listings_with_hosts`.
+
+In summary, we will keep `dim_listings_with_hosts` and `fct_reviews` as our final tables and we don't need to create additional tables for `dim_listings_cleansed` and `dim_hosts_cleansed`. These can remain as views that get converted into CTEs (Common Table Expressions) during integration into the final tables.
+
+So, this is what we will do: we will create the final table `dim_listings_with_hosts`.
+
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) touch models/dim/dim_listings_w_hosts.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano models/dim/dim_listings_w_hosts.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_w_hosts.sql
+  WITH
+  l AS (
+      SELECT
+          *
+      FROM
+          {{ ref('dim_listings_cleansed') }}
+  ),
+  h AS (
+      SELECT * 
+      FROM {{ ref('dim_hosts_cleansed') }}
+  )
+
+  SELECT 
+      l.listing_id,
+      l.listing_name,
+      l.room_type,
+      l.minimum_nights,
+      l.price,
+      l.host_id,
+      h.host_name,
+      h.is_superhost as host_is_superhost,
+      l.created_at,
+      GREATEST(l.updated_at, h.updated_at) as updated_at
+  FROM l
+  LEFT JOIN h ON (h.host_id = l.host_id)
+```
+
+This script creates a CTE (Common Table Expression) for our listings and hosts.
+* We reference the cleansed listings and hosts tables (`dim_listings_cleansed` and `dim_hosts_cleansed`) and read every column from these two tables.
+* We also rename the column `is_superhost` to `host_is_superhost`.
+* For the `updated_at` field, we ensure we keep the most recent update from either the listing or the host.
+
+This is a simple and effective way to combine the listings and hosts into our final dimension table `dim_listings_with_hosts`.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+  17:08:06  Running with dbt=1.7.17
+  17:08:06  Registered adapter: snowflake=1.7.1
+  17:08:06  Found 7 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  17:08:06  
+  17:08:17  Concurrency: 1 threads (target='dev')
+  17:08:17  
+  17:08:17  1 of 7 START sql view model DEV.src_hosts ...................................... [RUN]
+  17:08:18  1 of 7 OK created sql view model DEV.src_hosts ................................. [SUCCESS 1 in 1.77s]
+  17:08:18  2 of 7 START sql view model DEV.src_listings ................................... [RUN]
+  17:08:20  2 of 7 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.40s]
+  17:08:20  3 of 7 START sql view model DEV.src_reviews .................................... [RUN]
+  17:08:21  3 of 7 OK created sql view model DEV.src_reviews ............................... [SUCCESS 1 in 1.63s]
+  17:08:21  4 of 7 START sql table model DEV.dim_hosts_cleansed ............................ [RUN]
+  17:08:24  4 of 7 OK created sql table model DEV.dim_hosts_cleansed ....................... [SUCCESS 1 in 2.97s]
+  17:08:24  5 of 7 START sql table model DEV.dim_listings_cleansed ......................... [RUN]
+  17:08:27  5 of 7 OK created sql table model DEV.dim_listings_cleansed .................... [SUCCESS 1 in 2.39s]
+  17:08:27  6 of 7 START sql incremental model DEV.fct_reviews ............................. [RUN]
+  17:08:31  6 of 7 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 0 in 4.11s]
+  17:08:31  7 of 7 START sql table model DEV.dim_listings_w_hosts .......................... [RUN]
+  17:08:33  7 of 7 OK created sql table model DEV.dim_listings_w_hosts ..................... [SUCCESS 1 in 1.98s]
+  17:08:33  
+  17:08:33  Finished running 3 view models, 3 table models, 1 incremental model in 0 hours 0 minutes and 26.77 seconds (26.77s).
+  17:08:33  
+  17:08:33  Completed successfully
+  17:08:33  
+  17:08:33  Done. PASS=7 WARN=0 ERROR=0 SKIP=0 TOTAL=7
+```
+
+![](/img/57.png)
+
+Now that we are done with our basic modeling, let's clean up the materialization settings.
+
+First, we will fix the project-level materialization. In the source layer, as discussed, we don't need any tables to be materialized permanently. Therefore, we will set the materialization to `ephemeral` for the source layer.
+
+Here are the materialization settings in the `dbt_project.yml` file:
+
+```yaml
+models:
+  dbt_learn:
+    +materialized: view
+    dim:
+      +materialized: table
+    src:
+      +materialized: ephemeral
+```
+
+When I execute `dbt run` now, every model in the source layer will be converted to CTEs and won't be recreated as views. Here you can see the process:
+
+- The development models and the dimension tables will be recreated.
+- No materialization changes will occur for the source models, even though they are still part of the project.
+
+Here is an example output of running `dbt run`:
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run                      
+  06:59:46  Running with dbt=1.7.17
+  06:59:46  Registered adapter: snowflake=1.7.1
+  06:59:47  Found 7 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  06:59:47  
+  06:59:52  Concurrency: 1 threads (target='dev')
+  06:59:52  
+  06:59:52  1 of 4 START sql table model DEV.dim_hosts_cleansed ............................ [RUN]
+  06:59:55  1 of 4 OK created sql table model DEV.dim_hosts_cleansed ....................... [SUCCESS 1 in 2.63s]
+  06:59:55  2 of 4 START sql table model DEV.dim_listings_cleansed ......................... [RUN]
+  06:59:57  2 of 4 OK created sql table model DEV.dim_listings_cleansed .................... [SUCCESS 1 in 2.31s]
+  06:59:57  3 of 4 START sql incremental model DEV.fct_reviews ............................. [RUN]
+  07:00:01  3 of 4 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 0 in 3.71s]
+  07:00:01  4 of 4 START sql table model DEV.dim_listings_w_hosts .......................... [RUN]
+  07:00:03  4 of 4 OK created sql table model DEV.dim_listings_w_hosts ..................... [SUCCESS 1 in 2.32s]
+  07:00:03  
+  07:00:03  Finished running 3 table models, 1 incremental model in 0 hours 0 minutes and 16.83 seconds (16.83s).
+  07:00:03  
+  07:00:03  Completed successfully
+  07:00:03  
+  07:00:03  Done. PASS=4 WARN=0 ERROR=0 SKIP=0 TOTAL=4
+```
+
+You can see, when I executed dbt run:
+```sh
+1 of 4 START sql table model DEV.dim_hosts_cleansed
+1 of 4 OK created sql table model DEV.dim_hosts_cleansed
+2 of 4 START sql table model DEV.dim_listings_cleansed
+2 of 4 OK created sql table model DEV.dim_listings_cleansed
+3 of 4 START sql incremental model DEV.fct_reviews
+3 of 4 OK created sql incremental model DEV.fct_reviews
+4 of 4 START sql table model DEV.dim_listings_w_hosts
+4 of 4 OK created sql table model DEV.dim_listings_w_hosts
+```
+
+Then every model in the source layer will be converted to CTEs and won't be recreated as views. The development models and the dimension tables will be recreated, right? And that's very much it. No materialization changes will occur for the source models, even though they are still part of the project.
+
+If you want to see what happens: Well, first of all, you can go into Snowflake and take a look at the views. So if I refresh, And go to views: I will see that, hey, I still have these views, even though now they should be materialized as ephemeral models. 
+
+![](/img/58.png)
+
+The reason for this is that dbt will not automatically drop views or tables in these cases. So you need to do it yourself. Let's go ahead and drop these views. Here we go. Now, these views are dropped. So if I come back and execute dbt run again, we will see that these views will not be recreated.
+
+![](/img/59.png)
+
+So here we go. Refresh, no views, right?
+
+So that's it now. These are ephemeral models, right?
+
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+07:27:43  Running with dbt=1.7.17
+07:27:43  Registered adapter: snowflake=1.7.1
+07:27:43  Found 7 models, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+07:27:43  
+07:27:46  Concurrency: 1 threads (target='dev')
+07:27:46  
+07:27:46  1 of 4 START sql table model DEV.dim_hosts_cleansed ............................ [RUN]
+07:27:48  1 of 4 OK created sql table model DEV.dim_hosts_cleansed ....................... [SUCCESS 1 in 1.96s]
+07:27:48  2 of 4 START sql table model DEV.dim_listings_cleansed ......................... [RUN]
+07:27:49  2 of 4 ERROR creating sql table model DEV.dim_listings_cleansed ................ [ERROR in 1.15s]
+07:27:49  3 of 4 START sql incremental model DEV.fct_reviews ............................. [RUN]
+07:27:52  3 of 4 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 0 in 3.36s]
+07:27:52  4 of 4 SKIP relation DEV.dim_listings_w_hosts .................................. [SKIP]
+07:27:52  
+07:27:52  Finished running 3 table models, 1 incremental model in 0 hours 0 minutes and 9.20 seconds (9.20s).
+07:27:52  
+07:27:52  Completed with 1 error and 0 warnings:
+07:27:52  
+07:27:52    Database Error in model dim_listings_cleansed (models/dim/dim_listings_cleansed.sql)
+  002003 (42S02): SQL compilation error:
+  Object 'SRC_LISTINGS' does not exist or not authorized.
+  compiled Code at target/run/dbt_learn/models/dim/dim_listings_cleansed.sql
+07:27:52  
+07:27:52  Done. PASS=2 WARN=0 ERROR=1 SKIP=1 TOTAL=4
+
+```
