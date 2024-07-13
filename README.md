@@ -1189,9 +1189,9 @@ models:
 
 By adding these lines, you are differentiating the materialization between different types of models in your project:
 
-Views for Lightweight Models (src): The src_hosts, src_listings, and src_reviews models are materialized as views because they involve very lightweight transformations and probably won't be accessed directly very often.
+* `Views` for **Lightweight Models (src)**: The `src_hosts`, `src_listings`, and `src_reviews` models are materialized as views because they involve very lightweight transformations and probably won't be accessed directly very often.
 
-Tables for Cleansed Models (dim): The dim_hosts_cleansed and dim_listings_cleansed models, which are already cleansed and stable, will be materialized as tables because they will be accessed frequently. Materializing them as tables optimizes the performance of frequent queries.
+* `Tables` for *Cleansed Models (dim)**: The `dim_hosts_cleansed` and `dim_listings_cleansed` models, which are already cleansed and stable, will be materialized as tables because they will be accessed frequently. Materializing them as tables optimizes the performance of frequent queries.
 
 * `dim` : Specifies another subsection within dbt_learn. The key dim corresponds to specific models within the dim subdirectory in dbt_learn.
 
@@ -1229,13 +1229,15 @@ and look in the snowflake:
 
 #### Incremental materialization
 
+> In the context of dbt (Data Build Tool), "incremental" refers to a type of materialization that allows updating only a part of the table instead of rebuilding the entire table from scratch every time the model is run. This approach is especially useful for large volumes of data, as it reduces processing time and computational load.
+
 Here we have associate **reviews**, which you are already familiar with, which has a `listing idea`, `review  dates`, `reviewer name`, `reviewer tests` and also the `sentiment`.
 
 ![](/img/60.png)
 
 Now we are performing our two steps in the following order:
-* Cleansing: We ensure that only reviews containing actual text are included in our effective table.
-* Incremental Updates: We make sure that these reviews are updated incrementally rather than being recreated during each dbt run.
+1. Cleansing: We ensure that only reviews containing actual text are included in our effective table.
+2. Incremental Updates: We make sure that these reviews are updated incrementally rather than being recreated during each dbt run.
 
 
 ```sh
@@ -1243,7 +1245,7 @@ Now we are performing our two steps in the following order:
 (dbt_env) ➜  dbt_learn git:(main) ✗ touch models/fct/fct_reviews.sql
 ```
 
-OK, so first, let's create a standard table without any increment.
+So first, let's create a standard table **without any increment**.
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/fct/fct_reviews.sql
@@ -1254,7 +1256,9 @@ WITH src_reviews AS (
 SELECT * FROM src_reviews
 WHERE review_text is not null%  
 ```
-Now, we want to change this to use incremental materialization. To do this, we will use Jinja syntax in dbt to configure our model for incremental updates. Here is the configuration:
+Now, we want to change this **to use incremental materialization**.  
+To do this, we will use `Jinja` syntax in dbt to configure our model for incremental updates.  
+Here is the configuration:
 
 ```sh
 {{
@@ -1270,24 +1274,30 @@ SELECT * FROM src_reviews
 WHERE review_text is not null
 ```
 
-`Config`uration Block:
+Configuration block:
 * `materialized = 'incremental'`: This setting configures the model to use incremental materialization. In dbt, incremental models only process and add new or updated data since the last run, rather than rebuilding the entire table. This is useful for large datasets where full refreshes are time-consuming and resource-intensive.
 * `on_schema_change='fail'`: This setting specifies the action dbt should take if there is a change in the schema of the source table. Setting this to 'fail' means that the incremental model will fail if there is a schema change detected in the source data. This is a safety measure to prevent unexpected issues caused by schema changes.
 
-Up until now, all views and tables were recreated every time we executed `dbt run`. However, with incremental materialization, we maintain a stable table (fct_reviews) that is updated incrementally. If there is a schema change upstream, we need to be aware of it and react accordingly. By setting on_schema_change to 'fail', we ensure that any unexpected schema changes will cause the model to fail, prompting us to address the issue before proceeding.
+Up until now, all views and tables were recreated every time we executed `dbt run`. However, with incremental materialization, we maintain a stable table (`fct_reviews`) that is updated incrementally. 
 
-But I also need to tell DVT how to increment. I need to tell DVT, what are the new records right? How it knows from record that it's new are not.  And here I can go and simply create a jinjar if statements for this. 
+If there is a schema change upstream, we need to be aware of it and react accordingly.  
+By setting `on_schema_change` to 'fail', we ensure that any unexpected schema changes will cause the model to fail, prompting us to address the issue before proceeding.
+
+But I also need to tell DBT how to increment. I need to tell DBT, what are the new records right? How it knows from record that it's new are not.  And here I can go and simply create a jinjar if statements for this. 
 
 ```SQL
 {% if is_incremental() %}
   AND review_date > (select max(review_date) from {{ this }})
 {% endif %}
 ```
-* This section uses Jinja templating to add conditional logic to the query. The `is_incremental()` function checks if the model is running in incremental mode. 
-* If the model is running incrementally, the condition `AND review_date > (select max(review_date) from {{ this }})` is added to the WHERE clause. 
-  * `review_date > (select max(review_date) from {{ this }}):` This ensures that only new records with a review_date greater than the maximum review_date already present in the target table (represented by {{ this }}) are included in the incremental run.
+* This section uses Jinja templating to add conditional logic to the query. 
+* The `is_incremental()` function checks if the model is running in incremental mode. 
+* If the model is running incrementally, the condition 
+  * `AND review_date > (select max(review_date) from {{ this }})` is added to the 
+  * `WHERE` clause `review_text` 
+* This ensures that only new records with a review_date greater than the maximum review_date already present in the target table (represented by {{ this }}) are included in the incremental run.
 
-Now, notice for a second how much freedom this leaves you because. Here, if you want to have some more sophisticated logic, like working on an updated feared or anything doing with IDs, whatever. You're free to express it here in SQL.
+> Now, notice for a second how much freedom this leaves you because. Here, if you want to have some more sophisticated logic, like working on an updated feared or anything doing with IDs, whatever. You're free to express it here in SQL.
 
 ```SQL
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/fct/fct_reviews.sql
@@ -1429,16 +1439,19 @@ Now, I won't see any change here, of course, because this will bring me to the s
 
 #### Ephemeral materialization
 
+> In the context of dbt (Data Build Tool), "ephemeral" materialization refers to a type of materialization where the model is not stored as a table or view in the database, but is used only as a temporary expression within the dbt compilation process. Ephemeral models exist only during the execution of a dbt operation and do not persist in the database after the operation is complete.
+>
 
-The type of materialization for all of the tables we've created so far is shown in the diagram. We still need to create the dim_listings_with_hosts, which will be our final dimension table, so we will do that now.
+
+The type of materialization for all of the tables we've created so far is shown in the diagram. We still need to create the `dim_listings_with_hosts`, which will be our final dimension table, so we will do that now.
 
 ![](img/48.png)
 
 If you think about it, as an Airbnb analytics engineer, once we are done with processing, we end up with two main tables: fct_reviews and dim_listings_with_hosts. These tables combine all the necessary data, such as listings joined with host information and review details.
 
-Since these tables are our final, stable tables that we frequently access for analytics, we can keep them stable by materializing them as tables or views. This means, for example, if we have dim_listings_cleansed and dim_hosts_cleansed materialized as views, we don't need to create additional tables out of them because we will only read from these views.
+Since these tables are our final, stable tables that we frequently access for analytics, we can keep them stable by materializing them as tables or views. This means, for example, if we have `dim_listings_cleansed` and `dim_hosts_cleansed` materialized as views, we don't need to create additional tables out of them because we will only read from these views.
 
-By using views for dim_listings_cleansed and dim_hosts_cleansed, we can simplify our data processing pipeline and ensure that we have up-to-date data without the need for redundant table creation.
+By using views for `dim_listings_cleansed` and `dim_hosts_cleansed`, we can simplify our data processing pipeline and ensure that we have `up-to-date` data without the need for redundant table creation.
 
 ![](img/56.png)
 
