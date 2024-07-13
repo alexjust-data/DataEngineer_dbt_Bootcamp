@@ -557,7 +557,7 @@ delete these lines
       +materialized: view
 ```
 
-If you take a more if you take a look at the model, you see we have some example in water set up here by default. So we like to ask you to delete the example for to just get in the folder itself.
+If you take a look at the model, you see we have some example in water set up here by default. So we like to ask you to delete the example for to just get in the folder itself.
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ ls -la models
@@ -609,6 +609,23 @@ packages:
 
 ![](img/26.png)
 
+```sh
+(dbt_env) ➜  dbt_learn git:(main) tree -L 1                   
+.
+├── README.md
+├── analyses
+├── dbt_packages
+├── dbt_project.yml
+├── logs
+├── macros
+├── models
+├── package-lock.yml
+├── packages.yml
+├── seeds
+├── snapshots
+├── target
+└── tests
+```
 
 ## Data Flow - Overview
 
@@ -616,7 +633,11 @@ So here is the data flow we are going to build.
 
 ![](img/33.png)
 
-As you see in green, we have three input tables: `Costs, listings, and reviews`. We will import these input tables and make minor modifications in our first layer, the `src (source)` layer. We will then clean these tables and create our dimension tables `dim` and the `fct_reviews` fact table. Additionally, we will use an external table and send data to Snowflake via dbt. With the help of dbt, we will create a few so-called `mart_fullmoon_reviews` tables, which will be used by an executive dashboard. As we do this, we will also create a set of tests, which you can see here in the square.
+As you see in green, we have three input tables: `Costs, listings, and reviews`.   
+* We will import these input tables and make minor modifications in our first layer, the `src (source)` layer.  
+* We will then clean these tables and create our dimension tables `dim` and the `fct_reviews` fact table. 
+* Additionally, we will use an external table and send data to Snowflake via dbt. 
+* With the help of dbt, we will create a few so-called `mart_fullmoon_reviews` tables, which will be used by an executive dashboard. As we do this, we will also create a set of tests, which you can see here in the square.
 
 ![](img/35.png)
 
