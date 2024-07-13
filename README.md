@@ -372,20 +372,21 @@ You have the information here:
 
 
 ```sql
--- Create the `dbt` user and assign to role
-CREATE USER IF NOT EXISTS dbt
-  PASSWORD='dbtPassword123'
-  LOGIN_NAME='dbt'
-  MUST_CHANGE_PASSWORD=FALSE
-  DEFAULT_WAREHOUSE='COMPUTE_WH'
-  DEFAULT_ROLE=TRANSFORM
-  DEFAULT_NAMESPACE='AIRBNB.RAW'
-  COMMENT='DBT user used for data transformation';
-GRANT ROLE TRANSFORM to USER dbt;
+-- -- Create the `dbt` user and assign to role
+-- CREATE USER IF NOT EXISTS dbt
+--   PASSWORD='dbtPassword123'
+--   LOGIN_NAME='dbt'
+--   MUST_CHANGE_PASSWORD=FALSE
+--   DEFAULT_WAREHOUSE='COMPUTE_WH'
+--   DEFAULT_ROLE=TRANSFORM
+--   DEFAULT_NAMESPACE='AIRBNB.RAW'
+--   COMMENT='DBT user used for data transformation';
+-- GRANT ROLE TRANSFORM to USER dbt;
 
--- Create our database and schemas
-CREATE DATABASE IF NOT EXISTS AIRBNB;
-CREATE SCHEMA IF NOT EXISTS AIRBNB.RAW;
+-- -- Create our database and schemas
+-- CREATE DATABASE IF NOT EXISTS AIRBNB;
+-- CREATE SCHEMA IF NOT EXISTS AIRBNB.RAW;
+
 ```
 `dbt_learn` is the name of my project.
 
