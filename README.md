@@ -6,9 +6,9 @@
   - [dbt™ Overview](#dbt-overview)
 - [Project Overview (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
   - [resources](#resources)
-  - [snowflake link](#snowflake-link)
-    - [Snowflake user creation](#snowflake-user-creation)
-    - [Snowflake data import](#snowflake-data-import)
+  - [snowflake](#snowflake)
+  - [Snowflake user creation](#snowflake-user-creation)
+  - [Snowflake data import](#snowflake-data-import)
   - [dbt setup](#dbt-setup)
     - [VSC extension : vscode-dbt-power-user](#vsc-extension--vscode-dbt-power-user)
 - [Data Flow - Overview](#data-flow---overview)
@@ -196,9 +196,11 @@ These are some of the main requirements of a data analytics tool, and DBT is gre
 * [dbt project's GitHub page](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero)
 
 
-### snowflake [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
+### snowflake 
 
-* SnoeFow edition : Standard
+* snowflake [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
+
+* snowflake edition : Standard
 * Provider : AWS Web Service
 * Place : Ohio
 
@@ -213,7 +215,7 @@ Snowflake :
 
 ![](img/18.png)
 
-#### Snowflake user creation
+### Snowflake user creation
 
 Copy these SQL statements into a Snowflake Worksheet, select all and execute them (i.e. pressing the play button).
 
@@ -258,7 +260,7 @@ GRANT ALL ON FUTURE TABLES IN SCHEMA AIRBNB.RAW to ROLE TRANSFORM;
 
 Select all and press the play button or pest control, enter.
 
-#### Snowflake data import
+### Snowflake data import
 
 Copy these SQL statements into a Snowflake Worksheet, select all and execute them (i.e. pressing the play button).
 
