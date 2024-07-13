@@ -6,7 +6,7 @@
   - [dbt™ Overview](#dbt-overview)
 - [Project Overview (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
   - [resources](#resources)
-  - [snowflake 👉🏻 link](#snowflake--link)
+  - [snowflake link](#snowflake-link)
     - [Snowflake user creation](#snowflake-user-creation)
     - [Snowflake data import](#snowflake-data-import)
   - [dbt setup](#dbt-setup)
@@ -196,7 +196,7 @@ These are some of the main requirements of a data analytics tool, and DBT is gre
 * [dbt project's GitHub page](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero)
 
 
-### snowflake 👉🏻 [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
+### snowflake [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
 
 * SnoeFow edition : Standard
 * Provider : AWS Web Service
