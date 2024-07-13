@@ -755,9 +755,8 @@ Now, it's time to create our first staging layer. In this layer, we will prefix 
 * one for hosts, 
 * and one for reviews.  
 
-These models will be views built on top of the raw data in the `raw_listings`, `raw_hosts`, and `raw_reviews` tables. 
-
-We will make some minor changes to these tables, such as renaming columns, as a first step in cleansing our data. In this section, we will implement the src_listings model together. Then, you will have the chance to implement the necessary src_reviews model through a guided lab and assess the src_hosts model as an individual task
+These models will be views built on top of the raw data in the `raw_listings`, `raw_hosts`, and `raw_reviews` tables.  
+We will make some minor changes to these tables, such as renaming columns, as a first step in cleansing our data.
 
 ---
 Creating a new model in the `models/src/` folder called `src_rlisting.sql`:
@@ -783,6 +782,7 @@ Similar live here in the models folder and you can organize your models into sub
 │       └── src_listings.sql
 ```
 
+name column change  
 * `name AS listing_name`,
 * `price AS price_str`,
 
@@ -935,7 +935,9 @@ Creating a new model in the `models/src/` folder called `src_hosts.sql`:
   05:13:47  Done. PASS=3 WARN=0 ERROR=0 SKIP=0 TOTAL=3
 ```
 
+**Created our first model: Airbnb listings**
 
+![](img/36.png)
 
 ### Materializations
 
