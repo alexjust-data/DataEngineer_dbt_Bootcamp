@@ -195,14 +195,14 @@ These are some of the main requirements of a data analytics tool, and DBT is gre
 * [single markdown file](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero/blob/main/_course_resources/course-resources.md)
 * [dbt project's GitHub page](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero)
 
-
 ### snowflake 
 
-* snowflake [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)
 
-* snowflake edition : Standard
-* Provider : AWS Web Service
-* Place : Ohio
+* snowflake [link](https://signup.snowflake.com/?utm_cta=trial-en-www-homepage-top-right-nav-ss-evg&_ga=2.74406678.547897382.1657561304-1006975775.1656432605&_gac=1.254279162.1656541671.Cj0KCQjw8O-VBhCpARIsACMvVLPE7vSFoPt6gqlowxPDlHT6waZ2_Kd3-4926XLVs0QvlzvTvIKg7pgaAqd2EALw_wcB)  
+* snowflake edition : Standard  
+* Provider : AWS Web Service  
+* Place : Ohio  
+
 
 Send you a link: https://boryss-qp53113.snowflakecomputing.com/console/login?activationToken=
 
