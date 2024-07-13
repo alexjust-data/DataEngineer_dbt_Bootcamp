@@ -1168,7 +1168,7 @@ models:
 
 * `dbt_learn:` This specifies a sub-section within the models configuration. The dbt_learn key corresponds to a specific directory or group of models within your project. In this case, it refers to models located in the dbt_learn directory.
 * `+materialized: view` : This line is an added configuration setting for the models in the dbt_learn directory. +materialized is a dbt directive that specifies the materialization strategy for these models. 
-* `view` means that dbt will create a database view **for each model in the dbt_learn directory**. Views are virtual tables that are defined by a query but do not store data physically.
+* `view` means that dbt will create a database `view` **for each model in the dbt_learn directory**. Views are virtual tables that are defined by a query but do not store data physically.
 
 In this case, you would want the sources `src_hosts`, `src_listings`, and `src_reviews` to be materialized as views because they involve very transformations and probably won't be accessed directly very often. 
 
