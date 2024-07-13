@@ -4,15 +4,15 @@
   - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
   - [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
   - [dbt™ Overview](#dbt-overview)
-- [PROJECT OVERVIEW (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
+- [Project Overview (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
   - [resources](#resources)
   - [snowflake 👉🏻 link](#snowflake--link)
     - [Snowflake user creation](#snowflake-user-creation)
     - [Snowflake data import](#snowflake-data-import)
   - [dbt setup](#dbt-setup)
     - [VSC extension : vscode-dbt-power-user](#vsc-extension--vscode-dbt-power-user)
-  - [Data Flow - Overview](#data-flow---overview)
-  - [MODELS](#models)
+- [Data Flow - Overview](#data-flow---overview)
+  - [Models](#models)
     - [Common Table Expression (CTE)](#common-table-expression-cte)
     - [Creating our first model: Airbnb listings](#creating-our-first-model-airbnb-listings)
     - [Materializations](#materializations)
@@ -138,7 +138,7 @@ To bring it home: With DBT, you will build production-grade data pipelines. What
 
 Since DBT interpolates the locations of all the models it generates, it allows you to create different environments like development or production, and you can effortlessly switch between the two. In terms of performance, DBT will take your models (i.e., SQL SELECT statements), understand the dependencies between them, craft a dependency order, and parallelize the way your models are built. And it will run arbitrary subgraph.
 
-## PROJECT OVERVIEW (Analytics Engineering with Airbnb)
+## Project Overview (Analytics Engineering with Airbnb)
 
 You will act as if you were an analytics engineer at Airbnb. You’re responsible for all the data flow in Berlin, Germany. This role comes with a lot of responsibilities, so you will need to import your data into a data warehouse and then make this data available for tools like DBT. Then, you will need to clean the data, perform several transformations on it, and export it to BI tools. 
 
@@ -614,7 +614,7 @@ packages:
 ![](img/26.png)
 
 
-### Data Flow - Overview
+## Data Flow - Overview
 
 INPUT DATA MODEL
 
@@ -648,7 +648,7 @@ So here is the data flow we are going to build. As you see in green, we have thr
 
 And let's go and start building our first three mortars, SSD hosts, associate listings and SSD reviews.
 
-### MODELS
+### Models
 
 * Understand the data flow of our project
 * Understand the concept of Models in dbt
