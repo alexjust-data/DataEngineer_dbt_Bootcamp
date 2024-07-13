@@ -21,6 +21,8 @@
     - [Incremental materialization](#incremental-materialization)
     - [Ephemeral materialization](#ephemeral-materialization)
   - [Seeds and Sources](#seeds-and-sources)
+  - [Sources](#sources)
+    - [Source Freshness](#source-freshness)
 
 ---
 ## Introduction
@@ -1903,3 +1905,190 @@ You see that this year is a single currency week, but you don't necessarily need
 ```
 
 ![](/img/64.png)
+
+DBT internally analyzes your CSV files and automatically determines the schema, including the data types of columns.
+
+---
+
+Now we are ready to implement our fourth layer, which will be our Mart layer. The Mart layer typically contains tables and views accessible by BI tools.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/mart/mart_full_moon_reviews.sql
+
+  {{ config(
+    materialized = 'table',
+  ) }}
+
+  WITH fct_reviews AS (
+      SELECT * FROM {{ ref('fct_reviews') }}
+  ),
+  full_moon_dates AS (
+      SELECT * FROM {{ ref('seed_full_moon_dates') }}
+  )
+
+  SELECT
+    r.*,
+    CASE
+      WHEN fm.full_moon_date IS NULL THEN 'not full moon'
+      ELSE 'full moon'
+    END AS is_full_moon
+  FROM
+    fct_reviews
+    r
+    LEFT JOIN full_moon_dates
+    fm
+    ON (TO_DATE(r.review_date) = DATEADD(DAY, 1, fm.full_moon_date))
+```
+
+* Configures the model to be materialized as a table.
+* Creates two Common Table Expressions (CTEs):
+  * `fct_reviews`: Selects all data from the fct_reviews table.
+  * `full_moon_dates`: Selects all data from the seed_full_moon_dates seed.
+* Performs a LEFT JOIN between fct_reviews and full_moon_dates, matching review dates with the day after a full moon date.
+* Adds a column is_full_moon to indicate whether the review date is the day after a full moon ('full moon') or not ('not full moon').
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+  18:42:10  Running with dbt=1.7.17
+  18:42:11  Registered adapter: snowflake=1.7.1
+  18:42:11  Found 8 models, 1 seed, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  18:42:11  
+  18:42:13  Concurrency: 1 threads (target='dev')
+  18:42:13  
+  18:42:14  1 of 5 START sql view model DEV.dim_hosts_cleansed ............................. [RUN]
+  18:42:15  1 of 5 OK created sql view model DEV.dim_hosts_cleansed ........................ [SUCCESS 1 in 1.33s]
+  18:42:15  2 of 5 START sql view model DEV.dim_listings_cleansed .......................... [RUN]
+  18:42:16  2 of 5 OK created sql view model DEV.dim_listings_cleansed ..................... [SUCCESS 1 in 1.30s]
+  18:42:16  3 of 5 START sql incremental model DEV.fct_reviews ............................. [RUN]
+  18:42:20  3 of 5 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 0 in 3.63s]
+  18:42:20  4 of 5 START sql table model DEV.dim_listings_w_hosts .......................... [RUN]
+  18:42:22  4 of 5 OK created sql table model DEV.dim_listings_w_hosts ..................... [SUCCESS 1 in 2.39s]
+  18:42:22  5 of 5 START sql table model DEV.mart_full_moon_reviews ........................ [RUN]
+  18:42:27  5 of 5 OK created sql table model DEV.mart_full_moon_reviews ................... [SUCCESS 1 in 4.61s]
+  18:42:27  
+  18:42:27  Finished running 2 view models, 1 incremental model, 2 table models in 0 hours 0 minutes and 15.98 seconds (15.98s).
+  18:42:27  
+  18:42:27  Completed successfully
+  18:42:27  
+  18:42:27  Done. PASS=5 WARN=0 ERROR=0 SKIP=0 TOTAL=5
+```
+
+![](/img/65.png)
+
+### Sources
+
+Let's convert our raw tables into sources. Sources are an abstraction on top of your input data, providing extra features like data freshness checks. Additionally, as you will see later in the documentation, sources appear as special entities. This process will not change the actual behavior of DBT or the queries it executes, but it will make our project more structured.
+
+To define sources, follow these steps:
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/sources.yml
+version: 2
+
+sources:
+  - name: airbnb
+    schema: raw
+    tables:
+      - name: listings
+        identifier: raw_listings
+
+      - name: hosts
+        identifier: raw_hosts
+
+      - name: reviews
+        identifier: raw_reviews
+```
+
+* sources: Defines the list of sources.
+  * name: airbnb: The name of the source. This creates a namespace for the source tables.
+  * schema: raw: Specifies the schema in the database where the source tables are located.
+  * tables: Lists the tables included in the source.
+    * name: listings: The name by which the table will be referenced in DBT.
+    * identifier: raw_listings: The actual name of the table in the database.
+<br>  
+    * name: hosts: The name by which the table will be referenced in DBT.
+    * identifier: raw_hosts: The actual name of the table in the database.
+<br> 
+    * name: reviews: The name by which the table will be referenced in DBT.
+    * identifier: raw_reviews: The actual name of the table in the database.
+
+
+In DBT, configuring sources adds an abstraction layer over raw tables, enhancing project structure and organization. It allows easy referencing of tables as sources, enables freshness checks to ensure data is up-to-date, and improves documentation and data traceability. This setup simplifies maintenance and schema change management, without altering query behavior, but structures the project more efficiently and robustly.
+
+Let's go to my source there was because here I found those motors which refer and throw them both.
+
+```sh
+│   └── src
+│       ├── src_hosts.sql
+│       ├── src_listings.sql
+│       └── src_reviews.sql
+```
+
+So if I open raw listings.  Then you will see that here `SELECT * FROM AIRBNB.RAW.RAW_LISTINGS` we use a direct reference to our snowflake is right. 
+
+```SQL
+WITH raw_listings AS (
+    SELECT * FROM AIRBNB.RAW.RAW_LISTINGS
+)
+SELECT ...
+```
+
+What happens if these tables move or you have different instances using different schemas? This is where sources and this abstraction help you. By using sources, you can simplify your references. For example, instead of directly referencing a table, you reference your sources. We pass the source name, such as bmb, and then, in our case, listings. 
+
+```SQL
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/models/src/src_listings.sql
+
+  WITH raw_listings AS (
+      SELECT * FROM {{ source('airbnb', 'listings') }}
+  )
+  SELECT ...
+```
+
+This way, DBT will recognize that you are referring to `raw` through the alias `airbnb`. You can do the same with raw_hosts host in the hosts file and with raw_reviews. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/models/src/src_hosts.sql   
+
+WITH raw_hosts AS (
+    SELECT * FROM {{ source('airbnb', 'hosts') }}
+)
+SELECT
+    id AS host_id,
+    NAME AS host_name,
+    is_superhost,
+    created_at,
+    updated_at
+FROM
+    raw_hosts
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/models/src/src_reviews.sql
+
+WITH raw_reviews AS (
+    SELECT * FROM {{ source('airbnb', 'reviews') }}
+SELECT
+    listing_id,
+    date AS review_date,
+    reviewer_name,
+    comments AS review_text,
+    sentiment AS review_sentiment
+FROM
+    raw_reviews
+```
+
+This makes the project more structured. Let's see if it works.
+
+I will not execute this with dbt run, because we have another command just for checking if all the template tags and the connections and everything we defined in our project make sense. This is called dbt, dbt compile. With dbt compile, dbt goes through all of your models, the YAML files and tests and all, and it will check if all of the references and template tags and everything is correct. And it says, OK.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt compile
+19:26:04  Running with dbt=1.7.17
+19:26:05  Registered adapter: snowflake=1.7.1
+19:26:05  Found 8 models, 1 seed, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+19:26:05  
+19:26:06  Concurrency: 1 threads (target='dev')
+19:26:06  
+```
+
+#### Source Freshness
