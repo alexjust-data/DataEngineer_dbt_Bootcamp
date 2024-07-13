@@ -23,6 +23,8 @@
   - [Seeds and Sources](#seeds-and-sources)
   - [Sources](#sources)
     - [Source Freshness](#source-freshness)
+  - [Snapshots](#snapshots)
+    - [Snapshots Overview](#snapshots-overview)
 
 ---
 ## Introduction
@@ -2046,7 +2048,7 @@ What happens if these tables move or you have different instances using differen
 
 This way, DBT will recognize that you are referring to `raw` through the alias `airbnb`. You can do the same with raw_hosts host in the hosts file and with raw_reviews. 
 
-```sh
+```SQL
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/models/src/src_hosts.sql   
 
 WITH raw_hosts AS (
@@ -2062,7 +2064,7 @@ FROM
     raw_hosts
 ```
 
-```sh
+```SQL
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/models/src/src_reviews.sql
 
 WITH raw_reviews AS (
@@ -2092,3 +2094,102 @@ I will not execute this with dbt run, because we have another command just for c
 ```
 
 #### Source Freshness
+
+In a production setting, you probably want to have some kind of monitoring in place to ensure that your data ingestion works on schedule and correctly. One way to do this is to check the last timestamp of the ingested data. If the ingested data is somewhat stale, it should trigger a warning, and if it is significantly delayed, it should trigger an error. DBT has a built-in functionality called source freshness to help with this.
+
+
+![](/img/66.png)
+
+Let's see this in action. Here, we have the raw_reviews table, which we converted to a source. This table contains a date column that stores the review date. We can define source freshness constraints in the sources.yml file. Here's an example configuration:
+
+```yml
+sources:
+  - name: airbnb
+    schema: raw
+    tables:
+      - name: listings
+        identifier: raw_listings
+
+      - name: hosts
+        identifier: raw_hosts
+
+      - name: reviews
+        identifier: raw_reviews
+        loaded_at_field: date
+        freshness:
+          warn_after: {count: 1, period: hour}
+          error_after: {count: 24, period: hour}
+```
+In this configuration:
+
+* `loaded_at_field` points to the column that stores the ingestion timestamp (date in the reviews table).
+* `freshness` constraints are defined:
+  *` warn_after`: {count: 1, period: hour}: Issues a warning if no data is found within the last hour.
+  * `error_after`: {count: 24, period: hour}: Raises an error if no data is found within the last 24 hours.
+  * To check the freshness, save your changes and run the following command in your console:
+  
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt source freshness
+19:40:21  Running with dbt=1.7.17
+19:40:22  Registered adapter: snowflake=1.7.1
+19:40:22  Found 8 models, 1 seed, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+19:40:22  
+19:40:25  Concurrency: 1 threads (target='dev')
+19:40:25  
+19:40:25  1 of 1 START freshness of airbnb.reviews ....................................... [RUN]
+19:40:26  1 of 1 ERROR STALE freshness of airbnb.reviews ................................. [ERROR STALE in 1.67s]
+19:40:26  
+19:40:26  Done.
+```
+
+DBT will then check the freshness of your data. For example, if you added a new review more than an hour ago, you might receive a warning. If the data is over 24 hours old, you will receive an error.
+
+This setup ensures that your data ingestion processes are closely monitored, and any issues with data freshness are promptly flagged, helping maintain the integrity and reliability of your data pipeline.
+
+
+### Snapshots
+
+In this section, you will see how DBT helps you maintain historical data as it changes over time. This is accomplished using Type II Slowly Changing Dimensions, a concept we covered in our theoretical lessons. You will learn how DBT handles these Type II Slowly Changing Dimensions and the different snapshotting strategies it supports. We will implement snapshots for both our listings table and our hosts table. So, let's get started.
+
+LEARNING OBJECTIVES
+* Understand how dbt handles type-2 slowly changing dimensions
+* Understand snapshot strategies
+* Learn how to create snapshots on top of our listings and hosts models
+
+#### Snapshots Overview
+
+Let's take a look at how snapshots are implemented in DBT. First, a quick recap of how Slowly Changing Dimensions work. This demo will focus on Type II Slowly Changing Dimensions.
+
+TYPE-2 SLOWLY CHANGING DIMENSIONS
+
+Let's assume you have a dimension table, such as our host table, with entries for Alice and Bob. Bob's email address is initially set to `bob.erbynb@gmail.com`. If Bob updates his email address to `bob.new@gmail.com`, you want to keep a history of this change rather than just overwriting the existing data.
+
+In an analytical data pipeline, maintaining this history is crucial. DBT handles this using Type II Slowly Changing Dimensions, a best practice in the data warehousing world. DBT adds two extra columns to the original table, indicating the start and end timestamps for each record's validity.
+
+How DBT Handles Changes
+
+![](/img/67.png)
+
+1. **Original Record**: Each record has `valid_from` and `valid_to` columns.
+2. **Current Record**: For a current record, `valid_to` is `null`.
+3. **On Change**: When a change occurs, `valid_to` is set to the date of the change for the existing record, and a new record is created with the new values, `valid_from` set to the change date, and `valid_to` set to `null`.
+This method allows you to always see the current version by filtering for valid_to = null and to track the entire history of changes by looking at all records.
+
+**DBT Snapshot Configuration and Strategies**
+
+DBT offers two strategies for implementing Slowly Changing Dimensions:
+
+1. Timestamp Strategy:
+   * Requires a unique key on your source table.
+   * Uses an updated_at field that stores the last update timestamp.
+   * DBT records any changes based on this timestamp.
+
+2. Check Strategy:
+   * Does not require an updated_at field.
+   * Monitors specified columns (or all columns) for changes.
+   * DBT adds new records whenever any of these columns change.
+
+**Implementing Snapshots**
+
+We will now implement snapshots for both our listings table and our hosts table using these strategies. By doing so, we ensure that our data warehouse maintains a comprehensive history of changes, enabling robust analysis and reporting.
+
