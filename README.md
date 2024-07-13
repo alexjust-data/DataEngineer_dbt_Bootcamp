@@ -1,4 +1,4 @@
-**Analytics Engineering with Airbnb - [ [dbt](https://www.getdbt.com/) (Data Build Tool) ]**
+**Analytics Engineering with Airbnb - [ [dbt](https://www.getdbt.com/) ~ Data Build Tool ]**
 
 - [Introduction](#introduction)
   - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
