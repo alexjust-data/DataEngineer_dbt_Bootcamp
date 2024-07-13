@@ -674,6 +674,7 @@ raw reviews
 
 ### Models
 
+Objectives:  
 * Understand the data flow of our project
 * Understand the concept of Models in dbt
 * Create three basic models:
@@ -797,30 +798,6 @@ So now Dbt knows that I want to have a view created called src_listings. And thi
 dbt run  
 
 ```sh
-(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run  
-  18:31:52  Running with dbt=1.7.17
-  18:31:53  Registered adapter: snowflake=1.7.1
-  18:31:53  [WARNING]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
-  There are 1 unused configuration paths:
-  - models.dbt_learn.example
-  18:31:53  Found 1 model, 0 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
-  18:31:53  
-  18:31:59  Concurrency: 1 threads (target='dev')
-  18:31:59  
-  18:31:59  1 of 1 START sql view model DEV.src_listings ................................... [RUN]
-  18:32:00  1 of 1 OK created sql view model DEV.src_listings .............................. [SUCCESS 1 in 1.76s]
-  18:32:00  
-  18:32:00  Finished running 1 view model in 0 hours 0 minutes and 7.52 seconds (7.52s).
-  18:32:00  
-  18:32:00  Completed successfully
-  18:32:00  
-  18:32:00  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
-```
-
-[WARNING]: Eliminate the folfer `examples` from `dbt_project.yml `
-
-```sh
-(dbt_env) ➜  dbt_learn git:(main) ✗ nano dbt_project.yml 
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt run              
   18:35:45  Running with dbt=1.7.17
   18:35:45  Registered adapter: snowflake=1.7.1
