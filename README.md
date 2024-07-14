@@ -2332,7 +2332,7 @@ After updating the data, re-execute the `dbt snapshot` command. This will:
 
 Upon re-executing `dbt snapshot`, check the `scd_raw_listings` table again. You should see two records for the listing ID 3176:
 
-![](/img/71.png)
+![](/img/72.png)
 
 1. The initial record with `minimum_nights` set to 62 and `dbt_valid_to` updated to today's date.
 2. A new record with `minimum_nights` set to 30 and `dbt_valid_to` set to `NULL`.
