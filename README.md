@@ -25,6 +25,8 @@
     - [Sources](#sources)
     - [Sources Freshness](#sources-freshness)
   - [Snapshots](#snapshots)
+    - [Creating a Snapshot](#creating-a-snapshot)
+  - [Learning objectives - Tests](#learning-objectives---tests)
 
 ---
 ## Introduction
@@ -2193,4 +2195,182 @@ DBT offers two strategies for implementing Slowly Changing Dimensions:
 **Implementing Snapshots**
 
 We will now implement snapshots for both our listings table and our hosts table using these strategies. By doing so, we ensure that our data warehouse maintains a comprehensive history of changes, enabling robust analysis and reporting.
+
+#### Creating a Snapshot
+
+In this lesson, we will create two snapshot tables: one for raw listings and another for raw hosts. I'll demonstrate the process using raw listings, and later apply the same steps to raw hosts. Let's get started.
+
+First, it's important to know that the snapshots path is defined in `dbt.project.yml` and should be set to the snapshots folder by default `snapshot-paths: ["snapshots"]`. You shouldn't need to change anything here.
+
+```sh
+├── snapshots
+├── seeds
+│   └── seed_full_moon_dates.csv
+```
+
+Next, let's take a look at the raw listings table.  Our goal is to snapshot the `raw data` so we can track any changes right at the source. This way, if any new data comes in or changes occur, we can capture those changes immediately. You can choose different strategies based on your use case, such as snapshotting already cleaned data, but we'll focus on raw data to catch changes as early as possible.
+
+![](/img/68.png)
+
+We have the raw listings table, which contains an ID and various properties, including a `minimum_nights` field and an `updated_at` field. Our aim is to ensure that any changes to a record, identified by the `updated_at` field, are tracked.
+
+Let's create our snapshot. In the snapshots folder, create a new file called `scd_raw_listings.sql`. This is an arbitrary name, and you can choose a different one if you prefer. In this file, we'll define our snapshot.
+
+Here is the snapshot definition you can use:
+
+```SQL
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch snapshots/scd_raw_listings.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano snapshots/scd_raw_listings.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat snapshots/scd_raw_listings.sql
+
+  {% snapshot scd_raw_listings %}
+    {{
+      config(
+          target_schema='DEV',
+          unique_key='id',
+          strategy='timestamp',
+          updated_at='updated_at',
+          invalidate_hard_deletes=True
+      )
+    }}
+
+    select * FROM {{ source('airbnb', 'listings') }}
+
+  {% endsnapshot %}
+```
+
+Explanation of the Snapshot Definition:
+* `SELECT Statement`: The basis of a snapshot is a `SELECT` statement, usually a `SELECT * FROM` a source table. Here, it's the Airbnb raw listings table.
+* Snapshot Jinja Tags: Enclose your snapshot definition between `{% snapshot %}` tags.
+* Configuration Options:
+  * `target_schema`: Defines the schema where the snapshot will be stored.
+  * `unique_key`: The unique identifier for records in your snapshot.
+  * `strategy`: We use a timestamp strategy to track changes.
+  * `updated_at`: The column used to identify updates.
+  * `invalidate_hard_deletes`: If set to `True`, deleted records from the source table will be marked as deleted in the snapshot by updating the valid_to column to the current snapshot date.
+
+By following these steps, you can create a snapshot that tracks changes to your raw listings data. Apply the same process to create a snapshot for raw hosts.
+
+Feel free to refer to the class resources for additional details and copy the provided definitions. Happy snapshotting!
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt snapshot
+18:44:44  Running with dbt=1.7.17
+18:44:45  Registered adapter: snowflake=1.7.1
+18:44:45  Found 8 models, 1 seed, 1 snapshot, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+18:44:45  
+18:44:48  Concurrency: 1 threads (target='dev')
+18:44:48  
+18:44:48  1 of 1 START snapshot DEV.scd_raw_listings ..................................... [RUN]
+18:44:51  1 of 1 OK snapshotted DEV.scd_raw_listings ..................................... [SUCCESS 1 in 2.60s]
+18:44:51  
+18:44:51  Finished running 1 snapshot in 0 hours 0 minutes and 5.62 seconds (5.62s).
+18:44:51  
+18:44:51  Completed successfully
+18:44:51  
+18:44:51  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+
+
+Now that we have our snapshot defined, let's execute the `dbt snapshot` command to create our snapshots. Remember, for snapshotting, you need to run a separate command: `dbt snapshot`, not `dbt run`.
+
+When you execute `dbt snapshot`, it confirms that we have created a snapshot named `dbt_scd_raw_listings`. Let’s refresh our Snowflake tables to verify this. 
+
+Checking the Snapshot Table
+
+![](/img/69.png)
+
+Upon refreshing, you’ll see the `scd_raw_listings` table. This table will have additional columns compared to the original table, including:
+
+- **dbt_scd_id**: A hashed ID used internally.
+- **dbt_updated_at**: An internal timestamp column.
+- **dbt_valid_from**: Reflects the original `updated_at` value.
+- **dbt_valid_to**: Initially set to `NULL` because we’ve just created our initial snapshot.
+
+**Updating the Data**
+
+Next, let’s update the raw data to see how changes are tracked. Here’s a simple query to update the `minimum_nights` value to 30 for the listing ID 3176 and refresh the `updated_at` timestamp:
+
+```sql
+UPDATE AIRBNB.RAW.RAW_LISTINGS
+SET minimum_nights = 30, updated_at = CURRENT_TIMESTAMP()
+WHERE id = 3176;
+```
+
+Before executing the update, check the current state of the raw listings table to confirm the change. For instance, if the current `minimum_nights` value for ID 3176 is 62, update it to 30 and refresh the `updated_at` field.
+
+![](/img/70.png)
+
+**Running dbt Snapshot Again**
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt snapshot                      
+  19:00:41  Running with dbt=1.7.17
+  19:00:41  Registered adapter: snowflake=1.7.1
+  19:00:41  Found 8 models, 1 seed, 1 snapshot, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  19:00:41  
+  19:00:44  Concurrency: 1 threads (target='dev')
+  19:00:44  
+  19:00:44  1 of 1 START snapshot DEV.scd_raw_listings ..................................... [RUN]
+  19:00:49  1 of 1 OK snapshotted DEV.scd_raw_listings ..................................... [SUCCESS 2 in 5.08s]
+  19:00:49  
+  19:00:49  Finished running 1 snapshot in 0 hours 0 minutes and 7.90 seconds (7.90s).
+  19:00:49  
+  19:00:49  Completed successfully
+  19:00:49  
+  19:00:49  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+After updating the data, re-execute the `dbt snapshot` command. This will:
+
+1. Compare the raw table with the snapshot table.
+2. Detect differences.
+3. Update the snapshot table accordingly.
+
+**Verifying the Update**
+
+Upon re-executing `dbt snapshot`, check the `scd_raw_listings` table again. You should see two records for the listing ID 3176:
+
+![](/img/71.png)
+
+1. The initial record with `minimum_nights` set to 62 and `dbt_valid_to` updated to today's date.
+2. A new record with `minimum_nights` set to 30 and `dbt_valid_to` set to `NULL`.
+
+This process demonstrates how snapshots work in dbt. It’s straightforward and efficient. Personally, I find it impressive because it simplifies the implementation of Slowly Changing Dimensions (SCD) Type 2, which typically requires complex re-implementation in different databases. With dbt, it just works seamlessly.
+
+and it's always something you need to reimplement yourself, figuring out the logic repeatedly. But now, DBT handles it for you, which is perfect. This is a significant improvement.
+
+Another important point to note is the flexibility of DBT when working with different SQL dialects. Most of what we've done so far involves plain SQL, tailored to the specific database platform we're using. For instance, SQL for a Snowflake instance might differ slightly from SQL for a Databricks or MySQL instance. We provided the SQL, and DBT offered the framework.
+
+However, with snapshots, there is more internal SQL logic at play. The process of updating fields in the SCD table and merging new data depends heavily on the underlying technology. In this case, the DBT connector generates the appropriate SQL for Snowflake to make updates. If you were using Databricks Spark SQL, it would use a different approach.
+
+This demonstrates how DBT increasingly integrates into the process, handling more complex logic. I find snapshots particularly impressive and hope you will appreciate them as well.
+
+### Learning objectives - Tests
+
+LEARNING OBJECTIVES
+   * Understand how tests can be defined
+   * Configure built-in generic tests
+   * Create your own singular tests
+
+In this section, you will learn how DBT can help you implement data quality tests. You will understand the DBT testing framework and see how to implement both generic and singular tests in practice. Let's get started.
+
+**Test overview**
+
+In DBT, there are generally two kinds of tests: singular tests and generic tests. The differences between the two are quite subtle.
+
+* **Singular Tests** Singular tests are straightforward. They are simple SQL SELECT statements that you place in your test folder. These SQL queries are expected to return an empty result set. If a singular test returns any records, the test is considered to have failed.
+
+* **Generic Tests** DBT also includes a few built-in tests known as generic tests. There are four main types of built-in generic tests:
+  1. **Unique**: Ensures that a column contains only unique values.
+  2. **Not Null**: Ensures that a column does not contain null values.
+  3. **Accepted Values**: Ensures that a column contains only specific, predefined values.
+  4. **Relationships**: Ensures that values in a column are valid references to another column in a different table.
+
+**Custom Generic Tests**
+You can take tests to a more advanced level by writing your own generic tests. This involves using macros, which will be covered in later sections of the course. Additionally, once you learn about DBT packages, you'll see how to install third-party packages and use the tests they provide as generic tests in your DBT project.
+
+**Practical Implementation**
+We'll see how all of this works in practice by implementing a few generic tests and a singular test. You'll then have the opportunity to create your own singular test as part of an exercise. Let's dive in!
 
