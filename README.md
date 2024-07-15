@@ -27,6 +27,8 @@
   - [Snapshots](#snapshots)
     - [Creating a Snapshot](#creating-a-snapshot)
   - [Learning objectives - Tests](#learning-objectives---tests)
+    - [Implementing Generic Tests in `dim_Listings_Cleaned.sql`](#implementing-generic-tests-in-dim_listings_cleanedsql)
+    - [Singular Tests](#singular-tests)
 
 ---
 ## Introduction
@@ -2368,9 +2370,249 @@ In DBT, there are generally two kinds of tests: singular tests and generic tests
   3. **Accepted Values**: Ensures that a column contains only specific, predefined values.
   4. **Relationships**: Ensures that values in a column are valid references to another column in a different table.
 
-**Custom Generic Tests**
+**Custom Generic Tests**  
 You can take tests to a more advanced level by writing your own generic tests. This involves using macros, which will be covered in later sections of the course. Additionally, once you learn about DBT packages, you'll see how to install third-party packages and use the tests they provide as generic tests in your DBT project.
 
-**Practical Implementation**
+**Practical Implementation**  
 We'll see how all of this works in practice by implementing a few generic tests and a singular test. You'll then have the opportunity to create your own singular test as part of an exercise. Let's dive in!
+
+#### Implementing Generic Tests in `dim_Listings_Cleaned.sql`
+
+Let's implement a few tests on our `dim_Listings_Cleaned`. As we discussed, there are generic tests and singular tests. Here, I will show you how generic tests work. Generic tests are built-in tests in dbt. They can come from the standard dbt core installation, through CertQuality packages, or your own custom generic test implementation. In this guide, we will go through the four built-in generic tests.
+
+Before we implement these tests, let's take a look at the `DIMM Listings Clean` view. Below is a step-by-step process on how to set up and execute these tests in dbt.
+
+**dim_Listings_Cleaned**
+
+Let’s review the `DIMM Listings Clean` view in Snowflake. Here's a brief description of the columns we are interested in:
+
+- **Listing ID**: This column should not contain any null values and must be unique as it serves as the primary key.
+- **Listing Name**: This column should also be not null.
+- **Room Type**: This column should contain only preset values such as "entire home or apartment", "private room", or "shared room".
+- **Host ID**: This column is an external reference to the host table, so every ID here must correlate to an existing host ID in the host table.
+
+![](/img/73.png)
+
+**Creating the Tests**
+
+We will create a new file named `schema.yaml` in the Models folder. This file will contain the configuration, tests, and documentation for your models. Here’s how you can define the tests:
+
+1. **Create `schema.yaml`**: Create a new file named `schema.yaml` in the Models folder.
+2. **Define Config Version**: Indicate the config version.
+3. **Define Model and Tests**: Define your model and the tests for individual columns.
+
+
+Here is the structure of the `schema.yaml` file:
+
+```yml
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch models/schema.yml
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano models/schema.yml 
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/schema.yml 
+
+
+version: 2
+
+models:
+  - name: dim_listings_cleansed
+    columns:
+
+      - name: listing_id
+        tests:
+          - unique
+          - not_null
+```
+
+This command will execute the tests defined in the schema.yaml file. The tests will check for constraints such as not_null, unique, and accepted_values, and verify relationships between tables.
+
+If you're interested in the actual SQL queries dbt executes, you can find them in the target folder where your compiled tests are stored.
+
+By following these steps, you can ensure that your dim_Listings_Cleaned table adheres to the necessary data quality standards.
+
+```sh
+07:07:05  Running with dbt=1.7.17
+07:07:05  Registered adapter: snowflake=1.7.1
+07:07:06  Found 8 models, 1 seed, 1 snapshot, 2 tests, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+07:07:06  
+07:07:08  Concurrency: 1 threads (target='dev')
+07:07:08  
+07:07:08  1 of 2 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+07:07:09  1 of 2 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.91s]
+07:07:09  2 of 2 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+07:07:11  2 of 2 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.47s]
+07:07:11  
+07:07:11  Finished running 2 tests in 0 hours 0 minutes and 5.27 seconds (5.27s).
+07:07:11  
+07:07:11  Completed successfully
+07:07:11  
+07:07:11  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 TOTAL=2
+```
+
+Probably a last word before we move on. In many database technologies, you have these unique and not-null constraints built in automatically. For example, if you use MySQL, you can simply add the not-null constraint or the unique constraint to a column. You don't need to create separate tests for them. However, if you work with new technologies like data lakes, such as Snowflake or Databricks, this can often be a challenge. Many new technologies, cloud platforms, data lakes, and lakehouses, do not support these constraints built in. So, we need to create our own tests for them.
+
+Okay, so the listing ID is done. I will also create a test for the host ID, stating it shouldn't be null. Then, I want to create a relationship test to ensure that every value in my host ID column is a valid reference to the host ID column of the DIM host cleansed model. Simple. Now, I have a relationship defined in a test. If I submit a host ID to the listings table that is not present in the host table, my test will fail.
+
+Next, I will set up a test for the room type. These are the values I use for room types: Entire home/apt, Private room, Shared room, and Hotel room. These are the accepted values. Here, you can see the four built-in tests in dbt: unique, not null, relationship, and accepted values. These are the built-in generic tests. You can always create your own, or when you install a dbt package, the packages might provide you with more tests.
+
+So let's execute these tests. I execute `dbt test` again. Now, you will see that I have five tests. All of these tests are starting, and all of them have passed.
+
+```yaml
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/schema.yml 
+
+
+version: 2
+
+models:
+  - name: dim_listings_cleansed
+    description: Cleansed table which contains Airbnb listings.
+    columns:
+
+      - name: listing_id
+        description: Primary key for the listing
+        tests:
+          - unique
+          - not_null
+
+      - name: host_id
+        description: The hosts's id. References the host table.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_hosts_cleansed')
+              field: host_id
+
+      - name: room_type
+        description: Type of the apartment / room
+        tests:
+          - accepted_values:
+              values: ['Entire home/apt',
+                      'Private room',
+                      'Shared room',
+                      'Hotel room']
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test
+
+  07:18:12  Running with dbt=1.7.17
+  07:18:13  Registered adapter: snowflake=1.7.1
+  07:18:13  Found 8 models, 1 seed, 1 snapshot, 5 tests, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  07:18:13  
+  07:18:15  Concurrency: 1 threads (target='dev')
+  07:18:15  
+  07:18:15  1 of 5 START test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [RUN]
+  07:18:16  1 of 5 PASS accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [PASS in 1.26s]
+  07:18:16  2 of 5 START test not_null_dim_listings_cleansed_host_id ....................... [RUN]
+  07:18:17  2 of 5 PASS not_null_dim_listings_cleansed_host_id ............................. [PASS in 1.17s]
+  07:18:17  3 of 5 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+  07:18:18  3 of 5 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.25s]
+  07:18:18  4 of 5 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+  07:18:20  4 of 5 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.46s]
+  07:18:20  5 of 5 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+  07:18:21  5 of 5 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.23s]
+  07:18:21  
+  07:18:21  Finished running 5 tests in 0 hours 0 minutes and 8.30 seconds (8.30s).
+  07:18:21  
+  07:18:21  Completed successfully
+  07:18:21  
+  07:18:21  Done. PASS=5 WARN=0 ERROR=0 SKIP=0 TOTAL=5
+```
+
+
+`values: ['Entire home/apt`
+`values: ['Entire home/apt - beark the model`
+
+
+**Debugging a Test in dbt**
+
+Okay, so let's go ahead. Let me show you how you would debug a certain test. I can come here and intentionally break a test. For instance, I will modify the room type value to `entire home/apt`, but it will not be in my accepted values definition. Now, let's run `dbt test`.
+
+* `values: ['Entire home/apt`
+* `values: ['Entire home/apt - beark the model`
+* 
+```yml
+      - name: room_type
+        description: Type of the apartment / room
+        tests:
+          - accepted_values:
+              values: ['Entire home/apt - beark the model',
+                      'Private room',
+                      'Shared room',
+                      'Hotel room']
+```
+
+Every time you debug a test, you can review the SQL generated by dbt. This simplicity and transparency are the beauty of dbt, making the whole infrastructure easy to work with. These are generic tests, and you can see how you can debug and understand the underlying processes.
+
+Let's correct the error and rerun the test. Ensure that all the values in your accepted values list are accurate and reflect the actual data.
+
+Now, let's execute dbt test again:
+
+
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test
+
+07:36:09  Running with dbt=1.7.17
+07:36:10  Registered adapter: snowflake=1.7.1
+07:36:10  Found 8 models, 1 seed, 1 snapshot, 5 tests, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+07:36:10  
+07:36:12  Concurrency: 1 threads (target='dev')
+07:36:12  
+07:36:12  1 of 5 START test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt_beark_the_model__Private_room__Shared_room__Hotel_room  [RUN]
+07:36:14  1 of 5 FAIL 1 accepted_values_dim_listings_cleansed_room_type__Entire_home_apt_beark_the_model__Private_room__Shared_room__Hotel_room  [FAIL 1 in 1.88s]
+07:36:14  2 of 5 START test not_null_dim_listings_cleansed_host_id ....................... [RUN]
+07:36:15  2 of 5 PASS not_null_dim_listings_cleansed_host_id ............................. [PASS in 1.12s]
+07:36:15  3 of 5 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+07:36:16  3 of 5 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.15s]
+07:36:16  4 of 5 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+07:36:17  4 of 5 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.33s]
+07:36:17  5 of 5 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+07:36:19  5 of 5 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.28s]
+07:36:19  
+07:36:19  Finished running 5 tests in 0 hours 0 minutes and 8.79 seconds (8.79s).
+07:36:19  
+07:36:19  Completed with 1 error and 0 warnings:
+07:36:19  
+07:36:19  Failure in test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt_beark_the_model__Private_room__Shared_room__Hotel_room (models/schema.yml)
+07:36:19    Got 1 result, configured to fail if != 0
+07:36:19  
+07:36:19    compiled Code at target/compiled/dbt_learn/models/schema.yml/accepted_values_dim_listings_c_e28eca9f72de66744937dbb743f42b83.sql
+07:36:19  
+07:36:19  Done. PASS=4 WARN=0 ERROR=1 SKIP=0 TOTAL=5
+``` 
+
+Tests are getting executed, right? And let's see the results. There we go. The test failed. You also get the test SQL. This is what I wanted to show you. You can open this in your code editor, but I will display it in the terminal.
+
+`07:36:19    compiled Code at target/compiled/dbt_learn/models/schema.yml/accepted_values_dim_listings_c_e28eca9f72de66744937dbb743f42b83.sql`
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat target/compiled/dbt_learn/models/schema.yml/accepted_values_dim_listings_c_e28eca9f72de66744937dbb743f42b83.sql
+
+    
+    
+
+with all_values as (
+
+    select
+        room_type as value_field,
+        count(*) as n_records
+
+    from AIRBNB.DEV.dim_listings_cleansed
+    group by room_type
+
+)
+
+select *
+from all_values
+where value_field not in (
+    'Entire home/apt - beark the model','Private room','Shared room','Hotel room'
+)
+
+```
+
+Every time you debug a test, you can review the SQL generated by dbt. This simplicity and transparency are the beauty of dbt, making the whole infrastructure easy to work with. These are generic tests, and you can see how you can debug and understand the underlying processes.
+
+Let's correct the error and rerun the test. Ensure that all the values in your accepted values list are accurate and reflect the actual data.
+
+#### Singular Tests
+
 
