@@ -2631,6 +2631,8 @@ LIMIT 10
 
 Here's the SQL query: I select every record from the listings where the minimum nights are less than one. If all minimum nights records are greater than zero, the test will pass. I've saved the file and can now execute the test. You will see that we have six tests, including our new test, DimListingsMinimumNights.
 
+In this specific case, the test is checking that there are no values in the minimum_nights column that are less than 1. This is important because a value less than 1 could indicate a data error, given that in the context of "minimum nights," it makes sense to expect the values to be at least 1 or greater.
+
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt test
 14:40:21  Running with dbt=1.7.17
