@@ -2615,4 +2615,79 @@ Let's correct the error and rerun the test. Ensure that all the values in your a
 
 #### Singular Tests
 
+These tests are straightforward. You can define any SQL statement in an SQL file, which will be used as a test. For the test to pass, the file must result in zero returned records. Let me show you an example. Ensure you are back with a proper generic test here. Previously, I broke the entire on-flash APT, and now we move on to our first singular test. Singular tests reside in the Tests folder as SQL files. I'll create a new file called DimListingsMinimumNights.sql. This test checks if the constraint that the minimum nights in the listings table must be greater than zero is upheld.
 
+```SQL
+(dbt_env) ➜  dbt_learn git:(main) touch tests/dim_listings_minimum_nigths.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat tests/dim_listings_minimum_nigths.sql
+
+SELECT
+    *
+FROM
+    {{ ref('dim_listings_cleansed') }}
+WHERE minimum_nights < 1
+LIMIT 10
+```
+
+Here's the SQL query: I select every record from the listings where the minimum nights are less than one. If all minimum nights records are greater than zero, the test will pass. I've saved the file and can now execute the test. You will see that we have six tests, including our new test, DimListingsMinimumNights.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test
+14:40:21  Running with dbt=1.7.17
+14:40:21  Registered adapter: snowflake=1.7.1
+14:40:21  Found 8 models, 1 seed, 1 snapshot, 6 tests, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+14:40:21  
+14:40:23  Concurrency: 1 threads (target='dev')
+14:40:23  
+14:40:23  1 of 6 START test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [RUN]
+14:40:24  1 of 6 PASS accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [PASS in 1.41s]
+14:40:24  2 of 6 START test dim_listings_minimum_nigths .................................. [RUN]
+14:40:26  2 of 6 PASS dim_listings_minimum_nigths ........................................ [PASS in 1.55s]
+14:40:26  3 of 6 START test not_null_dim_listings_cleansed_host_id ....................... [RUN]
+14:40:27  3 of 6 PASS not_null_dim_listings_cleansed_host_id ............................. [PASS in 1.23s]
+14:40:27  4 of 6 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+14:40:28  4 of 6 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.32s]
+14:40:28  5 of 6 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+14:40:30  5 of 6 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.31s]
+14:40:30  6 of 6 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+14:40:31  6 of 6 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.26s]
+14:40:31  
+14:40:31  Finished running 6 tests in 0 hours 0 minutes and 9.61 seconds (9.61s).
+14:40:31  
+14:40:31  Completed successfully
+14:40:31  
+14:40:31  Done. PASS=6 WARN=0 ERROR=0 SKIP=0 TOTAL=6
+```
+
+I have executed all the tests, but I can restrict the execution to tests concerning a specific model. For example, you can look at the dbt-test--help documentation to see how it works. We have select properties, allowing us to execute specific tests. Using dbt-test-select, I can run only the tests related to DimListings. Executing this command will run four tests, all for DimListings, including DimListingsMinimumNights.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_cleansed
+
+  14:43:01  Running with dbt=1.7.17
+  14:43:02  Registered adapter: snowflake=1.7.1
+  14:43:02  Found 8 models, 1 seed, 1 snapshot, 6 tests, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+  14:43:02  
+  14:43:07  Concurrency: 1 threads (target='dev')
+  14:43:07  
+  14:43:07  1 of 6 START test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [RUN]
+  14:43:08  1 of 6 PASS accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [PASS in 1.32s]
+  14:43:08  2 of 6 START test dim_listings_minimum_nigths .................................. [RUN]
+  14:43:09  2 of 6 PASS dim_listings_minimum_nigths ........................................ [PASS in 1.27s]
+  14:43:09  3 of 6 START test not_null_dim_listings_cleansed_host_id ....................... [RUN]
+  14:43:10  3 of 6 PASS not_null_dim_listings_cleansed_host_id ............................. [PASS in 1.20s]
+  14:43:10  4 of 6 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+  14:43:12  4 of 6 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.21s]
+  14:43:12  5 of 6 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+  14:43:13  5 of 6 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.66s]
+  14:43:13  6 of 6 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+  14:43:15  6 of 6 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.23s]
+  14:43:15  
+  14:43:15  Finished running 6 tests in 0 hours 0 minutes and 12.56 seconds (12.56s).
+  14:43:15  
+  14:43:15  Completed successfully
+  14:43:15  
+  14:43:15  Done. PASS=6 WARN=0 ERROR=0 SKIP=0 TOTAL=6
+```
+
+These are singular tests, very simple, and you will have the chance to try them out yourself in the next exercise.
