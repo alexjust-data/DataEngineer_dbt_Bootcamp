@@ -23,6 +23,11 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 
+#dbt_project.yml
+vars:
+  surrogate_key_treat_nulls_as_empty_strings: true #turn on legacy behaviour
+
+
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 

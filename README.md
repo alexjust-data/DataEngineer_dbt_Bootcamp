@@ -29,6 +29,11 @@
   - [Learning objectives - Tests](#learning-objectives---tests)
     - [Implementing Generic Tests in `dim_Listings_Cleaned.sql`](#implementing-generic-tests-in-dim_listings_cleanedsql)
     - [Singular Tests](#singular-tests)
+  - [Macros, custom tests and packages](#macros-custom-tests-and-packages)
+    - [Installing Third-Party Packages](#installing-third-party-packages)
+  - [Learning Objectives - Documentation](#learning-objectives---documentation)
+    - [Writing and Exploring Basic Documentation](#writing-and-exploring-basic-documentation)
+    - [Markdown-based Docs, Custom Overview Page and Assets](#markdown-based-docs-custom-overview-page-and-assets)
 
 ---
 ## Introduction
@@ -2693,3 +2698,510 @@ I have executed all the tests, but I can restrict the execution to tests concern
 ```
 
 These are singular tests, very simple, and you will have the chance to try them out yourself in the next exercise.
+
+
+```SQL
+(dbt_env) ➜  dbt_learn git:(main) touch tests/dim_hosts_is_superhosts.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat tests/dim_hosts_is_superhosts.sql
+
+SELECT *
+FROM {{ ref('dim_hosts_cleansed') }}
+WHERE is_superhost NOT IN ('t', 'f')
+LIMIT 10
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_hosts_cleansed     
+15:02:40  Running with dbt=1.7.17
+15:02:40  Registered adapter: snowflake=1.7.1
+15:02:41  Found 8 models, 1 seed, 1 snapshot, 7 tests, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
+15:02:41  
+15:02:42  Concurrency: 1 threads (target='dev')
+15:02:42  
+15:02:42  1 of 2 START test dim_hosts_is_superhosts ...................................... [RUN]
+15:02:44  1 of 2 PASS dim_hosts_is_superhosts ............................................ [PASS in 1.53s]
+15:02:44  2 of 2 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+15:02:45  2 of 2 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.33s]
+15:02:45  
+15:02:45  Finished running 2 tests in 0 hours 0 minutes and 4.43 seconds (4.43s).
+15:02:45  
+15:02:45  Completed successfully
+15:02:45  
+15:02:45  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 TOTAL=2
+```
+
+### Macros, custom tests and packages
+
+In this section, we will discuss macros, custom tests, and packages. By the end, 
+* you will understand what macros are and how to create your own. 
+* You will also learn how to use these macros to create custom generic tests 
+* and how to import macros, generic tests, and other elements from third-party GPT packages. 
+
+Let's get started with 
+
+* Macros are jinja templates created in the macros folder
+* There are many built-in macros in DBT
+* You can use macros in model definitions and tests
+* A special macro, called test, can be used for implementing your own generic tests
+* dbt packages can be installed easily to get access to a plethora of macros and tests
+
+The aim of this section is to guide you from creating a simple macro to using it as a custom test, progressing to custom generic tests, and finally working with packaging. 
+
+You will learn that macros are essentially Jinja templates stored in the macros folder, and GPT already includes a variety of built-in macros. By using a special macro called a test, you can create your own generic tests. Additionally, if you need more, you can search for third-party packages to import macros and tests created by others.
+
+**Creating our First Macro**
+
+We are setting up a macro to use as a singular test. This macro is not yet an official generic test. We will create the macro and use it arbitrarily for this purpose. Macros are stored in the macros folder, so let's create a new file there called no-nulls-in-columns. This macro will take a model name and check all its columns to see if any contain null values.
+
+```SQL
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat macros/no_nulls_in_columns.sql
+
+{% macro no_nulls_in_columns(model) %}
+    SELECT * FROM {{ model }} WHERE
+    {% for col in adapter.get_columns_in_relation(model) -%}
+        {{ col.column }} IS NULL OR
+    {% endfor %}
+    FALSE
+{% endmacro %} 
+```
+Here is the macro, written as a Jinja template in GPT. If you want to learn about creating control structures like loops or conditions in Jinja, you can refer to the Jinja documentation. In Jinja, you can create variables, use built-in functions, and more. GPT also includes many built-in macros and functions.
+
+
+Let's explore what this macro does. Named `no_nulls_in_columns`, it takes a single parameter, a model, much like a standard function in a programming language or an SQL function. 
+
+The macro constructs a SQL `SELECT` statement that iterates through every column in the model. The function `adapter.get_columns_in_relation(model)`—a built-in dbt functionality—retrieves all columns from the model. If you're interested in how different adapters like Snowflake or Databricks work, you can check their respective documentation.
+
+As we iterate through each column, the macro builds a condition to check if the column value is null. For example, it checks if the first column is null, then moves to the next column, and so on. The final SQL checks if any column contains a null value. At the end of the iteration, we add `FALSE` to ensure the query is syntactically valid, even if it's a single-column table.
+
+The macro ends with the keyword `endmacro`. The hyphen (`-`) in Jinja templates trims any trailing white spaces, making the expression concise. You can use this hyphen anywhere in the template to ensure clean formatting.
+
+
+Now, if we go back to the terminal and execute our test, you will see that GPT has identified 180 macros.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_cleansed  
+
+15:17:15  Running with dbt=1.7.17
+15:17:16  Registered adapter: snowflake=1.7.1
+15:17:16  Found 8 models, 1 seed, 1 snapshot, 7 tests, 3 sources, 0 exposures, 0 metrics, 547 macros, 0 groups, 0 semantic models
+15:17:16  
+15:17:22  Concurrency: 1 threads (target='dev')
+15:17:22  
+15:17:22  1 of 6 START test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [RUN]
+15:17:23  1 of 6 PASS accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [PASS in 1.40s]
+15:17:23  2 of 6 START test dim_listings_minimum_nigths .................................. [RUN]
+15:17:25  2 of 6 PASS dim_listings_minimum_nigths ........................................ [PASS in 1.39s]
+15:17:25  3 of 6 START test not_null_dim_listings_cleansed_host_id ....................... [RUN]
+15:17:26  3 of 6 PASS not_null_dim_listings_cleansed_host_id ............................. [PASS in 1.35s]
+15:17:26  4 of 6 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+15:17:27  4 of 6 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.20s]
+15:17:27  5 of 6 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+15:17:29  5 of 6 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.47s]
+15:17:29  6 of 6 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+15:17:30  6 of 6 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.21s]
+15:17:30  
+15:17:30  Finished running 6 tests in 0 hours 0 minutes and 13.98 seconds (13.98s).
+15:17:30  
+15:17:30  Completed successfully
+15:17:30  
+15:17:30  Done. PASS=6 WARN=0 ERROR=0 SKIP=0 TOTAL=6
+```
+
+With the macro in place, let's create a singular model from it. We'll use `no_nulls_in_columns` to create a new test. Navigate to the tests directory and create a file named `no_nulls_in_dimListings.sql`. 
+
+To refer to the macro, use double curly braces, similar to ref. The syntax looks like this: {{ no_nulls_in_columns(ref('dimListings.cleans')) }}. Here, we reference the model dimListings.cleans using ref.
+
+```SQL
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat tests/no_nulls_in_dim_listings.sql 
+
+  {{ no_nulls_in_columns(ref('dim_listings_cleansed')) }}
+```
+
+Now that the macro is set up, let's execute all the tests to ensure everything works correctly.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_cleansed
+
+  15:31:59  Running with dbt=1.7.17
+  15:32:00  Registered adapter: snowflake=1.7.1
+  15:32:00  Found 8 models, 1 seed, 1 snapshot, 8 tests, 3 sources, 0 exposures, 0 metrics, 547 macros, 0 groups, 0 semantic models
+  15:32:00  
+  15:32:05  Concurrency: 1 threads (target='dev')
+  15:32:05  
+  15:32:05  1 of 7 START test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [RUN]
+  15:32:06  1 of 7 PASS accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [PASS in 1.23s]
+  15:32:06  2 of 7 START test dim_listings_minimum_nigths .................................. [RUN]
+  15:32:07  2 of 7 PASS dim_listings_minimum_nigths ........................................ [PASS in 1.20s]
+  15:32:07  3 of 7 START test no_nulls_in_dim_listings ..................................... [RUN]
+  15:32:09  3 of 7 PASS no_nulls_in_dim_listings ........................................... [PASS in 2.05s]
+  15:32:09  4 of 7 START test not_null_dim_listings_cleansed_host_id ....................... [RUN]
+  15:32:10  4 of 7 PASS not_null_dim_listings_cleansed_host_id ............................. [PASS in 1.21s]
+  15:32:10  5 of 7 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+  15:32:11  5 of 7 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.23s]
+  15:32:11  6 of 7 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+  15:32:13  6 of 7 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.24s]
+  15:32:13  7 of 7 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+  15:32:14  7 of 7 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.30s]
+  15:32:14  
+  15:32:14  Finished running 7 tests in 0 hours 0 minutes and 13.87 seconds (13.87s).
+  15:32:14  
+  15:32:14  Completed successfully
+  15:32:14  
+  15:32:14  Done. PASS=7 WARN=0 ERROR=0 SKIP=0 TOTAL=7
+```
+
+**Writing Custom Generic Tests**
+
+Custom generic tests are essentially macros with a special signature. By using this signature, you can add these macro names into your YAML file, such as `schema.yml`, and use them as generic tests. For instance, the test for `dim_listings_minimum_nigths`, which ensures that `minimum nights` values are positive, is a good candidate for a custom generic test. Let's create this test.
+
+Custom generic tests reside in the macros folder since they are macros. I'll create a new file named `macros/positiveValue.sql`. Here’s the custom generic test, which you can also find in the class resources:
+
+```sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch macros/positive_value.sql       
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat macros/positive_value.sql
+
+  {% test positive_value(model, column_name) %}
+  SELECT
+      *
+  FROM
+      {{ model }}
+  WHERE
+      {{ column_name}} < 1
+  {% endtest %}
+```
+
+This macro has a special signature indicating it is a test. It is named `positive_value`, though the actual name used in your SQL can be different. The critical part is the macro name. The macro takes two parameters: `model` and `column_name`. When added to your `schema.yml` file, these parameters will be automatically filled in, allowing you to create SQL as if it were a singular test. This example selects all records from the model where the specified column contains values less than one, ensuring all values are positive.
+
+Next, we need to add this custom generic test to our schema.yml file. Here's how you can do it:
+
+```yml
+      - name: minimum_nights
+        tests:
+          - positive_value
+```
+
+In this example, we specify a new generic test for the minimumNights column of the dimListings model. The test we use is positiveValue.
+
+Now, let’s see if it works. By running your dbt tests, dbt will automatically use the positiveValue macro to check that all values in the minimumNights column are positive. This demonstrates how simple and powerful custom generic tests can be in ensuring data integrity within your dbt models.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_cleansed 
+
+15:56:55  Running with dbt=1.7.17
+15:56:55  Registered adapter: snowflake=1.7.1
+15:56:55  Found 8 models, 1 seed, 1 snapshot, 9 tests, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+15:56:55  
+15:56:57  Concurrency: 1 threads (target='dev')
+15:56:57  
+15:56:57  1 of 8 START test accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [RUN]
+15:56:58  1 of 8 PASS accepted_values_dim_listings_cleansed_room_type__Entire_home_apt__Private_room__Shared_room__Hotel_room  [PASS in 1.25s]
+15:56:58  2 of 8 START test dim_listings_minimum_nigths .................................. [RUN]
+15:57:00  2 of 8 PASS dim_listings_minimum_nigths ........................................ [PASS in 1.39s]
+15:57:00  3 of 8 START test no_nulls_in_dim_listings ..................................... [RUN]
+15:57:01  3 of 8 PASS no_nulls_in_dim_listings ........................................... [PASS in 1.61s]
+15:57:01  4 of 8 START test not_null_dim_listings_cleansed_host_id ....................... [RUN]
+15:57:02  4 of 8 PASS not_null_dim_listings_cleansed_host_id ............................. [PASS in 1.22s]
+15:57:02  5 of 8 START test not_null_dim_listings_cleansed_listing_id .................... [RUN]
+15:57:04  5 of 8 PASS not_null_dim_listings_cleansed_listing_id .......................... [PASS in 1.33s]
+15:57:04  6 of 8 START test positive_value_dim_listings_cleansed_minimum_nights .......... [RUN]
+15:57:06  6 of 8 PASS positive_value_dim_listings_cleansed_minimum_nights ................ [PASS in 1.83s]
+15:57:06  7 of 8 START test relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [RUN]
+15:57:07  7 of 8 PASS relationships_dim_listings_cleansed_host_id__host_id__ref_dim_hosts_cleansed_  [PASS in 1.29s]
+15:57:07  8 of 8 START test unique_dim_listings_cleansed_listing_id ...................... [RUN]
+15:57:08  8 of 8 PASS unique_dim_listings_cleansed_listing_id ............................ [PASS in 1.24s]
+15:57:08  
+15:57:08  Finished running 8 tests in 0 hours 0 minutes and 12.79 seconds (12.79s).
+15:57:08  
+15:57:08  Completed successfully
+15:57:08  
+15:57:08  Done. PASS=8 WARN=0 ERROR=0 SKIP=0 TOTAL=8
+```
+
+**updated versions os packages**
+
+DBT utils and third-party packages get updated rapidly. Please make sure that you install the latest version of dbt-utils. You can see the latest tested dbt-utils version on our GitHub page. In this source file, there is also a dbt-expectations package installed, which you can ignore for now; we will get to this later in the course.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt deps
+
+16:00:42  Running with dbt=1.7.17
+16:00:45  Installing dbt-labs/dbt_utils
+16:00:46  Installed from version 1.2.0
+16:00:46  Up to date!
+```
+
+When you use the latest version of dbt_utils, using the surrogate_key macro now returns an error saying there's a newer version: generate_surrogate_key.
+
+In case you run into this error in the next lecture, please use generate_surrogate_key and it should work fine.
+
+Also, if you use the dbt Power User VSCode extension, please quit VSCode for the time you execute dbt deps in the next lecture. Some students reported that the dbt Power User extension has a bug that breaks the dbt deps command's execution.
+
+
+
+#### Installing Third-Party Packages
+
+DBT (Data Build Tool) gives you the opportunity to install third-party packages into your project. Usually, you would go to [hub.getdbt.com](https://hub.getdbt.com) to look for packages, where you will see a full index of many packages.
+
+For example, if you want to extend the core capabilities of dbt:
+- To extend audit capabilities, you can use `dbt-utils`.
+- For more advanced auditing, you can use `audit-helper`.
+- For more sophisticated testing capabilities, you can use the `great-expectations` package, which is not necessarily hosted on dbt-hub.
+
+Here is a step-by-step guide on how to extend the core capabilities of dbt using `dbt-utils`:
+
+1. **Find the Package**:
+    - Go to [dbt-utils](https://hub.getdbt.com/dbt-labs/dbt_utils/latest/) on hub.getdbt.com.
+    - Locate the package definition needed for installation.
+
+2. **Add the Package to Your Project**:
+    - Copy the package definition (it's also available in your class resources).
+    - Navigate to your project folder.
+    - Create a new file named `packages.yml`.
+    - Add the following installation definition to `packages.yml`:
+      ```yaml
+      packages:
+        - package: dbt-labs/dbt_utils
+          version: <version_number>
+      ```
+
+3. **Install the Package**:
+    - To install the package, execute the following command:
+      ```bash
+      dbt deps
+      ```
+    - This command, `dbt deps`, stands for dbt dependencies. It will install the packages defined as dependencies for your project.
+
+By following these steps, you can extend the functionality of dbt and integrate additional capabilities into your project.
+
+We need to install it. In order to install a package, you can execute `dbt deps`. `dbt deps` stands for dbt dependencies. These packages are expressed as dependencies to your project. When you run `dbt deps`, your packages will be installed based on the package's YAML definition.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt deps
+
+16:00:42  Running with dbt=1.7.17
+16:00:45  Installing dbt-labs/dbt_utils
+16:00:46  Installed from version 1.2.0
+16:00:46  Up to date!
+```
+
+Let's take a look at this `dbt-utils` package. It's all available on GitHub. Here you see the public reference we add in the `packages.yaml` file. 
+
+I want to use a specific function from this package called [surrogate_key](https://github.com/dbt-labs/dbt-utils/tree/1.2.0/#generate_surrogate_key-source) . With a `surrogate_key`, you can generate a primary key for your table. Even if you have a table that doesn't have a proper key, you can use this `surrogate_key` function and specify which columns combined will be unique. Based on this, dbt will create the key for you.
+
+```sql
+{{ dbt_utils.generate_surrogate_key(['field_a', 'field_b'[,...]]) }}
+```
+
+
+For example, if I go to Snowflake and take a look at the `fact_reviews` table, you will see that it doesn't have any key. It has `listing_id`, `review_date`, `reviewer_name`, `review_text`, and `review_sentiment`. Not all these columns are primary keys, but we can combine them to make a primary key.
+
+![](/img/74.png)
+
+Let's do this:
+
+1. **Open the `fact_reviews` model**:
+    - Navigate to your project.
+    - Open the `fact_reviews` file from the `models` folder.
+      ```sql
+      {{
+        config(
+          materialized = 'incremental',
+          on_schema_change = 'fail'
+          )
+      }}
+      WITH src_reviews AS (
+          SELECT * FROM {{ ref("src_reviews") }}
+      )
+      SELECT *
+      FROM src_reviews
+      WHERE review_text IS NOT NULL
+      {% if is_incremental() %}
+          AND review_date > (SELECT MAX(review_date) FROM {{ this }})
+      {% endif %}
+      ```
+    - Add a new key column in the main `SELECT` statement.
+
+2. **Add the `surrogate_key`**:
+    - Add an extra column using the `surrogate_key` function.
+    - Use the following columns: `listing_id`, `review_date`, `reviewer_name`, and `review_text` (excluding `review_sentiment`).
+      ```sql
+      SELECT
+        ...,
+        {{ dbt_utils.surrogate_key(['listing_id', 'review_date', 'reviewer_name', 'review_text']) }} AS review_id
+      FROM
+        ...
+      ```
+      ```sql
+      {{
+        config(
+          materialized = 'incremental',
+          on_schema_change = 'sync_all_columns'
+        )
+      }}
+
+      WITH src_reviews AS (
+        SELECT * FROM {{ ref('src_reviews') }}
+      )
+
+      SELECT 
+        {{ dbt_utils.generate_surrogate_key(['listing_id', 'review_date', 'reviewer_name', 'review_text']) 
+        }} AS review_id,
+        *
+      FROM src_reviews
+      WHERE review_text IS NOT NULL
+      {% if is_incremental() %}
+        AND review_date > (
+          SELECT MAX(review_date) 
+          FROM {{ this }}
+        )
+      {% endif %}
+      ```
+
+3. **Refresh the Model**:
+    - Execute `dbt run` to refresh the model.
+    - Since this is an incremental model, add the `--full-refresh` flag:
+      ```bash
+      dbt run --full-refresh --select fact_reviews
+      ```
+
+Let's see if it works. 
+
+It started an incremental run of `dev_fact_reviews`, and it's completely rebuilt. Great. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run --full-refresh --select fct_reviews
+18:15:19  Running with dbt=1.7.17
+18:15:20  Registered adapter: snowflake=1.7.1
+18:15:20  Found 8 models, 1 snapshot, 9 tests, 1 seed, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+18:15:20  
+18:15:23  Concurrency: 1 threads (target='dev')
+18:15:23  
+18:15:23  1 of 1 START sql incremental model DEV.fct_reviews ............................. [RUN]
+18:15:29  1 of 1 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 1 in 6.14s]
+18:15:29  
+18:15:29  Finished running 1 incremental model in 0 hours 0 minutes and 8.95 seconds (8.95s).
+18:15:29  
+18:15:29  Completed successfully
+18:15:29  
+18:15:29  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+4. **Verify in Snowflake**:
+    - Go to Snowflake and refresh the page.
+    - Check the `dev_tables.fact_reviews` table.
+    - You should now see a `review_id` column, which is a hash of all the columns that participate in the ID composition.
+
+This process shows how simple it is to use any of the built-in packages from dbt hub or third-party providers. You can also create your own packages and distribute them publicly or internally within your organization.
+
+![](/img/75.png)
+
+### Learning Objectives - Documentation
+
+**Overview**
+
+The general concept of documentation in DBT is to keep it as close as possible to the actual source code, specifically to your analytics code. This is considered best practice when building data infrastructure. If you separate documentation into a completely standalone service, it risks diverging from your actual analytics code. To prevent this, DBT integrates documentation seamlessly with your code.
+
+You can handle documentation in DBT in two ways. First, you can include simple documentation directly in your YAML files, such as the schema YAML where your model is defined. Here, you can add descriptions for documenting models, tables, views, columns, and so on. If more comprehensive documentation is needed, you can write it in standalone markdown files for any tables or columns. DBT will compile this documentation into an HTML service, which can be used either as a static set of HTML assets on your web server or via the built-in DBT web server for development and iterative documentation purposes.
+
+There are two special cases to note. One is the project overview page, which has a dedicated file called overview.md. You can write the overview documentation in this markdown file. Additionally, you can configure DBT to store various assets, such as downloadable files and images, in a special folder, referencing them from the markdown files.
+
+We will cover all these use cases and more in our upcoming lessons.
+
+#### Writing and Exploring Basic Documentation
+
+First, we are going to look at how to create simple documentation, generate HTML documentation based on what we define, and start the documentation survey interface. Simple documentation can be added to the YAML files for your model descriptions. You can document models, schemas, sources, macros, and tests.
+
+Let's document our model. Please open schema.yaml and add documentation to `dim_listings_cleansed`. Adding documentation in DBT is straightforward. You simply add a new property called description and include your documentation. For example, the description for the `dim_listings_cleansed` table might state that it contains Airbnb listings `description: Cleansed table which contains Airbnb listings.`. Similarly, you can add a description tag for each column. 
+
+```yml
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/schema.yml 
+
+version: 2
+
+models:
+  - name: dim_listings_cleansed
+    description: Cleansed table which contains Airbnb listings.
+    columns:
+      
+      - name: listing_id
+        description: Primary key for the listing
+        tests:
+          - unique
+          - not_null
+        
+      - name: host_id
+        description: The hosts's id. References the host table.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_hosts_cleansed')
+              field: host_id
+
+      - name: room_type
+        description: Type of the apartment / room
+        tests:
+          - accepted_values:
+              values: ['Entire home/apt', 'Private room', 'Shared room', 'Hotel room']
+
+      - name: minimum_nights
+        description: '{{ doc("dim_listing_cleansed_minimum_nights") }}'
+        tests:
+          - positive_value%   
+```
+
+For example, for the primary key of the listing, you would document the listing ID column. Let's do the same for the host ID. Copy-paste the description from the host resources: host ID is host ID. We also have room type and minimum nulls. We'll leave minimum nulls for the next lesson to add more detailed documentation.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs generate
+18:44:03  Running with dbt=1.7.17
+18:44:03  Registered adapter: snowflake=1.7.1
+18:44:03  Found 8 models, 1 snapshot, 8 tests, 1 seed, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+18:44:03  
+18:44:05  Concurrency: 1 threads (target='dev')
+18:44:05  
+18:44:07  Building catalog
+18:44:11  Catalog written to /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/target/catalog.json
+```
+
+Once the basic documentation is in place, save the file. To generate the HTML website, execute dbt docs generate. DBT will process all your YAML files, compile the documentation pieces, and create an HTML page. This documentation is stored in the catalog.json file within the target folder.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cd target 
+(dbt_env) ➜  target git:(main) ✗ ls -la
+total 5408
+drwxr-xr-x  13 alex  staff      416 Jul 15 20:44 .
+drwxr-xr-x  16 alex  staff      512 Jul 15 19:55 ..
+-rw-r--r--   1 alex  staff    14213 Jul 15 20:44 catalog.json
+drwxr-xr-x   3 alex  staff       96 Jul 13 16:45 compiled
+-rw-r--r--   1 alex  staff    20505 Jul 15 20:44 graph.gpickle
+-rw-r--r--   1 alex  staff     1967 Jul 15 20:44 graph_summary.json
+-rw-r--r--   1 alex  staff  1501119 Jul 15 20:44 index.html
+-rw-r--r--   1 alex  staff   586624 Jul 15 20:44 manifest.json
+-rw-r--r--   1 alex  staff   604338 Jul 15 20:44 partial_parse.msgpack
+drwxr-xr-x   3 alex  staff       96 Jul 13 16:45 run
+-rw-r--r--   1 alex  staff    13882 Jul 15 20:44 run_results.json
+-rw-r--r--   1 alex  staff      234 Jul 15 20:44 semantic_manifest.json
+-rw-r--r--   1 alex  staff     1065 Jul 13 21:43 sources.json
+(dbt_env) ➜  target git:(main) ✗ less catalog.json 
+```
+
+You can view this structured schema definition and documentation by opening catalog.json with a code editor. This raw file isn't very human-friendly, but DBT provides an index.html and other files to create a proper HTML-based documentation. To view it, you can run a lightweight Python documentation server using dbt docs serve.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs serve
+```
+
+For production, you might want to use a more robust server, like serving the static files behind an Nginx server. However, for our purposes, the lightweight server is sufficient. Starting the server with dbt docs serve will allow you to view the documentation in a web interface.
+
+![](/img/76.png)
+
+In this interface, you can explore the documentation for sources, models, macros, tests, snapshots, and third-party packages. For example, expanding the Airbnb and Dev sections will show the `dim_listings_cleansed` documentation. This includes descriptions, statistics, metadata, ownership information, package details, Snowflake relations, and column information such as types and descriptions. You can also view tests defined on the model and any referencing models. Clicking on a test shows its code and the combined code executed by Snowflake. Additionally, you can see dependencies and the model's source code, including the Jinja template and compiled code.
+
+![](/img/77.png)
+
+This concludes our overview of generating and serving DBT documentation. We will delve deeper into exploring these features in the next lessons.
+
+
+#### Markdown-based Docs, Custom Overview Page and Assets
+
+
