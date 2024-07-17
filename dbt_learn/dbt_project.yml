@@ -39,10 +39,9 @@ vars:
 models:
   dbt_learn:
     +materialized: view
+    +post-hook:
+      - "GRANT SELECT ON {{ this }} TO ROLE REPORTER"
     dim:
       +materialized: table
     src:
       +materialized: ephemeral
-
-
-

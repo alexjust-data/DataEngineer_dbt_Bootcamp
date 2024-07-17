@@ -1,0 +1,18 @@
+ersion: 2
+
+exposures:
+  - name: executive_dashboard
+    label: Executive Dashboard
+    type: dashboard
+    maturity: low
+    url: https://dd8e9ea5.us2a.app.preset.io/superset/dashboard/8/?edit=true&native_filters_key=IOKdXVlOGA8eZos7U8JJYIyYFtHcHSKtMqSTQ_b0-45_IRiAv8_awODEiIKdy-E7
+    description: Executive Dashboard about Airbnb listings and hosts
+      
+
+    depends_on:
+      - ref('dim_listings_w_hosts')
+      - ref('mart_full_moon_reviews')
+
+    owner:
+      name: Zoltan C. Toth
+      email: dbtstudent@gmail.com
