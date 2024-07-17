@@ -26,14 +26,20 @@
     - [Sources Freshness](#sources-freshness)
   - [Snapshots](#snapshots)
     - [Creating a Snapshot](#creating-a-snapshot)
-  - [Learning objectives - Tests](#learning-objectives---tests)
+  - [Tests](#tests)
     - [Implementing Generic Tests in `dim_Listings_Cleaned.sql`](#implementing-generic-tests-in-dim_listings_cleanedsql)
     - [Singular Tests](#singular-tests)
   - [Macros, custom tests and packages](#macros-custom-tests-and-packages)
     - [Installing Third-Party Packages](#installing-third-party-packages)
-  - [Learning Objectives - Documentation](#learning-objectives---documentation)
+  - [Documentation](#documentation)
     - [Writing and Exploring Basic Documentation](#writing-and-exploring-basic-documentation)
     - [Markdown-based Docs, Custom Overview Page and Assets](#markdown-based-docs-custom-overview-page-and-assets)
+    - [The Linage Graph (Data Flow DAG)](#the-linage-graph-data-flow-dag)
+    - [dbt Power User - Lineage and Documentation (optional)](#dbt-power-user---lineage-and-documentation-optional)
+  - [Analyses, Hooks and Exposures](#analyses-hooks-and-exposures)
+    - [Analyses](#analyses)
+    - [Hooks](#hooks)
+    - [Setting up a BI Dashboard in Snowflake and Preset](#setting-up-a-bi-dashboard-in-snowflake-and-preset)
 
 ---
 ## Introduction
@@ -2354,9 +2360,10 @@ However, with snapshots, there is more internal SQL logic at play. The process o
 
 This demonstrates how DBT increasingly integrates into the process, handling more complex logic. I find snapshots particularly impressive and hope you will appreciate them as well.
 
-### Learning objectives - Tests
+### Tests
 
-LEARNING OBJECTIVES
+**Learning objectives**
+
    * Understand how tests can be defined
    * Configure built-in generic tests
    * Create your own singular tests
@@ -3095,9 +3102,9 @@ This process shows how simple it is to use any of the built-in packages from dbt
 
 ![](/img/75.png)
 
-### Learning Objectives - Documentation
+### Documentation
 
-**Overview**
+**Learning Objectives**
 
 The general concept of documentation in DBT is to keep it as close as possible to the actual source code, specifically to your analytics code. This is considered best practice when building data infrastructure. If you separate documentation into a completely standalone service, it risks diverging from your actual analytics code. To prevent this, DBT integrates documentation seamlessly with your code.
 
@@ -3204,4 +3211,355 @@ This concludes our overview of generating and serving DBT documentation. We will
 
 #### Markdown-based Docs, Custom Overview Page and Assets
 
+There are three more advanced documentation concepts I'd like to show you. One is how to create more sophisticated Markdown documentation for your tables or columns. The second is how to redesign the overview page. The third is how to include your own assets, like images, in the documentation. Let's see how this can be done.
 
+
+First, I'll show you how to create more sophisticated documentation. So far, you've seen the description tags, which are tools for creating simple documentation. 
+
+* `description: Cleansed table which contains Airbnb listings`.
+* `description: The hosts's id. References the host table`.
+* `description: Type of the apartment / room`
+
+```yml
+(dbt_env) ➜  dbt_learn git:(main) cat models/schema.yml 
+models:
+  - name: dim_listings_cleansed
+    description: Cleansed table which contains Airbnb listings.
+    columns:
+
+      - name: listing_id
+        description: Primary key for the listing
+        tests:
+          - unique
+          - not_null
+
+      - name: host_id
+        description: The hosts's id. References the host table.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_hosts_cleansed')
+              field: host_id
+
+      - name: room_type
+        description: Type of the apartment / room
+        tests:
+          - accepted_values:
+              values: ['Entire home/apt',
+                      'Private room',
+                      'Shared room',
+                      'Hotel room']
+      - name: minimum_nights
+        tests:
+          - positive_value
+```
+
+
+`- name: minimum_nights` will have empty tags. Let's add a more sophisticated documentation tag. I will start with the description, and something will come here `description: ...`. This is where I want to put my more sophisticated documentation. 
+```yml
+      - name: minimum_nights
+        description: ...
+        tests:
+          - positive_value
+```
+
+This will be managed through Markdown (MD). Typically, you create a documentation file, which I will call docs.md, but you can name it anything you like. The important part is that it should be an MD file in the modules folder. Let's copy a piece of documentation into it. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano models/docs.md
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/docs.md
+
+    {% docs dim_listing_cleansed__minimum_nights %}
+
+    Minimum number of nights required to rent this property. 
+
+    Keep in mind that old listings might have `minimum_nights` set 
+    to 0 in the source tables. Our cleansing algorithm updates this to `1`.
+
+    {% enddocs %}
+```
+
+You can get this from the class resources as usual. This file contains a Jinja template that includes a documentation block. Here is the documentation itself, in Markdown format, with some Markdown formatting. This is the documentation's key: `{% docs dim_listing_cleansed__minimum_nights %}`, named dim_listing_cleansed__minimum_nights. In the description tag, add the doc.jinja value. 
+
+Now that we have this documentation in place, let's connect it to DimListingsMinimumNodes. To do this, go to the schema.yaml file. 
+
+```yml
+      - name: minimum_nights
+        description: {{doc("dim_listing_cleansed__minimum_nights")}}
+        tests:
+          - positive_value
+```
+
+Here, we specify `dim_listing_cleansed__minimum_nights`. This is an arbitrary name, and you can choose your own. Now we have a more sophisticated description. Let's see if it works. By running dbt docs generate, the documentation will be auto-generated. After this, start the documentation server with dbt docs serve.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs generate
+
+04:46:12  Running with dbt=1.7.17
+04:46:12  Registered adapter: snowflake=1.7.1
+04:46:12  Found 8 models, 1 snapshot, 9 tests, 1 seed, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+04:46:12  
+04:46:14  Concurrency: 1 threads (target='dev')
+04:46:14  
+04:46:15  Building catalog
+04:46:19  Catalog written to /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/target/catalog.json
+```
+
+![](/img/78.png)
+
+---
+
+![](/img/79.png)
+
+**overview page**
+
+Next, let's work on the overview page. The overview page is currently a built-in page. I want to show you how to replace it with something more meaningful, such as our data model schema as an image and an intro text. 
+
+![](/img/80.png)
+
+To do this, create a new Markdown file in Models, named overview.md, to keep it separate. Copy the docs block for the overview. The overview uses a special tag, `__overview__`. If you create a tag like this, everything you put in it will be rendered as Markdown and set as your overview page.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano models/overview.md
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/overview.md
+
+  {% docs __overview__ %}
+  # Airbnb pipeline
+
+  Hey, welcome to our Airbnb pipeline documentation!
+
+  Here is the schema of our input data:
+  ![input schema](https://dbtlearn.s3.us-east-2.amazonaws.com/input_schema.png)
+
+  {% enddocs %}
+```
+
+Let's regenerate the documentation by pressing CTRL-C to stop the documentation server, then run dbt docs generate again. Start the documentation server again with dbt docs serve. 
+
+
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs generate      
+  04:57:47  Running with dbt=1.7.17
+  04:57:47  Registered adapter: snowflake=1.7.1
+  04:57:47  Found 8 models, 1 snapshot, 9 tests, 1 seed, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+  04:57:47  
+  04:57:52  Concurrency: 1 threads (target='dev')
+  04:57:52  
+  04:57:54  Building catalog
+  04:57:58  Catalog written to /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/target/catalog.json
+  (dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs serve   
+  04:58:09  Running with dbt=1.7.17
+  Serving docs at 8080
+  To access from your browser, navigate to: http://localhost:8080
+
+  Press Ctrl+C to exit.
+  127.0.0.1 - - [17/Jul/2024 06:58:09] "GET / HTTP/1.1" 200 -
+  127.0.0.1 - - [17/Jul/2024 06:58:10] "GET /manifest.json?cb=1721192290205 HTTP/1.1" 200 -
+  127.0.0.1 - - [17/Jul/2024 06:58:10] "GET /catalog.json?cb=1721192290205 HTTP/1.1" 200 -
+  127.0.0.1 - - [17/Jul/2024 06:58:10] code 404, message File not found
+  127.0.0.1 - - [17/Jul/2024 06:58:10] "GET /cart.json HTTP/1.1" 404 -
+```
+
+Now, the overview page is replaced, and you will see our image here. If you look at the MD file, you'll see that this image comes directly from our S3 bucket `![input schema](https://dbtlearn.s3.us-east-2.amazonaws.com/input_schema.png)` as input_schema.png.
+
+![](/img/81.png)
+
+Often, you don't want your images to be publicly accessible. You want to bundle them with your documentation, which is possible through the asset folder. Let me show you how to import this into assets.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ mkdir -p assets
+```
+
+First, create a new folder called assets. You can put any kind of image or asset into it. However, this folder alone isn't enough; we need to connect it to dbt through configuration. Open your dbt_project.yml file and specify that the asset path should be the assets folder `asset-path: ["assets"]`. Now these are connected. I have my assets folder, and the assets path is set.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano dbt_project.yml 
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat dbt_project.yml
+  ... 
+  # These configurations specify where dbt should look for different types of files.
+  # The `model-paths` config, for example, states that models in this project can be
+  # found in the "models/" directory. You probably won't need to change these!
+  model-paths: ["models"]
+  analysis-paths: ["analyses"]
+  test-paths: ["tests"]
+  seed-paths: ["seeds"]
+  macro-paths: ["macros"]
+  snapshot-paths: ["snapshots"]
+  asset-paths: ["assets"] # <-----------------
+```
+
+Stop the serving process and download the PNG file using CURL or manually from the class resources. Make sure you download the image to the assets folder with the same name. Now it should be in assets. Check in the code to see the input_schema.png in the assets folder.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ curl https://dbtlearn.s3.us-east-2.amazonaws.com/input_schema.png -o assets/input_schema.png
+
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 66943  100 66943    0     0  17858      0  0:00:03  0:00:03 --:--:-- 17860
+
+(dbt_env) ➜  dbt_learn git:(main) ✗ ls -la assets/
+  total 136
+  drwxr-xr-x   3 alex  staff     96 Jul 17 07:06 .
+  drwxr-xr-x  17 alex  staff    544 Jul 17 07:02 ..
+  -rw-r--r--   1 alex  staff  66943 Jul 17 07:06 input_schema.png
+```
+
+Replace the link in your Markdown file to point to the assets folder `![input schema](assets/input_scehma.png)`. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ nano models/overview.md 
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/overview.md
+
+  {% docs __overview__ %}
+  # Airbnb pipeline
+
+  Hey, welcome to our Airbnb pipeline documentation!
+
+  Here is the schema of our input data:
+  ![input schema](assets/input_schema.png)
+
+  {% enddocs %}
+```
+
+Save it, and run dbt docs generate. When the documentation is generated, all files from the assets folder will be included. Check the target folder, where you'll find the assets folder containing the input_schema.png.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs generate    
+05:15:36  Running with dbt=1.7.17
+05:15:37  Registered adapter: snowflake=1.7.1
+05:15:37  Found 8 models, 1 snapshot, 9 tests, 1 seed, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+05:15:37  
+05:15:39  Concurrency: 1 threads (target='dev')
+05:15:39  
+05:15:40  Building catalog
+05:15:44  Catalog written to /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/target/catalog.json
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs serve  
+```
+
+![](/img/81.png)
+
+
+Start the documentation server again with dbt docs serve. You will see the same image, but now it’s local. If you access the assets through your local server, you'll see the image under assets. Bundling everything together into your documentation is a good idea for production. You can then take the target folder and host it statically or use a development server behind an Nginx instance, or work with your DevOps team to productionize it.
+
+
+#### The Linage Graph (Data Flow DAG)
+
+Another important part of the Docs Serving Interface that we haven't covered yet is the DAG (Directed Acyclic Graph) of your data flow. The concept of a DAG represents the dependencies between different jobs and models as your data flows. Let me show you how it works.
+
+When you click on the DAG, you'll see the lineage of your data. 
+
+![](/img/86.png)
+
+Hopefully, yours looks very similar to this. The DAG provides a good overview of how the data flows and how models are built on top of each other. Let's take a closer look.
+
+![](/img/82.png)
+
+
+In the DAG view, you see all the sources as green boxes. You can also see the dependencies, tests, models, sources, and many other components. For example, if you're only interested in data components like models, snapshots, and sources, you can filter the view accordingly. 
+
+![](/img/83.png)
+
+You might see tests and models, such as `no_nights` and `dim_listings_minimum_nights`. These are shown in gray, indicating they are not part of the current selection. If you click "Update Graph," the excluded items will disappear from the view.
+
+![](/img/84.png)
+
+You can dive deeper into any part of the DAG. For example, clicking on `src_hosts` will show its entire lineage. Right-clicking it allows you to refocus on the node or view its documentation. Viewing the documentation will take you to the relevant section for `src_hosts`.
+
+![](/img/87.png)
+
+By clicking the tag again, 
+
+![](/img/86.png)
+
+you can see the entire lineage graph of everything that `src_hosts` depends on and everything that depends on `src_hosts`. You can also return to a full lineage view by clicking a specific button. This tool is important for understanding dependencies and how you use the dbt run command.
+
+The DAG view can also display specific selectors. For example, `+SFC_hosts+` shows everything `src_hosts` depends on (indicated by the preceding plus) and everything that builds on `src_hosts` (indicated by the trailing plus). 
+
+![](/img/88.png)
+
+If you want to see only what `src_hosts` builds on, remove the trailing plus. Conversely, if you want to see only what depends on `src_hosts`, remove the preceding plus.
+
+![](/img/89.png)
+
+I can also go to a model and just say that I want to hide this,
+
+![](/img/90.png)
+
+, and if I wanted to hide this, it goes into the exclude parameter. So you see that it says, hide dbt with host and everything that depends on dbt with host.
+
+![](/img/91.png)
+
+You can search by text, if you put text on your model, or explore different packages if you have a multi-package project, and before this, your resources. 
+
+![](/img/92.png)
+
+![](/img/93.png)
+
+
+The DAG is quite useful, and I want to show you one last thing about selectors and excludes. The same selectors used in the DAG can be applied to dbt run. For example, if you stop the server and execute dbt run, you can use the --help parameter to see various options, including `-m` and `-s`. The -s parameter allows you to select specific criteria.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run --help
+Usage: dbt run [OPTIONS]
+
+  Compile SQL and execute against the current target database.
+
+Options:
+  --cache-selected-only / --no-cache-selected-only
+                                  At start of run, populate relational cache
+                                  only for schemas containing selected nodes,
+                                  or for all schemas of interest.
+  -d, --debug / --no-debug        Display debug logging during dbt execution.
+                                  Useful for debugging and making bug reports.
+  -x, --fail-fast / --no-fail-fast
+                                  Stop execution on first failure.
+  -s, -m, --select, --models, --model TUPLE
+                                  Specify the nodes to include.
+  --selector TEXT                 The selector name to use, as defined in
+                                  selectors.yml
+  --state DIRECTORY               Unless overridden, use this state directory
+```
+
+You can run `dbt run -s SFC_hosts+` to execute SFC_hosts and every model that builds on it. This works for dbt run and dbt test. For instance, running dbt run -s SFC_hosts+ will execute SFC_hosts and all dependent models. While SFC_hosts is an ephemeral materialization and won't appear in the output, the two models that depend on it will execute.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run --select src_hosts+
+07:15:57  Running with dbt=1.7.17
+07:15:58  Registered adapter: snowflake=1.7.1
+07:15:58  Found 8 models, 1 snapshot, 9 tests, 1 seed, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+07:15:58  
+07:16:05  Concurrency: 1 threads (target='dev')
+07:16:05  
+07:16:05  1 of 2 START sql view model DEV.dim_hosts_cleansed ............................. [RUN]
+07:16:07  1 of 2 OK created sql view model DEV.dim_hosts_cleansed ........................ [SUCCESS 1 in 1.62s]
+07:16:07  2 of 2 START sql table model DEV.dim_listings_w_hosts .......................... [RUN]
+07:16:10  2 of 2 OK created sql table model DEV.dim_listings_w_hosts ..................... [SUCCESS 1 in 2.95s]
+07:16:10  
+07:16:10  Finished running 1 view model, 1 table model in 0 hours 0 minutes and 11.61 seconds (11.61s).
+07:16:10  
+07:16:10  Completed successfully
+07:16:10  
+07:16:10  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 TOTAL=2
+```
+
+Using the select parameter is a handy way to restrict your dbt run to specific models you're interested in.
+
+#### dbt Power User - Lineage and Documentation (optional)
+
+**Assignment: Document the dim_hosts_cleansed table**
+
+...
+
+Add basic documentation to the dim_hosts_cleansed table
+
+...
+
+### Analyses, Hooks and Exposures
+
+#### Analyses
+
+
+#### Hooks
+
+#### Setting up a BI Dashboard in Snowflake and Preset
