@@ -40,6 +40,8 @@
     - [Analyses](#analyses)
     - [Hooks](#hooks)
     - [Setting up a BI Dashboard in Snowflake and Preset](#setting-up-a-bi-dashboard-in-snowflake-and-preset)
+      - [Readme](#readme)
+    - [Exposures](#exposures)
 
 ---
 ## Introduction
@@ -3557,9 +3559,390 @@ Add basic documentation to the dim_hosts_cleansed table
 
 ### Analyses, Hooks and Exposures
 
+In this section, we are going to discuss three advanced topics: analysis, hooks, and exposures. By the end of this section, you will learn how to set up ad-hoc analytical queries, store them in dbt, and compile them. Additionally, you will understand how to use model pre- and post-hooks to manage permissions in the data warehouse. We will also have an extended session where we register for a hosted BI tool called Preset and set up a dashboard. You will then learn how to work with exposures to document and link to our dashboard.
+
 #### Analyses
 
+Often, you need to execute an ad-hoc query without creating a model or materializing it anywhere. You simply want to run a query while still using dbt's macros, templating system, and model references. This is where `analysts` come in. Analysts reside in the analysis folder, and you can create SQL files here just like creating a model. 
+
+I will create one to examine the new sampling and its dependence on the model. Let's call it 2.1.0.3. In this file, I will add a simple query that counts the number of reviews grouped by tool mode and review sentiment.
+
+```SQL
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) cd dbt_learn 
+(dbt_env) ➜  dbt_learn git:(main) nano analyses/full_moon_no_sleep.sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat analyses/full_moon_no_sleep.sql 
+
+WITH fullmoon_reviews AS (
+    SELECT * FROM {{ ref('mart_full_moon_reviews') }}
+)
+SELECT
+    is_full_moon,
+    review_sentiment,
+    COUNT(*) as reviews
+FROM
+    fullmoon_reviews
+GROUP BY
+    is_full_moon,
+    review_sentiment
+ORDER BY
+    is_full_moon,
+    review_sentiment%   
+```
+
+As you can see, this query still uses reference tags, allowing me to reference models, but these queries will not be materialized. You can still use and version control these queries, letting them reside in the analysis folder. To execute them against your data warehouse, you can run dbt compile. This command will process all your SQL files and compile them into actual SQL queries. The compiled queries will be stored in the target directory.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt compile
+
+  11:43:43  Running with dbt=1.7.17
+  11:43:43  Registered adapter: snowflake=1.7.1
+  11:43:44  Found 8 models, 1 snapshot, 9 tests, 1 seed, 1 analysis, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+  11:43:44  
+  11:43:45  Concurrency: 1 threads (target='dev')
+  11:43:45  
+```
+
+```sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ less target/compiled/dbt_learn/analyses/full_moon_no_sleep.sql 
+
+WITH fullmoon_reviews AS (
+    SELECT * FROM AIRBNB.DEV.mart_full_moon_reviews
+)
+SELECT
+    is_full_moon,
+    review_sentiment,
+    COUNT(*) as reviews
+FROM
+    fullmoon_reviews
+GROUP BY
+    is_full_moon,
+    review_sentiment
+ORDER BY
+    is_full_moon,
+    review_sentiment
+target/compiled/dbt_learn/analyses/full_moon_no_sleep.sql (END)
+```
+
+Now, I will demonstrate this process in Snowflake. After compiling, I have a proper query that I can execute against the data warehouse. Here is the query execution. 
+
+![](/img/94.png)
+
+As you can see, we have performance metrics versus negative, positive, and neutral reviews. Although this data does not yet determine how performance affects these reviews, we will set up a dashboard in the next lessons to visualize and analyze this further.
 
 #### Hooks
 
+In order to create a dashboard, we need to create a user specifically for the dashboard, which we will call "preset." We also need to ensure that permissions are maintained for any table that is recreated when we execute dbt run, dbt seed, or dbt snapshot. This is where hooks come in handy. Hooks are SQL scripts executed at predefined times. You can define hooks at the project level, model subfolder level, or individual model level. Generally speaking, there are four kinds of hooks:
+
+1. On-run start: These are SQL scripts executed before the core of dbt run, dbt seed, or dbt snapshot.
+2. On-run end: These are executed at the very end of dbt run, dbt seed, or dbt snapshot.
+3. Pre-hook: These are executed before a model, seed, or snapshot is created.
+4. Post-hook: These are executed after a model, seed, or snapshot has been created.
+
+--- 
+
+* Hooks are SQLs that are executed at predefined times
+* Hooks can be configured on the project, subfolder, or model level
+* Hook types:
+  * on_run_start: executed at the start of dbt {run, seed, snapshot}
+  * on_run_end: executed at the end of dbt {run, seed, snapshot}
+  * pre-hook: executed before a model/seed/snapshot is built
+  * post-hook: executed after a model/seed/snapshot is built
+
+---
+
+Let's see how this works in action. First, we need to create a user for our BI dashboarding tool, which we will call "`preset`." This `user` will have the login name "preset" with the `password` "Preset123," and it will use the "reporter" `role`. We will also perform some housekeeping, such as giving the "reporter" role usage rights on the Airbnb and Airbnb_dev schemas. Let’s execute this.
+
+```SQL
+USE ROLE ACCOUNTADMIN;
+CREATE ROLE IF NOT EXISTS REPORTER;
+CREATE USER IF NOT EXISTS PRESET
+ PASSWORD='presetPassword123'
+ LOGIN_NAME='preset'
+ MUST_CHANGE_PASSWORD=FALSE
+ DEFAULT_WAREHOUSE='COMPUTE_WH'
+ DEFAULT_ROLE=REPORTER
+ DEFAULT_NAMESPACE='AIRBNB.DEV'
+ COMMENT='Preset user for creating reports';
+
+GRANT ROLE REPORTER TO USER PRESET;
+GRANT ROLE REPORTER TO ROLE ACCOUNTADMIN;
+GRANT ALL ON WAREHOUSE COMPUTE_WH TO ROLE REPORTER;
+GRANT USAGE ON DATABASE AIRBNB TO ROLE REPORTER;
+GRANT USAGE ON SCHEMA AIRBNB.DEV TO ROLE REPORTER;
+
+-- We don't want to grant select rights here; we'll do this through hooks:
+-- GRANT SELECT ON ALL TABLES IN SCHEMA AIRBNB.DEV TO ROLE REPORTER;
+-- GRANT SELECT ON ALL VIEWS IN SCHEMA AIRBNB.DEV TO ROLE REPORTER;
+-- GRANT SELECT ON FUTURE TABLES IN SCHEMA AIRBNB.DEV TO ROLE REPORTER;
+-- GRANT SELECT ON FUTURE VIEWS IN SCHEMA AIRBNB.DEV TO ROLE REPORTER;
+```
+
+![](/img/95.png)
+
+Now, we have the "reporter" role in place. You might need to refresh Snowflake to see this role. After refreshing your browser, you should see the "reporter" role. 
+
+![](/img/96.png)
+
+If you switch to the "reporter" role, you might notice that it doesn't have access to the actual schema. This is not a problem. Although the "reporter" role can see the Airbnb and dev schemas, it cannot see any tables or views.
+
+![](/img/97.png)
+
+To ensure that the tables and views generated by dbt are visible to the "reporter," we will set up a hook for that. Let's return to our coding application, open the dbt project, and set up a post-hook to grant select permissions on the models to the "reporter."
+
+Here’s how we do it:
+
+```yml
++post-hook:
+      - "GRANT SELECT ON {{ this }} TO ROLE REPORTER"
+```
+
+We will create a **post-hook** that will be executed after every model is created. This hook will grant select permissions on the model to the "reporter." 
+
+```yml
+# In this example config, we tell dbt to build all models in the example/
+# directory as views. These settings can be overridden in the individual model
+# files using the `{{ config(...) }}` macro.
+
+models:
+  dbt_learn:
+    +materialized: view
+    +post-hook:
+      - "GRANT SELECT ON {{ this }} TO ROLE REPORTER"
+    dim:
+      +materialized: table
+    src:
+      +materialized: ephemeral
+```
+
+Note that this is not a run-end hook but a post-hook executed for **every model** in the dbt project. Therefore, it will be executed multiple times and will apply to each individual model.
+
+Let’s save this configuration and execute dbt run. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run
+12:15:30  Running with dbt=1.7.17
+12:15:31  Registered adapter: snowflake=1.7.1
+12:15:31  Found 8 models, 1 snapshot, 1 analysis, 9 tests, 1 seed, 3 sources, 0 exposures, 0 metrics, 548 macros, 0 groups, 0 semantic models
+12:15:31  
+12:15:34  Concurrency: 1 threads (target='dev')
+12:15:34  
+12:15:34  1 of 5 START sql view model DEV.dim_hosts_cleansed ............................. [RUN]
+12:15:36  1 of 5 OK created sql view model DEV.dim_hosts_cleansed ........................ [SUCCESS 1 in 1.90s]
+12:15:36  2 of 5 START sql view model DEV.dim_listings_cleansed .......................... [RUN]
+12:15:38  2 of 5 OK created sql view model DEV.dim_listings_cleansed ..................... [SUCCESS 1 in 1.99s]
+12:15:38  3 of 5 START sql incremental model DEV.fct_reviews ............................. [RUN]
+12:15:42  3 of 5 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 0 in 4.39s]
+12:15:42  4 of 5 START sql table model DEV.dim_listings_w_hosts .......................... [RUN]
+12:15:45  4 of 5 OK created sql table model DEV.dim_listings_w_hosts ..................... [SUCCESS 1 in 3.08s]
+12:15:45  5 of 5 START sql table model DEV.mart_full_moon_reviews ........................ [RUN]
+12:15:50  5 of 5 OK created sql table model DEV.mart_full_moon_reviews ................... [SUCCESS 1 in 4.27s]
+12:15:50  
+12:15:50  Finished running 2 view models, 1 incremental model, 2 table models in 0 hours 0 minutes and 18.61 seconds (18.61s).
+12:15:50  
+12:15:50  Completed successfully
+12:15:50  
+12:15:50  Done. PASS=5 WARN=0 ERROR=0 SKIP=0 TOTAL=5
+```
+
+As you can see, the models are now recreated or incremented. If we go back to Snowflake, refresh with the "reporter" role, and check the Airbnb schema, you will see that the tables and views are now visible, and we have select rights on them. This confirms that our hooks work correctly.
+
+![](/img/98.png)
+
+Now, let's move on and create our first dashboard.
+
+
 #### Setting up a BI Dashboard in Snowflake and Preset
+
+
+**Step 1: Sign Up for Preset**
+
+1. Go to [preset.io](https://preset.io).
+2. Click on "Try for free."
+3. Use an email address to sign up. You can use a temporary email service like 10-minute mail if you prefer.
+4. Verify your email by clicking the verification link sent to your temporary email account.
+5. Complete the sign-up process by adding your name and creating a password.
+6. Fill in the onboarding details:
+   - Team Name: "DBT Course Team" (for example)
+   - Workspace Name: "DBT Course Workspace"
+
+**Step 2: Connect to Snowflake**
+
+1. Once your workspace is set up, you will be prompted to connect to a database. Choose Snowflake.
+2. Enter the following details:
+   Remember:
+   ```sql
+    CREATE ROLE IF NOT EXISTS REPORTER;
+    CREATE USER IF NOT EXISTS PRESET
+    PASSWORD='presetPassword123'
+    LOGIN_NAME='preset'
+    MUST_CHANGE_PASSWORD=FALSE
+    DEFAULT_WAREHOUSE='COMPUTE_WH'
+    DEFAULT_ROLE=REPORTER
+    DEFAULT_NAMESPACE='AIRBNB.DEV'
+    COMMENT='Preset user for creating reports';
+   ```
+   - **Database Name**: Airbnb
+   - **Username**: preset
+   - **Password**: preset_password_123
+   - **Display Name**: preset
+   - **Default Warehouse**: ComputeWH
+   - **Default Role**: reporter
+   - **Snowflake Account**: Retrieve from your DBT profile using the terminal.
+     - Open Visual Studio Code or any terminal.
+     - Run the appropriate command to display your DBT profile:
+       - For VS Code, Mac, or Linux: `cat ~/.dbt/profiles.yml`
+       - For Windows PowerShell: `Get-Content -Path ~/.dbt/profiles.yml`
+       - For Command Prompt: `type %HOMEPATH%\.dbt\profiles.yml`
+     - Copy the Snowflake account string and paste it into the Snowflake account field in Preset.
+3. Click "Connect" and then "Continue with default settings."
+
+**Step 3: Create a Dataset**
+![](/img/99.png)
+1. Navigate to "Datasets" in Preset.
+2. Click "`+ Dataset`" (plus icon).
+3. Fill in the dataset details:
+   - **Database**: Select the `preset` Snowflake database.
+   - **Schema**: Dev
+   - **Table**: Mark Full Moon Reviews
+4. Click "Create Dataset."
+   
+![](/img/100.png)
+
+**Step 4: Create a Chart**
+1. After creating the dataset, proceed to create a chart.
+2. Choose "Bar Chart" as the chart type.
+3. Click "Create New Chart."
+4. Configure the chart with the following settings:
+   - **Metrics**: Count star
+   - **X-axis**: Is full moon (full moon or not full moon)
+   - **Dimensions**: Review sentiment (positive, neutral, or negative)
+5. Click "Create Chart."
+
+   ![](/img/102.png)
+
+**Step 5: Customize the Chart**
+
+1. To convert the chart to a percentage chart:
+   - Switch the contribution mode to "Row."
+   - Click "Update Chart."
+2. To stack the bars:
+   - Click "Customize."
+   - Choose "Stack" in the style options.
+3. Review the chart to see the distribution of review sentiments during full moon and no full moon.
+   
+   ![](/img/103.png)
+
+   So a little bit more negative with full moon than without full moon. But this difference is so little that I would say it's not significant. But you can go and check in with a resident data scientist in your company to apply a statistical test on it to figure out if it's a significant difference or not.
+
+**Step 6: Analyze the Chart**
+
+1. Analyze the results:
+   - Full moon: ~8% negative, 35% neutral, 57% positive.
+   - No full moon: ~7% negative, 36% neutral, 57% positive.
+2. Note that the difference is minor and might not be statistically significant. Consult with a data scientist for a statistical test if necessary.
+
+**Step 7: Save the Chart**
+
+1. Name the chart "Full Moon vs Reviews Chart."
+2. Save the chart.
+
+**Step 8: Create a Dashboard**
+
+1. Click "Dashboards."
+2. Click "New Dashboard" (plus icon).
+3. Name the dashboard "Executive Dashboard."
+4. Add the saved chart to the dashboard by dragging it from the right panel.
+5. Optionally, add a header and other elements to enhance the dashboard.
+   
+   ![](/img/104.png)
+
+**Step 7: Save and Share the Dashboard**
+
+1. Save the dashboard.
+2. Click "Share" and copy the link to the dashboard.
+3. Save the link for later use in a concept called exposures in dbt.
+
+##### Readme
+
+> Exposures naming convention changes in recent dbt releases
+When you create an Exposure in the next section, you might encounter the following warning message:
+>
+```sql
+Starting in v1.3, the 'name' of an exposure should contain only letters, numbers, and underscores. Exposures support a new property, 'label', which may contain spaces, capital letters, and special characters. Executive Dashboarddoes not follow this pattern. Please update the 'name', and use the 'label'
+```
+> Feel free to ignore this error.
+>If you want to fix it, you can rename your exposure to have a name without spaces and add an extra label as displayed in the updated reference solution:
+>
+```yml
+version: 2
+ 
+exposures:
+  - name: executive_dashboard
+    label: Executive Dashboard
+    ...
+```
+
+
+#### Exposures
+
+Exposures are a simple concept. They are configurations that point to external resources, like reports and dashboards, and they are integrated and compiled into our documentation. Exposures are defined in YAML files.
+
+A good practice is to create separate YAML files for all of your exposures or, for example, for all of your dashboards. I will create one called dashboards.yaml and simply copy-paste my exposure code, which you can get from the resources, of course. Let's take a look at how our exposure files look.
+
+```yml
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dashboards.yml
+ersion: 2
+
+exposures:
+  - name: executive_dashboard
+    label: Executive Dashboard
+    type: dashboard
+    maturity: low
+    url: https://00d200da.us1a.app.preset.io/superset/dashboard/x/?edit=true&native_filters_key=fnn_HJZ0z42ZJtoX06x7gRbd9oBFgFLbnPlCW2o_aiBeZJi3bZuyfQuXE96xfgB
+    description: Executive Dashboard about Airbnb listings and hosts
+      
+
+    depends_on:
+      - ref('dim_listings_w_hosts')
+      - ref('mart_full_moon_reviews')
+
+    owner:
+      name: Zoltan C. Toth
+      email: dbtstudent@gmail.com
+```
+
+This is an exposure configuration. You can put this into any YAML file within your dbt project. I created a standard YAML file to keep things structured. Here's how you define an exposure:
+
+* Name: This will be "Executive Dashboard."
+* Type: Specify the type of dashboard.
+* Maturity Level: Indicate the maturity level to understand the significance of the exposure.
+* URL: The URL of the dashboard.
+* Description: Add a description.
+* Dependencies: Define which models your dashboard depends on.
+* Owner: Specify who owns the dashboard.
+  
+Once the exposure is defined, let's see how it translates into practice when we generate and serve the documentation. After executing the documentation generation, you'll see a new section labeled "Dashboards," which includes the "Executive Dashboard." This section will display the exposure details, such as its maturity, owner, dependencies, etc. You can click "View this exposure," and the utility will take you to your dashboard.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs generate         
+  13:47:03  Running with dbt=1.7.17
+  13:47:04  Registered adapter: snowflake=1.7.1
+  13:47:04  Found 8 models, 1 snapshot, 1 analysis, 9 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 548 macros, 0 groups, 0 semantic models
+  13:47:04  
+  13:47:07  Concurrency: 1 threads (target='dev')
+  13:47:07  
+  13:47:08  Building catalog
+  13:47:13  Catalog written to /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/target/catalog.json
+
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs serve  
+```
+
+![](/img/105.png)
+
+Additionally, these exposures appear in your lineage graph. You will see the "Executive Dashboard" and the complete lineage showing how data flows into this dashboard.
+
+![](/img/106.png)
+
+![](/img/107.png)
+
+Now we have come full circle. We created our first models, seeds, and snapshots, built models with data cleansing on top of each other, implemented tests and documentation, and finally, we have a proper dashboard integrated with dbt. 
