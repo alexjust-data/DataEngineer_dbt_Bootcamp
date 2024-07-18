@@ -42,6 +42,14 @@
     - [Setting up a BI Dashboard in Snowflake and Preset](#setting-up-a-bi-dashboard-in-snowflake-and-preset)
       - [Readme](#readme)
     - [Exposures](#exposures)
+- [Hero](#hero)
+  - [Debugging Tests and Testing with dbt-Great Expectations](#debugging-tests-and-testing-with-dbt-great-expectations)
+    - [Great Expectations Overview](#great-expectations-overview)
+    - [Comparing row counts between models](#comparing-row-counts-between-models)
+    - [Looking for outliers in your data](#looking-for-outliers-in-your-data)
+    - [Implementing test warnings for extremal items](#implementing-test-warnings-for-extremal-items)
+    - [Validating column types](#validating-column-types)
+    - [Monitoring categoriacl variables in the source data](#monitoring-categoriacl-variables-in-the-source-data)
 
 ---
 ## Introduction
@@ -3946,3 +3954,437 @@ Additionally, these exposures appear in your lineage graph. You will see the "Ex
 ![](/img/107.png)
 
 Now we have come full circle. We created our first models, seeds, and snapshots, built models with data cleansing on top of each other, implemented tests and documentation, and finally, we have a proper dashboard integrated with dbt. 
+
+
+## Hero
+
+So far, we have covered a lot. We delved into theoretical backgrounds, modeling, testing, documentation, slowly changing dimensions, snapshots, and different materializations. You already understand the essence of GPT, and I would say that you are ready to start using it.
+
+At this point, I'd like to shift the course's direction a bit to allow for deeper dives into various topics. As you have seen, our videos until now were very short and straight to the point. Now, I assume that you are interested in a more in-depth exploration of different topics. Therefore, I will adopt a more conversational and exploratory style.
+
+We will code together, encounter problems, solve them, and have discussions about various topics. So, let's get started.
+
+**Have your say in the course's roadmap**
+
+https://dbt-course-zero-to-hero.canny.io/course-update-requests
+
+
+### Debugging Tests and Testing with dbt-Great Expectations
+
+As you'll see, the dbt-expectations package has been updated from version 0.6 since the recording of this video, and it keeps having frequent updates. Please Ensure that you use the updated version from our Github page when you add it to packages.yml.
+
+```yml
+packages:
+  - package: dbt-labs/dbt_utils
+    version: 1.1.1
+  - package: calogica/dbt_expectations
+    version: 0.10.1
+```
+
+#### Great Expectations Overview
+
+So far, you have seen in this course how to create singular tests, generic tests, and custom tests. These are probably the best ways to test your data. However, sometimes you don't need to reinvent the wheel because someone else has already done it. This is often the case with testing. Many times, companies implement tests that are already widely used. One library that is especially great for data testing is called [Great Expectations](https://github.com/great-expectations/great_expectations?tab=readme-ov-file).
+
+https://docs.greatexpectations.io/docs/reference/learn/
+https://docs.greatexpectations.io/docs/reference/learn/glossary
+
+In my experience working with companies, I've seen and implemented many data sanity checks. It can easily happen that your data pipeline works syntactically well, but something changes in your input data that leads to data errors. For example, in an Airbnb scenario, you might assume that the price comes in as a string from your source, starting with a dollar sign followed by numbers, a comma, and a dot. However, this assumption may not always hold true. Upstream data can change at any time. You probably want to test against these scenarios to ensure your data in the data warehouse is correct and that your tables, data marts, and dimension tables are consistent with your sources.
+
+I'm going to show you a few examples of how you can implement tests using the Great Expectations framework. Great Expectations is a data testing framework. If you look it up, you'll see it's an open-source project on GitHub with the tagline "`Always know what to expect from your data.`" It helps data teams eliminate pipeline debt through data testing, documentation, and programming.
+
+Great Expectations provides a variety of functions you can apply to your data. 
+
+https://greatexpectations.io/expectations/ 
+
+For example, there is a not_null construct, which you have already seen can be implemented as a generic test. There are also more sophisticated ones, like ensuring column values match a regex pattern. For instance, you can test your source price column to ensure all price values start with a dollar sign. You can also check that column values are unique or that table row counts fall within a specific range.
+
+Given the popularity and effectiveness of Great Expectations, we want to use its functions within dbt. To do this, there's another open-source project available as a dbt package called dbt-expectations https://github.com/calogica/dbt-expectations. This project is inspired by Great Expectations and serves as an extension package for dbt.
+
+
+---
+
+Here’s how [to install dbt-expectations](https://github.com/calogica/dbt-expectations?tab=readme-ov-file#install):
+
+To install dbt-expectations, add it to your packages.yaml file. For example, the package supports dbt-1.2.x. If you completed the first part of the course with dbt-1.1.x, you can upgrade your dbt installation without changing your dbt project or source code. Use Python packages to upgrade to dbt-1.2.x, or adjust accordingly if a newer version is out.
+
+
+1. Open your editor and navigate to `packages.yaml`.
+2. Ensure you have dbt-utils installed.
+3. Add the following line:
+
+```yml
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat packages.yml 
+
+packages:
+  - package: dbt-labs/dbt_utils
+    version: 1.1.1
+  - package: calogica/dbt_expectations
+    version: 0.10.1
+```
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ tree -L 1       
+.
+├── README.md
+├── analyses
+├── assets
+├── dbt_packages
+├── dbt_project.yml
+├── logs
+├── macros
+├── models
+├── package-lock.yml
+├── packages.yml
+├── seeds
+├── snapshots
+├── target
+└── tests
+```
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt deps
+  16:17:58  Running with dbt=1.7.17
+  16:18:04  Updating lock file in file path: /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/package-lock.yml
+  16:18:04  Installing dbt-labs/dbt_utils
+  16:18:05  Installed from version 1.1.1
+  16:18:05  Updated version available: 1.2.0
+  16:18:05  Installing calogica/dbt_expectations
+  16:18:06  Installed from version 0.10.1
+  16:18:06  Updated version available: 0.10.3
+  16:18:06  Installing calogica/dbt_date
+  16:18:06  Installed from version 0.10.1
+  16:18:06  Up to date!
+  16:18:06  
+  16:18:06  Updates available for packages: ['dbt-labs/dbt_utils', 'calogica/dbt_expectations']                 
+  Update your versions in packages.yml, then run dbt deps
+```
+
+Now that we have dbt-expectations installed, let's create a few tests. On the [dbt-expectations site](https://github.com/calogica/dbt-expectations?tab=readme-ov-file#available-tests), you'll find various tests for different purposes. For example, you can ensure a column exists, compare row counts between tables, check for unique values, and more.
+
+Feel free to take a look; we have a few more examples, and the documentation is quite comprehensive. If I [expect one table's row count to equal](https://github.com/calogica/dbt-expectations?tab=readme-ov-file#expect_table_row_count_to_equal_other_table) another's, I can click on the respective function to see how it works. You'll see that I can add this as a generic test. We need to specify the package name, so we say it's `dbt-expectations`. Here are the parameters. I need to specify which other table I want to compare the tested table to, and there are other optional variables as well.
+
+If you want to dive deeper into the implementation, you can [click the function name](https://github.com/calogica/dbt-expectations/blob/main/macros/schema_tests/table_shape/expect_table_row_count_to_equal_other_table.sql), which will take you to the documentation. This is where you can see how the test works. You can use GitHub or VS Code to check out the `dbt-expectations` library and explore the function implementations.
+
+Setting up these tests is crucial. Best practices in data engineering and analytics engineering dictate that you should ensure your output tables are in excellent shape. In our Airbnb project, we should focus on testing the mart tables, dimension tables, and fact tables—those accessed by data scientists, data analysts, and decision-makers. We want to ensure that the output is accurate and reliable.
+
+When I worked for a software service company, I was responsible for the team that managed the service architecture, including reporting on core metrics like disability payments, income, and company revenue. We often faced huge problems because we lacked a variety of sanity checks and quality checks. This was about ten years ago. Occasionally, the data pipeline failed due to issues with the input tables, leading to incorrect metrics being reported. For example, we once reported a 90% drop in revenue in a single day.
+
+Our executives reviewed these numbers every morning and would ask, "What happened with the business?" It always turned out that nothing was wrong with the business; the issue was with the data pipeline. While we could always fix these problems technically, the bigger issue was losing credibility. If there were any suspicious values in the reports, the executive team would first suspect a problem with the data team rather than the business. This hurt the credibility of the entire data platform team.
+
+To address this, we set up similar tests and executed them regularly. We wanted to be the first to catch these errors because errors are inevitable. The key is to ensure that, as a data engineer or analytics engineer, you are the first to know about these data issues and can address them promptly.
+
+#### Comparing row counts between models
+
+Okay, so with this story in mind, let's go ahead and get hands-on by implementing a few tests. As we discussed, we need to test the user-facing tables of our pipeline, and the same goes for the input data as well. You want to ensure that your expectations about the input data hold true consistently. We are going to implement a few tests from the dbt-expectations package, starting with this one.
+
+
+Take a look at my code editor. If you look at the code here in Models, one of the final tables, if you remember, is `dim_listings_w_hosts.sql`. Let's add a few tests to this model. 
+
+```sh
+├── models
+│   ├── dashboards.yml
+│   ├── dim
+│   │   ├── dim_hosts_cleansed.sql
+│   │   ├── dim_listings_cleansed.sql
+│   │   └── dim_listings_w_hosts.sql
+```
+
+You can see here : [expect_table_row_count_to_equal_other_table](https://github.com/calogica/dbt-expectations/tree/main?tab=readme-ov-file#expect_table_row_count_to_equal_other_table):
+
+```yml
+models: # or seeds:
+  - name: my_model
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          compare_model: ref("other_model")
+          group_by: [col1, col2] # (Optional)
+          compare_group_by: [col1, col2] # (Optional)
+          factor: 1 # (Optional)
+          row_condition: "id is not null" # (Optional)
+          compare_row_condition: "id is not null" # (Optional)
+```
+
+I'm going to use the schema YAML here and add these tests as generic tests. And it's a good place to put my tests for the listings with us here, so I'm going to create a description for this table. And right here, let's add my test. So I want to compare with the source listings.
+
+```yml
+- name: dim_listings_w_hosts
+  description: "This is VM listings with hosts."
+  tests:
+    - dbt_expectations.expect_table_row_count_to_equal_other_table:
+        compare_model: source("airbnb","listings")
+```
+
+Now, let's execute the tests. I want to run the tests specifically for this model, so I'll use a selector. Here's how to do it: 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_w_hosts
+
+  06:39:05  Running with dbt=1.7.17
+  06:39:05  Registered adapter: snowflake=1.7.1
+  06:39:05  Found 8 models, 1 snapshot, 1 analysis, 17 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+  06:39:05  
+  06:39:11  Concurrency: 1 threads (target='dev')
+  06:39:11  
+  06:39:11  1 of 1 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+  06:39:13  1 of 1 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 2.26s]
+  06:39:13  
+  06:39:13  Finished running 1 test in 0 hours 0 minutes and 7.86 seconds (7.86s).
+  06:39:13  
+  06:39:13  Completed successfully
+  06:39:13  
+  06:39:13  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+#### Looking for outliers in your data
+
+If you remember, we also had some issues with the price. We want to make sure that, generally speaking, the prices of our Airbnbs are set within reasonable limits. So, there might be a few expensive Airbnbs, let's say around \$1,000 per night, or a few super-cheap Airbnbs, let's say around \$30 per night, but generally speaking, we want to see most of our Airbnbs within a certain range, let's say, \$50 to \$500.
+
+There is a `dbt Expectation test` to check that, so let's go ahead and run such a test. 
+
+
+If you take a look at the dbt great ExpectationSet site, you'll see that we have a function called [expect_column_quantile_values_to_be_between](https://github.com/calogica/dbt-expectations/tree/main?tab=readme-ov-file#expect_column_quantile_values_to_be_between), and this is exactly what we are after.
+
+```yml
+tests:
+  - dbt_expectations.expect_column_quantile_values_to_be_between:
+      quantile: .95
+      min_value: 0 # (Optional)
+      max_value: 2 # (Optional)
+      group_by: [group_id, other_group_id, ...] # (Optional)
+      row_condition: "id is not null" # (Optional)
+      strictly: false # (Optional. Default is 'false'. Adds an 'or equal to' to the comparison operator for min/max)
+```
+
+
+What we want to do is ensure that most of our Airbnb prices are within reasonable values. So, let's say we want to make sure that 99% of our Airbnb prices are between \$50 and \$500. We'll be able to do that by implementing this test.
+
+Let's take a look. Right now, this test is a little bit different because it applies to a column. So, I need to add a piece to the price column here. I will need to specify that the only thing to pass is a few columns, and one of these columns will be the price. I already have the price column here, and I want to apply a few tests on this one `dbt_expectations.expect_column_quantile_values_to_be_between`.
+
+This test is going to be called expectColumnQuantileValuesToBeBetween. I can say that the quantile value is 0.99. So, I want to have 99% of my values between, let's say, $50 and $500. The minValue should be $50 and the maxValue should be $500.
+
+```yml
+  - name: dim_listings_w_hosts
+    description: "This is VM listings with hosts."
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          compare_model: source("airbnb","listings")
+    columns:
+      - name: price
+        tests:
+          - dbt_expectations.expect_column_quantile_values_to_be_between:
+            quantile: .99
+            min_value: 50 
+            max_value: 500
+```
+
+Okay, let's take a look. I'll execute the rest of the tests. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_w_hosts
+
+09:21:31  Running with dbt=1.7.17
+09:21:32  Registered adapter: snowflake=1.7.1
+09:21:32  Found 8 models, 1 snapshot, 1 analysis, 18 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+09:21:32  
+09:21:33  Concurrency: 1 threads (target='dev')
+09:21:33  
+09:21:33  1 of 2 START test dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [RUN]
+09:21:35  1 of 2 PASS dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [PASS in 2.04s]
+09:21:35  2 of 2 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+09:21:37  2 of 2 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 1.22s]
+09:21:37  
+09:21:37  Finished running 2 tests in 0 hours 0 minutes and 4.85 seconds (4.85s).
+09:21:37  
+09:21:37  Completed successfully
+09:21:37  
+09:21:37  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 TOTAL=2
+```
+
+Now we have the quantile values, and it seems that it passed. Very good.
+
+#### Implementing test warnings for extremal items
+
+ The price column is used to ensure we don't accept extreme values. For instance, we don't want to see $100,000 for nights at AirBnB`s, as that likely indicates a problem in the data. To address this, we can use a function called [expect_column_max_to_be_between](https://github.com/calogica/dbt-expectations/tree/main?tab=readme-ov-file#expect_column_max_to_be_between). 
+ 
+ ```yml
+ tests:
+  - dbt_expectations.expect_column_max_to_be_between:
+      min_value: 1 # (Optional)
+      max_value: 1 # (Optional)
+      group_by: [group_id, other_group_id, ...] # (Optional)
+      row_condition: "id is not null" # (Optional)
+      strictly: false # (Optional. Default is 'false'. Adds an 'or equal to' to the comparison operator for min/max)
+ ```
+ 
+ This function allows us to specify the expected range for the maximum value in the price column. For example, we may set the maximum AirBnB value at $5,000, ensuring no listings exceed this amount. Let's apply this test to the price column.
+
+Here we go: we'll use the ExpectColumnMaxToBeBetween function to set the maximum value at $5,000. 
+
+
+```yml
+  - name: dim_listings_w_hosts
+    description: "This is VM listings with hosts."
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          compare_model: source("airbnb","listings")
+    columns:
+      - name: price
+        tests:
+          - dbt_expectations.expect_column_quantile_values_to_be_between:
+              quantile: .99
+              min_value: 50 
+              max_value: 500
+          - dbt_expectations.expect_column_max_to_be_between:
+              max_value: 5000 
+```
+
+
+It's a simple test, so let's see if it works by executing our test file.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_w_hosts
+
+09:36:20  Running with dbt=1.7.17
+09:36:20  Registered adapter: snowflake=1.7.1
+09:36:20  Found 8 models, 1 snapshot, 1 analysis, 19 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+09:36:20  
+09:36:22  Concurrency: 1 threads (target='dev')
+09:36:22  
+09:36:22  1 of 3 START test dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000  [RUN]
+09:36:24  1 of 3 FAIL 1 dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000  [FAIL 1 in 1.88s]
+09:36:24  2 of 3 START test dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [RUN]
+09:36:25  2 of 3 PASS dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [PASS in 1.53s]
+09:36:25  3 of 3 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+09:36:27  3 of 3 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 1.37s]
+09:36:27  
+09:36:27  Finished running 3 tests in 0 hours 0 minutes and 6.38 seconds (6.38s).
+09:36:27  
+09:36:27  Completed with 1 error and 0 warnings:
+09:36:27  
+09:36:27  Failure in test dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000 (models/schema.yml)
+09:36:27    Got 1 result, configured to fail if != 0
+09:36:27  
+09:36:27    compiled Code at target/compiled/dbt_learn/models/schema.yml/dbt_expectations_expect_column_c59e300e0dddb335c4211147100ac1c6.sql
+09:36:27  
+09:36:27  Done. PASS=2 WARN=0 ERROR=1 SKIP=0 TOTAL=3
+```
+
+Oh, it failed. It appears we have AirBnBs priced above \$5,000. To investigate further, I'll query Snowflake to get the maximum price in the AirBnB table, AirBnB.dev.LimitedReports. 
+
+![](/img/108.png)
+
+The maximum price is \$8,000. This could be legitimate or a listing error. To handle this, we can keep the test but change its severity from Error to Warn. This means we'll still get notified, but it won't require immediate action. Setting the severity to Warn is configurable for any test. 
+
+```yml
+- dbt_expectations.expect_column_max_to_be_between:
+    max_value: 5000 
+    config:
+      severity: warn
+```
+
+After making this change and re-running the tests, you'll see that they execute without immediate errors.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_w_hosts
+
+09:49:07  Running with dbt=1.7.17
+09:49:08  Registered adapter: snowflake=1.7.1
+09:49:08  Found 8 models, 1 snapshot, 1 analysis, 19 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+09:49:08  
+09:49:09  Concurrency: 1 threads (target='dev')
+09:49:09  
+09:49:09  1 of 3 START test dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000  [RUN]
+09:49:11  1 of 3 WARN 1 dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000  [WARN 1 in 1.25s]
+09:49:11  2 of 3 START test dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [RUN]
+09:49:12  2 of 3 PASS dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [PASS in 1.27s]
+09:49:12  3 of 3 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+09:49:13  3 of 3 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 1.27s]
+09:49:13  
+09:49:13  Finished running 3 tests in 0 hours 0 minutes and 5.30 seconds (5.30s).
+09:49:13  
+09:49:13  Completed with 1 warning:
+09:49:13  
+09:49:13  Warning in test dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000 (models/schema.yml)
+09:49:13  Got 1 result, configured to warn if != 0
+09:49:13  
+09:49:13    compiled Code at target/compiled/dbt_learn/models/schema.yml/dbt_expectations_expect_column_c59e300e0dddb335c4211147100ac1c6.sql
+09:49:13  
+09:49:13  Done. PASS=2 WARN=1 ERROR=0 SKIP=0 TOTAL=3
+```
+
+`09:49:11  1 of 3 WARN 1 dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000  [WARN 1 in 1.25s]`
+
+Warnings are useful because they alert you without causing panic or necessitating urgent action. They provide a signal to investigate further. Now, we have several tests implemented for our price column.
+
+
+#### Validating column types
+
+
+To add a new test ensuring that the price column contains numeric values, you can use the [expect_column_values_to_be_of_type](https://github.com/calogica/dbt-expectations/tree/main?tab=readme-ov-file#expect_column_values_to_be_of_type) test. This test will confirm that all values in the column are of a specified type, such as number for your Snowflake backend. Here is how you can include this new test in your schema.yml file:
+
+```yml
+tests:
+  - dbt_expectations.expect_column_values_to_be_of_type:
+      column_type: date
+```
+
+What should it be? Is it like floating point or numeric or integer? It very much depends on your backend. And we use the Snowflake backend. So if we come here and take a look at the database. And here in Airbnb, let's say, we have schema. Here in the tab, we have table listing with costs. And if I take a look, here is the price column. I'm going to click view definition. You'll see that the price here in Snowflake is called a number. So let us put number.
+
+![](/img/109.png)
+
+Like this in you schema.yml:
+
+```sh
+    columns:
+      - name: price
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: number
+          - dbt_expectations.expect_column_quantile_values_to_be_between:
+              quantile: .99
+              min_value: 50 
+              max_value: 500
+          - dbt_expectations.expect_column_max_to_be_between:
+              max_value: 5000 
+              config:
+                severity: warn
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select dim_listings_w_hosts
+
+10:02:14  Running with dbt=1.7.17
+10:02:15  Registered adapter: snowflake=1.7.1
+10:02:15  Found 8 models, 1 snapshot, 1 analysis, 20 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+10:02:15  
+10:02:16  Concurrency: 1 threads (target='dev')
+10:02:16  
+10:02:16  1 of 4 START test dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000  [RUN]
+10:02:18  1 of 4 WARN 1 dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000  [WARN 1 in 1.27s]
+10:02:18  2 of 4 START test dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [RUN]
+10:02:19  2 of 4 PASS dbt_expectations_expect_column_quantile_values_to_be_between_dim_listings_w_hosts_price__500__50__0_99  [PASS in 1.23s]
+10:02:19  3 of 4 START test dbt_expectations_expect_column_values_to_be_of_type_dim_listings_w_hosts_price__number  [RUN]
+10:02:21  3 of 4 PASS dbt_expectations_expect_column_values_to_be_of_type_dim_listings_w_hosts_price__number  [PASS in 1.81s]
+10:02:21  4 of 4 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+10:02:22  4 of 4 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 1.18s]
+10:02:22  
+10:02:22  Finished running 4 tests in 0 hours 0 minutes and 6.82 seconds (6.82s).
+10:02:22  
+10:02:22  Completed with 1 warning:
+10:02:22  
+10:02:22  Warning in test dbt_expectations_expect_column_max_to_be_between_dim_listings_w_hosts_price__5000 (models/schema.yml)
+10:02:22  Got 1 result, configured to warn if != 0
+10:02:22  
+10:02:22    compiled Code at target/compiled/dbt_learn/models/schema.yml/dbt_expectations_expect_column_c59e300e0dddb335c4211147100ac1c6.sql
+10:02:22  
+10:02:22  Done. PASS=3 WARN=1 ERROR=0 SKIP=0 TOTAL=4
+```
+
+`10:02:22  Done. PASS=3 WARN=1 ERROR=0 SKIP=0 TOTAL=4`
+
+There you see. Okay, very good. So now our price column is well tested. And feel free to go on and install DB expectations and execute a few more tests on the listings and the costs. Thanks again.
+
+
+#### Monitoring categoriacl variables in the source data
+
+As we discussed, another very important part of your data pipeline to test is your source data. So let's code some of the assumptions of the source listings data. First, I'd like to show you a useful dbtExpectations function, which is called expectColumnListingCountToEqual. So this is expectColumnListingCountToEqual. There we go. With this function, you can ensure that columns dealing with categorical variables, like room type, maintain a consistent number of unique values.
+
+For example, if we look at the room type in our raw tables, and I query the room type from Airbnb raw listings, you'll see that we have four different room types. Let's make sure this doesn't change.
