@@ -50,6 +50,7 @@
     - [Implementing test warnings for extremal items](#implementing-test-warnings-for-extremal-items)
     - [Validating column types](#validating-column-types)
     - [Monitoring categoriacl variables in the source data](#monitoring-categoriacl-variables-in-the-source-data)
+    - [Debugging dbt tests and Working with regular expressions](#debugging-dbt-tests-and-working-with-regular-expressions)
 
 ---
 ## Introduction
@@ -4385,6 +4386,155 @@ There you see. Okay, very good. So now our price column is well tested. And feel
 
 #### Monitoring categoriacl variables in the source data
 
-As we discussed, another very important part of your data pipeline to test is your source data. So let's code some of the assumptions of the source listings data. First, I'd like to show you a useful dbtExpectations function, which is called expectColumnListingCountToEqual. So this is expectColumnListingCountToEqual. There we go. With this function, you can ensure that columns dealing with categorical variables, like room type, maintain a consistent number of unique values.
+As we discussed, another very important part of your data pipeline to test is your source data. So let's code some of the assumptions of the source listings data. First, I'd like to show you a useful dbtExpectations function, which is called [expect_column_distinct_count_to_equal][(](https://github.com/calogica/dbt-expectations/tree/main?tab=readme-ov-file#expect_column_distinct_count_to_equal)). 
+
+```sh
+tests:
+  - dbt_expectations.expect_column_distinct_count_to_equal:
+      value: 10
+      quote_values: true # (Optional. Default is 'true'.)
+      group_by: [group_id, other_group_id, ...] # (Optional)
+      row_condition: "id is not null" # (Optional)
+```
+
+With this function, you can ensure that columns dealing with categorical variables, like room type, maintain a consistent number of unique values.
 
 For example, if we look at the room type in our raw tables, and I query the room type from Airbnb raw listings, you'll see that we have four different room types. Let's make sure this doesn't change.
+
+![](/img/110.png)
+
+Let's go to our editor and add this test to our sources. As you might guess, you won't be able to add this to your sources in schema.yml; instead, you will do this in the `sources.yml` file.
+
+Open `sources.yml`, and you'll see the source definitions. Let's add our test here. Under tables, we have the listings table `- name: listings`, and in this table, we'll add tests for columns. Let's create a new section called columns, add my column for room type, and define our test. 
+
+```yml
+sources:
+  - name: airbnb
+    schema: raw
+    tables:
+      - name: listings
+        identifier: raw_listings
+        columns:
+          - name: room_type
+            tests:
+              - dbt_expectations.expect_column_distinct_count_to_equal:
+                  value: 4
+```
+
+Our test is expectColumnListingCountToEqual. This test has a value attribute, which should be 4, right? So the value is 4.
+
+Now, let's see if we can execute this test. This goes into dbt test, and now I want to select the source. But how can you select sources? Sources are not dimensions or models, right? To select a source, you prefix your source name with source. `--select source:airbnb.listings`
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select source:airbnb.listings
+
+10:51:51  Running with dbt=1.7.17
+10:51:52  Registered adapter: snowflake=1.7.1
+10:51:52  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 21 tests, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+10:51:52  
+10:51:57  Concurrency: 1 threads (target='dev')
+10:51:57  
+10:51:57  1 of 2 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+10:51:58  1 of 2 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 1.39s]
+10:51:58  2 of 2 START test dbt_expectations_source_expect_column_distinct_count_to_equal_airbnb_listings_room_type__4  [RUN]
+10:52:00  2 of 2 PASS dbt_expectations_source_expect_column_distinct_count_to_equal_airbnb_listings_room_type__4  [PASS in 1.83s]
+10:52:00  
+10:52:00  Finished running 2 tests in 0 hours 0 minutes and 7.87 seconds (7.87s).
+10:52:00  
+10:52:00  Completed successfully
+10:52:00  
+10:52:00  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 TOTAL=2
+```
+
+You can also see that another test has been executed, expectTableRowCountToEqualOtherTable from the listings with host. Why is that? It’s because the source listings table is affected by that test, and dbt executes all of the tests that affect the source table when you select these listings. So that's why we have two tests here.
+
+#### Debugging dbt tests and Working with regular expressions
+
+
+Let's take a look at how you can verify the input format of strings in our source data, and also at how we can decode the results. Let's start by examining prices. If you remember, some of the price values from the source data start with a dollar sign and also contain dots. When I select price values from `mdmb.row.rowListings`, you will see they start with a dollar sign and have a few dots in them. Similarly, if you look at `models/dim/dim_listings_cleansed.sql`
+
+```sql
+  REPLACE(
+    price_str,
+    '$'
+  ) :: NUMBER(
+    10,
+    2
+  ) AS price,
+```
+
+you'll notice that we perform a cleansing step to convert the price into a number. We want to ensure that the price is in the correct format.
+
+To achieve this, we can write a test using a technique called Regex, which is shorthand for regular expressions. Regular expressions are a complex topic, but they allow you to define patterns for how you want a string to look. For example, a classic regular expression pattern for a markdown price could be `ls.*.markdown.*.md`. Regular expressions provide a comprehensive language to describe such patterns in strings. While it is beyond the scope of this course to cover regular expressions in depth, if you're not familiar with them, I highly recommend learning about them, as they are essential for data engineering.
+
+Now, let's define a regular expression that matches the price format: a dollar sign, followed by one or two numbers, a dot, and then a few more numbers. 
+
+![](/img/111.png)
+
+In DBT, we have a column expectation called [expect_column_values_to_match_regex](https://github.com/calogica/dbt-expectations/tree/main?tab=readme-ov-file#expect_column_values_to_match_regex). We will use this on the price column. This function ensures that every value in the column matches the specified regular expression.
+
+```yml
+tests:
+  - dbt_expectations.expect_column_values_to_match_regex:
+      regex: "[at]+"
+      row_condition: "id is not null" # (Optional)
+      is_raw: True # (Optional)
+      flags: i # (Optional)
+```
+
+Let's go to the text editor and open the source files. We will create a definition for the price column. Here is how you define the test for the price column:
+
+
+ I will need to use double backslashes. This is a little bit strange, but it happens if you chain multiple technologies together. So, YAML picks up backslashes as special characters, and regular expressions pick up dollars as special characters, so in order to provide a single backslash to the regular expression engine, I need to escape this single backslash with another backslash. So, this Regex backslash backslash dollar is going to be compiled into a backslash dollar in the regular expression world, and a backslash dollar in the regular expression world means an extra dollar sign `regex: "^\\$[0-9][0-9\\.]+$`.
+
+ ```sh
+sources:
+  - name: airbnb
+    schema: raw
+    tables:
+      - name: listings
+        identifier: raw_listings
+        columns:
+          - name: room_type
+            tests:
+              - dbt_expectations.expect_column_distinct_count_to_equal:
+                  value: 4
+          - name: price
+            tests:
+              - dbt_expectations.expect_column_values_to_match_regex:
+                  regex: "^\\$[0-9][0-9\\.]+$"
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select source:airbnb.listings
+
+13:30:09  Running with dbt=1.7.17
+13:30:09  Registered adapter: snowflake=1.7.1
+13:30:10  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+13:30:10  
+13:30:11  Concurrency: 1 threads (target='dev')
+13:30:11  
+13:30:11  1 of 3 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+13:30:13  1 of 3 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 1.68s]
+13:30:13  2 of 3 START test dbt_expectations_source_expect_column_distinct_count_to_equal_airbnb_listings_room_type__4  [RUN]
+13:30:15  2 of 3 PASS dbt_expectations_source_expect_column_distinct_count_to_equal_airbnb_listings_room_type__4  [PASS in 1.54s]
+13:30:15  3 of 3 START test dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_  [RUN]
+13:30:17  3 of 3 FAIL 17499 dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_  [FAIL 17499 in 2.03s]
+13:30:17  
+13:30:17  Finished running 3 tests in 0 hours 0 minutes and 7.01 seconds (7.01s).
+13:30:17  
+13:30:17  Completed with 1 error and 0 warnings:
+13:30:17  
+13:30:17  Failure in test dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_ (models/sources.yml)
+13:30:17    Got 17499 results, configured to fail if != 0
+13:30:17  
+13:30:17    compiled Code at target/compiled/dbt_learn/models/sources.yml/dbt_expectations_source_expect_a60b59a84fbc4577a11df360c50013bb.sql
+13:30:17  
+13:30:17  Done. PASS=2 WARN=0 ERROR=1 SKIP=0 TOTAL=3
+```
+
+`FAIL 17499 `
+
+`(dbt_env) ➜  dbt_learn git:(main) ✗ dbt --debug test --select source:airbnb.listings`
+
+
