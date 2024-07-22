@@ -5436,3 +5436,24 @@ We are now ready to explore Dagster integration.
 
 #### Deep Dive into the Python Files of our Dagster-dbt Project
 
+
+In this video, I would like to take a deep dive into our DAXO project. This is more in the realm of data engineering and software engineering, so if you are not very technical, feel free to skip this video. You will have the full experience even without understanding every line of the Python code. However, if you are interested in how DAXO works internally, I suggest spending the next few minutes following along as we look at how our PBT project fits together and is built in DAXO.
+
+Here is my DAXO project. You can see that it contains a sub-project called PBT-DAXO-Project. This structure is typical for DAXO. If you delve deeper into DAXO, you will understand that it can manage different packages within projects, and currently, we have a single package. Let me close some files for clarity. In the main folder, PBT-DAXO-Project, you will find a `pyproject.toml`, a Python standard configuration file, and a setup file. These files are used to build a Python package from the DAXO project, which can then be published to your internal PIP repository. These files contain metadata for the project.
+
+Within the PBT-DAXO-Project, you'll see a few gray files. These are Python internal files, such as bytecode caches and an `__init__.py` file, which indicates a Python module. The important files for us are four specific ones. When creating a DAXO project, you start with definitions. In DAXO, definitions can specify your DAG (directed acyclic graph), schedules, resources, and more.
+
+Let's begin with an overview of the files, starting from the top. We import the `dbt-cli` resource from the DAXO-DBT package. My VS Code settings are strict about Python code quality, so you might see some warnings that can be ignored. Importing `dbt-cli` allows DAXO to integrate with DBT. We create a definitions object, our DAXO model definition, which uses this `dbt-cli` resource to enable DAXO-DBT integration.
+
+We have three primary components: `dbt_project_dir`, `schedules`, and `dbt_learn_dbt_assets`. Let's start with `constants.py` to cover the `dbt_project_dir`. The `dbt-cli` resource sets up a DBT plugin, pointing to the `dbt-project-dir` defined in `constants.py`. In a production setting, you might want a cleaner solution, but our relative path works for now.
+
+The `dbt-cli` resource also configures DAXO to parse DBT projects on load. This parsing command reads model definitions, tests, macros, and creates a manifest file (`manifest.json`). This file contains critical technical details about your DBT project, which DAXO uses to understand how to work with it.
+
+Next, we have `assets.py`, where assets in DAXO are defined similarly to DBT models. This file uses the `dbt-cli` resource to execute DBT build commands based on `manifest.json`, informing DAXO how to materialize these assets.
+
+Lastly, `schedules.py` defines the schedules for running DBT models. The example schedule here is set to execute every midnight, materializing all DBT models. The job name is `materialize_dbt_models`, and it uses a cron syntax for scheduling.
+
+In summary, the constants file defines our DBT project directory, the assets file defines how to build DBT models, and the schedules file sets up the execution schedule. All of these are integrated into a definitions object in DAXO, which the system uses to manage the DBT project.
+
+When you start the DAXO server, it reads this definitions object, understanding all the configurations for your DBT project. This allows DAXO to manage and execute your DBT tasks efficiently.
+
