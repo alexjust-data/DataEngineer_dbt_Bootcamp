@@ -60,6 +60,14 @@
     - [Setting Default Values](#setting-default-values)
     - [Using Date Ranges to Make Incremental Models Production-Ready](#using-date-ranges-to-make-incremental-models-production-ready)
   - [Orchestating dbt with Dagster](#orchestating-dbt-with-dagster)
+    - [Overview of the Popular dbt Orchestration Tools and how to Choose the Right Tool](#overview-of-the-popular-dbt-orchestration-tools-and-how-to-choose-the-right-tool)
+        - [Airflow](#airflow)
+        - [Prefect](#prefect)
+        - [Azure Data Factory](#azure-data-factory)
+        - [DBT Cloud](#dbt-cloud)
+        - [Dexter](#dexter)
+    - [Dagster Installation (All Platforms plus Github Codespace)](#dagster-installation-all-platforms-plus-github-codespace)
+    - [Deep Dive into the Python Files of our Dagster-dbt Project](#deep-dive-into-the-python-files-of-our-dagster-dbt-project)
 
 ---
 ## Introduction
@@ -5115,9 +5123,6 @@ If there is no default value and nothing is passed from the command line, then t
 #### Using Date Ranges to Make Incremental Models Production-Ready
 
 
-
-### Orchestating dbt with Dagster
-
 Please open the factory views SQL. 
 
 ```sql
@@ -5244,3 +5249,190 @@ If you take DBT to the next level, you can have different incremental and merge 
 
 Reference - Working with incremental strategies: 
 https://docs.getdbt.com/docs/build/incremental-models#about-incremental_strategy
+
+
+### Orchestating dbt with Dagster
+
+####  Overview of the Popular dbt Orchestration Tools and how to Choose the Right Tool
+
+Let's assume that you reach a stage with your DBT project where you are ready to put it into production. Now, in these situations, one of the first questions that arises is how to orchestrate it. With most DBT projects, you want to execute them on a schedule. For example, you might want your models to be materialized every night right after midnight, once all the data for the previous day has come in. You want your models to be materialized, your tests to be executed, your snapshots to be created, and so on. For this, you need a tool that handles DBT orchestration. Choosing one is never easy because there are a plethora of tools out there.
+
+If you look at some of the tools I have selected for you, one of the most famous open-source orchestration tools is`Apache Airflow`. You can install Apache Airflow, integrate it with your DBT project, and start a nightly job for materializing your models. Alternatively, you might consider switching to a more modern solution. Some modern solutions include `Prefect`, an orchestration tool, and `Dexter`, which is another orchestration tool and our tool of choice for this course. There are also proprietary offerings, such as `Azure Data Factor`y from Microsoft or `DBT Cloud` from DBT Labs.
+
+I will guide you through some of these tools and give you my very objective opinion. I am quite opinionated about orchestration and ETL tools because I worked as a data engineer for a startup company before Airflow, the first major open-source orchestration tool, became popular. My team and I implemented three generations of orchestration tools, learning the hard way about the do's and don'ts of picking and choosing an orchestration tool.
+
+Let's take a look. I will go through a few websites, and you will find the links to these sites in the course resources section. If we go to the official DBT documentation, you will see a selection of tools DBT integrates with, such as Airflow, Azure Data Factory, Prefect, Dexter, and a few others.
+
+https://docs.getdbt.com/docs/deploy/deployment-tools
+
+
+
+###### Airflow
+
+https://airflow.apache.org/docs/apache-airflow/stable/start.html
+
+Airflow is an open-source project from Apache and is the largest orchestration tool out there. If your priority is to find as many answers on Stack Overflow or the internet as possible, then Airflow is the tool for you. However, personally, I would go with another tool because Airflow's installation can be cumbersome, and you probably want something easier to get up and running. Additionally, Airflow doesn't integrate deeply with DBT. It can launch DBT tasks, but it won't provide detailed insights into your models. Airflow manages your whole DBT project as a unit rather than as a set of different models, tests, macros, etc. It has a more traditional approach to integration.
+
+
+###### Prefect
+
+https://docs.prefect.io/latest/
+
+Next is Prefect, a much more modern ETL tool. Prefect is easy to install and very Pythonic, making it great for data engineers. It provides simple integration with DBT. 
+
+You can set up an environment to [integrate with DBT Cloud](https://www.prefect.io/blog/dbt-and-prefect) easily, especially with Prefect's proprietary solution, Prefect Cloud. However, if you want to stay open-source, integrating with DBT Core means Prefect will execute DBT build commands, but it doesn't offer a full-fledged integration.
+
+###### Azure Data Factory 
+
+https://azure.microsoft.com/en-us/products/data-factory/
+
+Azure Data Factory is another option. It's a point-and-click ETL orchestration tool. Initially, I was skeptical about Azure Data Factory because I came from a background of hard-coding orchestration logic. However, I eventually found it to be an amazing product for Azure-based orchestration. It doesn't tightly integrate with DBT but can execute DBT projects or workflows.
+
+###### DBT Cloud
+
+https://www.getdbt.com/
+
+DBT Cloud is DBT Labs' proprietary offering. It allows you to create jobs, set commands to execute, and schedule them using cron syntax. This solution integrates tightly with DBT but requires a subscription.
+
+###### Dexter
+
+https://dagster.io/
+
+We have chosen Dexter for DBT scheduling. Dexter, like Prefect, is a new-generation scheduling tool with several standout features for orchestrating DBT projects or any modern data stack project. Dexter's core concept, called an asset, is similar to DBT's models, making integration seamless. 
+
+Dexter boasts an excellent UI, which you'll see in a later section when we set up our own installation. It integrates tightly with DBT, displaying sources, models, and metrics clearly. This tight integration allows Dexter to orchestrate or re-execute specific parts of your pipeline, identify failed models, and re-execute those specific models.
+
+Dexter excels in debugging, providing clear error messages and detailed logs of executed commands. This feature makes troubleshooting efficient, a crucial aspect of any orchestration tool. 
+
+In the next section, we will set up a Dexter installation and orchestrate the project we've created. See you in the next lecture.
+
+
+#### Dagster Installation (All Platforms plus Github Codespace)
+
+
+You will find a section on [DBT orchestration](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero/blob/main/_course_resources/course-resources.md#dbt-orchestration), and here you have the piece for Dexter. It also explains how to create a new virtual environment if needed, which was covered in the previous lecture. 
+
+```sh
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ pip install -r requirements.txt
+
+dbt-snowflake==1.7.1
+dagster-dbt==0.22.0
+dagster-webserver==1.6.0
+```
+Now, let's focus on creating a Dexter project. Dexter provides a super simple way to create a project for an existing DBT project. I'll copy and paste this command into my terminal and walk you through it step-by-step. Please do the same. Just copy and paste, and let's see what happens.
+
+```sh
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ dagster-dbt project scaffold --project-name dbt_dagster_project --dbt-project-dir=dbtlearn
+```
+
+We are executing dexter-dbt. dexter-dbt is a project we've installed as a PIP package. We've installed everything from the requirements DXP5 into our virtual environment. The command essentially asks Dexter to create a new project. I'll name my project dbt-dexter-project, but you can choose any name you prefer. I will also specify that my DBT project folder is dbt-learn. After pressing Enter, it may take a second or two, and then our Dexter project will be ready and running.
+
+One important note: we specified the DBT project as `= dbt_learn` because that is my DBT project. If you look at it in dbt_learn, you'll see all the necessary files and folders.
+
+```sh
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ dagster-dbt project scaffold --project-name dbt_dagster_project --dbt-project-dir=dbt_learn
+
+  Running with dagster-dbt version: 0.22.0.
+  Initializing Dagster project dbt_dagster_project in the current working directory for dbt project directory 
+  /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn
+  Using profiles.yml found in /Users/alex/.dbt/profiles.yml.
+  Your Dagster project has been initialized. To view your dbt project in Dagster, run the following commands:
+                                                                                                                                  
+  cd '/Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_dagster_project'                                                         
+  DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev  
+```
+
+Now, let's execute Dexter. 
+
+You actually have the commandabove: `DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev  ` So it just said just `cd '/Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_dagster_project'` project and then execute `dagster dev` which is the dagster development server.
+
+For production, you might need some fine-tuning. In a production server, Dexter tasks can be executed on a different computer than the one scheduling those tasks. However, for our purposes, dexter-dev will suffice.
+
+We also specify the dexter-dbt-project on load `DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev  `, meaning every time we start the Dexter server, it will check our DBT project folder `/Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn` for new models or tests and execute them. Before running Dexter, ensure your DBT project is up and running and that dependencies are resolved. Go into your project folder and execute dbt-debug to ensure the connection is OK. Then execute dbt-deps to ensure all dependencies are installed.
+
+
+```sh
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ tree -L 1
+.
+├── README.md
+├── dbt_dagster_project
+├── dbt_env
+├── dbt_learn
+├── img
+├── logs
+├── requirements.txt
+└── test
+
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ cd dbt_learn 
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt debug
+  17:54:13  Running with dbt=1.7.17
+  17:54:13  dbt version: 1.7.17
+  17:54:13  python version: 3.11.6
+  17:54:20    Connection test: [OK connection ok]
+
+  17:54:20  All checks passed!
+
+
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt deps
+  17:54:57  Running with dbt=1.7.17
+  17:55:00  Up to date!
+```
+
+Before starting, we need to explicitly enable a schedule. By default, dagster doesn't have a scheduled execution, so you need to enable it in the Python code. Open the project in your editor, such as Visual Studio Code. Navigate to the dbt-dagster project and open `schedule.py`. For now, we'll simply remove the commands, but in the next lecture, I will guide you through these steps to ensure you understand the execution. Remove the commands, save the file, and now the schedules are enabled.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cd ..
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ cd dbt_dagster_project 
+(dbt_env) ➜  dbt_dagster_project git:(main) ✗ code dbt_dagster_project/schedules.py 
+```
+
+remove de coments
+
+```py
+schedules = [
+#     build_schedule_from_dbt_selection(
+#         [dbt_learn_dbt_assets],
+#         job_name="materialize_dbt_models",
+#         cron_schedule="0 0 * * *",
+#         dbt_select="fqn:*",
+#     ),
+]
+```
+
+```py
+schedules = [
+     build_schedule_from_dbt_selection(
+         [dbt_learn_dbt_assets],
+         job_name="materialize_dbt_models",
+         cron_schedule="0 0 * * *",
+         dbt_select="fqn:*",
+     ),
+]
+```
+
+Next, we are ready to start our Dexter server. Go back to the project folder and start the Dexter server by navigating to the dbt-dexter project directory and running the command. Dexter will launch, displaying "Launching Dexter services," and then "Serving Dexter web server on HTTP localhost port 3000."
+
+Copy this URL, open it in your browser, and if you see the specific screen, you are good to go. We are now ready to explore Dexter integration.
+
+`cd dbt_dagster_project`  
+`DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev`
+
+```sh
+(dbt_env) ➜  dbt_dagster_project git:(main) ✗ DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
+
+2024-07-22 20:03:30 +0200 - dagster - INFO - Using temporary directory /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_dagster_project/tmpv2qzcrwf for storage. This will be removed when dagster dev exits.
+2024-07-22 20:03:30 +0200 - dagster - INFO - To persist information across sessions, set the environment variable DAGSTER_HOME to a directory to use.
+2024-07-22 20:03:30 +0200 - dagster - INFO - Launching Dagster services...
+
+  Telemetry:
+```
+
+We will continue our work on the dagster UI at http://localhost:3000/
+
+
+We are now ready to explore Dexter integration.
+
+![](/img/118.png)
+
+#### Deep Dive into the Python Files of our Dagster-dbt Project
+
