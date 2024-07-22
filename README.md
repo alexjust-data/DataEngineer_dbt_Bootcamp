@@ -51,6 +51,15 @@
     - [Validating column types](#validating-column-types)
     - [Monitoring categoriacl variables in the source data](#monitoring-categoriacl-variables-in-the-source-data)
     - [Debugging dbt tests and Working with regular expressions](#debugging-dbt-tests-and-working-with-regular-expressions)
+  - [Debugging with Logging](#debugging-with-logging)
+    - [Logging to the dbtLog file](#logging-to-the-dbtlog-file)
+    - [Disabling Log Messages](#disabling-log-messages)
+  - [Using variables](#using-variables)
+    - [Working with Jinja Variables](#working-with-jinja-variables)
+    - [Working with dbt Variables](#working-with-dbt-variables)
+    - [Setting Default Values](#setting-default-values)
+    - [Using Date Ranges to Make Incremental Models Production-Ready](#using-date-ranges-to-make-incremental-models-production-ready)
+  - [Orchestating dbt with Dagster](#orchestating-dbt-with-dagster)
 
 ---
 ## Introduction
@@ -4535,6 +4544,703 @@ sources:
 
 `FAIL 17499 `
 
+
+So, it also tells you how many records fail the test, and in this case, it means all of them, practically. Let's take a look at this test and try to debug it. 
+
+If you want to debug DBT, there is a universal way to do it, but you will see that this is not the best practice in our use case. To debug DBT, you can add the `--debug` option to your command, right after the DBT command. 
+
 `(dbt_env) ➜  dbt_learn git:(main) ✗ dbt --debug test --select source:airbnb.listings`
 
+If you execute the DBT command with `--debug`, you will see all the SQL queries that DBT executes against your data warehouse. It might be quite overwhelming because, as you see, we have an extremely long debug output here. Here are all the tests, and here is my test for the RegEx. 
 
+Now, a better way to debug, especially a test, is to execute the test and look at the failed results. When a test fails, DBT will show you the SQL that it executed against your data warehouse. It indicates, "failure in test", "test expectations", and "combined SQL" in a specific file located in your target folder. 
+
+```sh
+_0_9_.e1269b5d63"
+04:42:38  Using snowflake connection "test.dbt_learn.dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_.e1269b5d63"
+04:42:38  On test.dbt_learn.dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_.e1269b5d63: /* {"app": "dbt", "dbt_version": "1.7.17", "profile_name": "dbt_learn", "target_name": "dev", "node_id": "test.dbt_learn.dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_.e1269b5d63"} */
+select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+
+
+
+
+    with grouped_expression as (
+    select
+        
+        
+    
+  
+
+
+    
+regexp_instr(price, '^\$[0-9][0-9\.]+$', 1, 1, 0, '')
+
+
+ > 0
+ as expression
+
+
+    from AIRBNB.raw.raw_listings
+    
+
+),
+validation_errors as (
+
+    select
+        *
+    from
+        grouped_expression
+    where
+        not(expression = true)
+
+)
+
+select *
+from validation_errors
+
+
+
+
+
+      
+    ) dbt_internal_test
+04:42:38  Opening a new connection, currently in state closed
+04:42:39  SQL status: SUCCESS 1 in 1.0 seconds
+04:42:39  Timing info for test.dbt_learn.dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_.e1269b5d63 (execute): 06:42:38.344704 => 06:42:39.683787
+04:42:39  On test.dbt_learn.dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_.e1269b5d63: Close
+04:42:39  3 of 3 FAIL 17499 dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_  [FAIL 17499 in 1.64s]
+04:42:39  Finished running node test.dbt_learn.dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_.e1269b5d63
+04:42:39  Connection 'master' was properly closed.
+04:42:39  Connection 'test.dbt_learn.dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_.e1269b5d63' was properly closed.
+04:42:39  
+04:42:39  Finished running 3 tests in 0 hours 0 minutes and 11.28 seconds (11.28s).
+04:42:39  Command end result
+04:42:39  
+04:42:39  Completed with 1 error and 0 warnings:
+04:42:39  
+04:42:39  Failure in test dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_ (models/sources.yml)
+04:42:39    Got 17499 results, configured to fail if != 0
+04:42:39  
+04:42:39    compiled Code at target/compiled/dbt_learn/models/sources.yml/dbt_expectations_source_expect_a60b59a84fbc4577a11df360c50013bb.sql
+04:42:39  
+04:42:39  Done. PASS=2 WARN=0 ERROR=1 SKIP=0 TOTAL=3
+04:42:39  Resource report: {"command_name": "test", "command_wall_clock_time": 12.166616, "process_user_time": 2.995502, "process_kernel_time": 0.458252, "process_mem_max_rss": "132988928", "command_success": false, "process_in_blocks": "0", "process_out_blocks": "0"}
+04:42:39  Command `dbt test` failed at 06:42:39.999139 after 12.17 seconds
+04:42:40  Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10f233410>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10f220410>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ac90a90>]}
+```
+
+In the target folder, I have these tests written. 
+
+
+`04:42:39    compiled Code at target/compiled/dbt_learn/models/sources.yml/dbt_expectations_source_expect_a60b59a84fbc4577a11df360c50013bb.sql`
+
+
+Let me open it in VS Code. 
+
+`(dbt_env) ➜  dbt_learn git:(main) code target/compiled/dbt_learn/models/sources.yml/dbt_expectations_source_expect_a60b59a84fbc4577a11df360c50013bb.sql`
+
+So, here we are. This is the test expression. Here is my regular expression. 
+
+```sh
+with grouped_expression as (
+    select
+regexp_instr(price, '^\$[0-9][0-9\.]+$', 1, 1, 0, '') > 0 
+as expression
+from AIRBNB.raw.raw_listings
+),validation_errors as (
+    select
+        *
+    from
+        grouped_expression
+    where
+        not(expression = true)
+) 
+select *
+from validation_errors
+```
+
+Let me copy and paste this directly into Snowflake. When I execute this test, it says, "the problem is that all the expressions are false." 
+
+![](/img/112.png)
+
+If we clean this up a bit, we can take a closer look.  First, it checks the price column, which is okay, and it adds my regular expression to the price column using Snowflake's built-in function `regex_instr` to check for matches. If the return value of this column is greater than zero, it means there is a match. So, this value should always be positive in my case. The validation errors indicate that we should collect all the non-matching return values of this SQL query, called expression, and count them.
+
+To simplify, let's strip it down to the core. We'll select the price and the regular expression itself as the expression. Executing this query, we now see the price and the compiled expression. 
+
+![](/img/113.png)
+
+We have a problem here. Let's see what happens if I specify that the string needs to start with a dollar sign `'^\$'`. Relaxing this condition to find the bug, we still get false results even though all strings start with a dollar sign. This suggests an escaping issue. The solution is likely that Snowflake needs double escaping, converting double backslashes into a single backslash for its regular expression engine. 
+
+![](/img/114.png)
+
+Testing with double backslashes, the expression is now true. So, we need double escaping. 
+
+
+![](/img/115.png)
+
+Given our sources already have double expressions, Snowflake converts double backslashes into single backslashes. To ensure Snowflake receives two backslashes, we must use four backslashes in our code. 
+
+
+This scenario, working with many interconnected technologies and regular expressions, often requires such complexity. In some projects, I've had to add eight or sixteen backslashes, which seems crazy but is sometimes necessary.
+
+`sourdes.yml`
+
+```sh
+            tests:
+              - dbt_expectations.expect_column_values_to_match_regex:
+                  regex: "^\\\\$[0-9][0-9\\\\.]+$"
+```
+
+Now, with four backslashes, let's see if our code works. Executing the test, it passes, which is great. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt test --select source:airbnb.listings 
+05:11:42  Running with dbt=1.7.17
+05:11:42  Registered adapter: snowflake=1.7.1
+05:11:42  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 807 macros, 0 groups, 0 semantic models
+05:11:42  
+05:11:44  Concurrency: 1 threads (target='dev')
+05:11:44  
+05:11:44  1 of 3 START test dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [RUN]
+05:11:45  1 of 3 PASS dbt_expectations_expect_table_row_count_to_equal_other_table_dim_listings_w_hosts_source_airbnb_listings_  [PASS in 1.29s]
+05:11:45  2 of 3 START test dbt_expectations_source_expect_column_distinct_count_to_equal_airbnb_listings_room_type__4  [RUN]
+05:11:46  2 of 3 PASS dbt_expectations_source_expect_column_distinct_count_to_equal_airbnb_listings_room_type__4  [PASS in 1.21s]
+05:11:46  3 of 3 START test dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_  [RUN]
+05:11:48  3 of 3 PASS dbt_expectations_source_expect_column_values_to_match_regex_airbnb_listings_price___0_9_0_9_  [PASS in 1.18s]
+05:11:48  
+05:11:48  Finished running 3 tests in 0 hours 0 minutes and 5.09 seconds (5.09s).
+05:11:48  
+05:11:48  Completed successfully
+05:11:48  
+05:11:48  Done. PASS=3 WARN=0 ERROR=0 SKIP=0 TOTAL=3
+```
+
+We just made a deep dive into debugging DBT tests, illustrating that examining the compiled file is helpful. Don't be afraid to investigate the lowest level of execution, which is the SQL file sent to Snowflake. Congratulations!
+
+
+### Debugging with Logging
+
+
+You will see how to log messages to DBT's standard log file or your terminal, and also how to temporarily disable a log message. The first step is to create a macro, something you've done earlier, right? Let's create a new file named logging.sql. This new SQL file will contain a macro with an arbitrary name, but we'll use `learn_logging()` for this example.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch macros/logging.sql
+```
+
+```sh
+├── logs
+│   └── dbt.log
+├── macros
+│   ├── logging.sql
+│   ├── no_nulls_in_columns.sql
+│   └── positive_value.sql
+```
+
+First, define the macro as macro learnLogging. It doesn't take any parameters. The purpose is to test DBT's logging capabilities. Remember to add end macro at the end. Here is the macro body. 
+
+```sql
+{% macro learn_logging() %}
+
+{% endmacro %}
+```
+
+Before implementing logging, delete the dbt.log file found under logs on the left. Click logs and delete the dbt.log file to have a clean slate.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ rm logs/dbt.log 
+```
+
+Logging with DBT is super easy. There is a built-in command called log that you can use to log any message. For example, you can use a debug message like "call your mom". You need to place this message inside a Jinja template.
+
+```sql
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat macros/logging.sql   
+
+  {% macro learn_logging() %}
+      {{ log("Call your mom!") }}
+  {% endmacro %} 
+```
+
+Save the file and then execute the macro using the dbt run-operation command. This command executes the macro itself, not as part of a test. Use the macro name learnLogging. The file name doesn't matter, so you can just use learn.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_logging
+
+  05:30:00  Running with dbt=1.7.17
+  05:30:01  Registered adapter: snowflake=1.7.1
+  05:30:01  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 808 macros, 0 groups, 0 semantic models
+```
+
+After executing the command, you will see that a new dbt.log file has appeared. If you scan through it, you will find the debug message "call your mom".
+
+This way, you can insert log messages anywhere in your DBT project, whether in the middle of a SQL command or a SQL select. Simply add the Jinja tag, and whenever DBT executes that specific command, it will create a log entry in the dbt.log file. This is a great method for debugging.
+
+Later, I will show you how to use variables and perform more sophisticated logging.
+
+![](/img/116.png)
+
+#### Logging to the dbtLog file
+
+Let's move on and put our log messages to the screen. So far they are here in our dbt.log file, but we want it to pop up on our screen. This is easy again. All you need to do is add a second parameter and this will be the info equals true. For those of you who are familiar with logging in Python, for example, what we do here is we step up the log level from debug to info and all info messages will pop up on the screen too. So I'll change it to call your dad, okay? Save it and rerun the operation. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat macros/logging.sql
+
+  {% macro learn_logging() %}
+      {{ log("Call your dad!", info=True) }}
+  {% endmacro %}
+```
+
+So dbt.run operation. Learn logging. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_logging
+
+  05:47:26  Running with dbt=1.7.17
+  05:47:26  Registered adapter: snowflake=1.7.1
+  05:47:27  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 808 macros, 0 groups, 0 semantic models
+  05:47:27  Call your dad!
+```
+
+And there we go. So now this is on our screen. Amazing. And if you take a look at the dbt.log file, you will see that it's here with an info log level too. Very, very good.
+
+![](/img/117.png)
+
+
+#### Disabling Log Messages
+
+Now how can you disable logging? Because it is important.
+
+Sometimes you just want to temporarily disable a log file. Now one thing that I would try if I was new to dbt is simply SQL command out this log file, this log line, like this. 
+
+```sql
+{% macro learn_logging() %}
+--  {{ log("Call your dad!", info=True) }} --> This will be put to the screen
+{% endmacro %}
+```
+
+Let me save it and re-execute it. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_logging
+
+  05:47:26  Running with dbt=1.7.17
+  05:47:26  Registered adapter: snowflake=1.7.1
+  05:47:27  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 808 macros, 0 groups, 0 semantic models
+  05:47:27  Call your dad!
+```
+
+And it's still here! `Call your dad!` what happened? So we spent a second trying to figure out why this has still ended up on our screen. Now the reason for this is that there are two layers of executions in dbt. So when a macro gets executed, then the Jinja part of the macro will get rendered and executed. And then the output of this Jinja will be the SQL, right? And this SQL might be picked up by a model and so on. And this command line this instructs the SQL engine to skip the line. But actually this got already evaluated in the first layer, in the first step. Now what you can do to fix this is to add a Jinja command. So something like this `{# log("Call your dad!", info=True) #}`. 
+
+```sql
+{% macro learn_logging() %}
+    {# log("Call your dad!", info=True) #}
+{% endmacro %}
+```
+
+You can replace your Jinja tag with this Jinja commands tag. And now I have a macro that has an empty Jinja line and you will see that no line has popped up on the screen. So very good!
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_logging
+
+  05:59:01  Running with dbt=1.7.17
+  05:59:01  Registered adapter: snowflake=1.7.1
+  05:59:02  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 808 macros, 0 groups, 0 semantic models
+```
+
+So...
+
+```sql
+{% macro learn_logging() %}
+    {{ log("Call your mom!") }}
+    {{ log("Call your dad!", info=True) }} --> Logs to the screen, too
+--  {{ log("Call your dad!", info=True) }} --> This will be put to the screen
+    {# log("Call your dad!", info=True) #} --> This won't be executed
+{% endmacro %}
+```
+
+
+### Using variables
+
+#### Working with Jinja Variables
+
+First, let's create a macro so we can practice working with it. Let's create a new macro file called `variables` and create a macro in it called `learn_variables()`. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ touch macros/variables.sql
+
+├── macros
+│   ├── logging.sql
+│   ├── no_nulls_in_columns.sql
+│   ├── positive_value.sql
+│   └── variables.sql
+```
+
+So, I say macro learnVariables, this won't take any parameters, and I add the macro. 
+
+```sql
+{% macro learn_variables() %}
+  {% set your_name_jinja = "Zoltan" %}  
+{% endmacro %}
+```
+
+Okay. Now, the most important thing here for you to have a good mental model about variables is to understand that there are two kinds of variables in DBT. 
+* There are the Jinja variables and then 
+* there are the DBT variables. 
+
+It's important to know which one you are dealing with anytime you work with variables.
+
+So, the Jinja variables, and this is what I'm going to show you now, are simple variables that come from the Jinja language. You can define them and use them in Jinja. That's it. The second type, the DBT variables, are DBT-specific variables which can be passed to DBT through the command line, the project descriptor file, or any other method. These are the ones you will want to use in most of your daily DBT work unless you're very advanced and need to do something that requires lower-level Jinja programming. Let me show you the Jinja variables first so you can tell the difference between the two. 
+
+
+The Jinja variable is kind of easy. You can define it with the set keyword. So you can say, for example, set yourName. I call this yourName Jinja. yourName Jinja is "Alex". Feel free to add your name here. 
+
+```sql
+{% macro learn_variables() %}
+  {% set your_name_jinja = "Alex" %}  
+{% endmacro %}
+```
+
+And now I have created a variable just like in any programming language. Now I can use this variable in logging. For example, I can say log hello and then my name. I can concatenate strings in Jinja with the tilde sign. So I will say yourName Jinja. I'll add info=True so it pops up on my screen. 
+
+```sql
+{% macro learn_variables() %}
+    {% set your_name_jinja = "Zoltan" %}
+    {{ log("Hello " ~ your_name_jinja, info=True) }}
+{% endmacro %}
+```
+
+And let us execute the learnVariables macro. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_variables
+
+  06:48:53  Running with dbt=1.7.17
+  06:48:53  Registered adapter: snowflake=1.7.1
+  06:48:54  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+  06:48:54  Hello Zoltan
+```
+
+Here we go. Okay, so this says, "hello, Sultan." Easy peasy, right?
+
+#### Working with dbt Variables
+
+DBT variables, also known as project variables, are variables that DBT manages for you. You can pass their values from the command line or from the project file, for example. They are similar to Jinja variables. Let me show you an example, and please code this with me.
+
+If I want to do something similar, I will just say now "hello dbt user." Let's assume that I want to pass a `username variable` to this macro. Then, if this is a DBT variable, I would be able to use the where keyword. 
+
+```sql
+{% macro learn_variables() %}
+
+    {% set your_name_jinja = "Zoltan" %}
+
+    {{ log("Hello " ~ your_name_jinja, info=True) }}
+    {{ log("Hello dbt user " ~ var("user_name") ~ "!", info=True) }}
+
+{% endmacro %}
+```
+
+So now I have a 
+
+* "hello," and then a Jinja variable, `"Hello " ~ your_name_jinja`
+* and then a "hello DBT user" username variable. `"Hello dbt user " ~ var("user_name")`
+
+This is how you can use a variable in DBT.
+
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_variables
+07:04:15  Running with dbt=1.7.17
+07:04:16  Registered adapter: snowflake=1.7.1
+07:04:16  Found 1 seed, 8 models, 1 snapshot, 1 analysis, 22 tests, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+07:04:16  Hello Zoltan
+07:04:16  Hello dbt user NO USERNAME IS SET!!!
+```
+
+
+So let me see how we can use and give a value to this project variable. If I say, `dbt run-operation` and then `learn_variables`, then you will see that DBT will start to complain. It says, "hello Zoltan," that's okay. But then it says right away that, `"oh right, I have no idea what username is."` But this is already a DBT error message, not an error message coming from Jinja.
+
+So let us pass the `username` variable to this macro. Now passing a variable, if you take a look at the help page, for example, if I say `run-operation --help`, 
+
+```sh
+  --args YAML                     Supply arguments to the macro. This
+                                  dictionary will be mapped to the keyword
+                                  arguments defined in the selected macro.
+                                  This argument should be a YAML string, eg.
+                                  '{my_variable: my_value}'
+```
+
+then you will see that it has this `--vars` parameter, and this is how I'm able to pass a variable. If you open the documentation, and I share this link:
+
+More information on variable passing: https://docs.getdbt.com/docs/build/project-variables
+
+<!-- <div style="background-color: #d6f5f5; padding: 10px; border-radius: 5px; border-left: 5px solid #00aabb; color: #005a75;">
+    <div style="display: flex; align-items: center;">
+        <svg viewBox="0 0 14 16" width="16" height="16" style="margin-right: 8px;">
+            <path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path>
+        </svg>
+        <span style="font-weight: bold; margin-right: 8px;">INFO</span>
+    </div>
+    <div style="margin-top: 8px;">
+        Jinja is not supported within the <code>vars</code> config, and all values will be interpreted literally.
+    </div>
+</div> -->
+
+
+you will see that there are several ways to define project variables. One way is through the `dbt_project.yml` file. 
+
+* [Defining variables in dbt_project.yml](https://docs.getdbt.com/docs/build/project-variables#defining-variables-in-dbt_projectyml)
+
+* [Defining variables on the command line](https://docs.getdbt.com/docs/build/project-variables#defining-variables-on-the-command-line) 
+
+
+
+You simply say dbt and then run-operation, run, test, debug, or seed. Most of the commands support variables, so you say dbt and then the command, and then pass the variables in this format. It's kind of a JSON-ish format here. So let me show this to you in practice. I will say dbt run-operation learn_variables --vars '{"username": "zoltancito"}'.
+
+Both of the following are valid and equivalent:
+
+```sh
+$ dbt run --vars '{"key": "value", "date": 20180101}'
+$ dbt run --vars '{key: value, date: 20180101}'
+```
+
+If only one variable is being set, the brackets are optional, eg:
+
+```sh
+$ dbt run --vars 'key: value'
+```
+
+Okay, like this. So I'm running now this operation. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_variables --vars '{user_name: AlexJust}'
+
+  07:23:10  Running with dbt=1.7.17
+  07:23:11  Registered adapter: snowflake=1.7.1
+  07:23:11  Unable to do partial parsing because config vars, config profile, or config target have changed
+  07:23:17  Found 8 models, 1 snapshot, 1 analysis, 22 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+  07:23:17  Hello Zoltan
+  07:23:17  Hello dbt user AlexJust!
+```
+
+Now the question arises, what can we do if we expect a variable like username, but we don't have it on our input variables tree? How can we manage the situation without forcing an error message to pop up? This is what I will show you in the next part.
+
+#### Setting Default Values
+
+
+When you deal with missing variable values, you have three options. 
+1. First, you can define a default value in your macro, in your signal file, or wherever you want to use this variable. 
+2. Second, you can pass the default value in your DBT project file. 
+3. Third, you can use Jinja control structures to check for variable existence. 
+
+I will show you the latter in the next video, so let's focus on the first two options.
+
+The simplest way to avoid an error message is to add a default value for the variable at the place of usage. I'll just add something quick and simple here. Let's say "no username is set." This should be the default username in case someone doesn't pass the username variable. So let's take a look. 
+
+
+```sql
+{% macro learn_variables() %}
+
+    {% set your_name_jinja = "Zoltan" %}
+    {{ log("Hello " ~ your_name_jinja, info=True) }}
+
+    {{ log("Hello dbt user " ~ var("user_name", "NO USERNAME IS SET!!") ~ "!", info=True) }}
+
+{% endmacro %}
+```
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_variables                               
+  07:32:40  Running with dbt=1.7.17
+  07:32:41  Registered adapter: snowflake=1.7.1
+  07:32:42  Found 8 models, 1 snapshot, 1 analysis, 22 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+  07:32:42  Hello Zoltan
+  07:32:42  Hello dbt user NO USERNAME IS SET!!!
+```
+
+If I just run dbt run-operation learn_variables and I don't pass the username variable, then you will see that I won't get an error message, but instead, I have this default variable set for me. This is one way to go. However, if you go this route, you'll need to set a default value at every place where you use the variable.
+
+Another way is to define a default value in your DBT project YAML file. Let's do that. Open `dbt_project.yml`, scroll to the end, and create a new section called `vars` as variables. Here, you can list the default values for your variables. For example, I will set username to "default username for this project." Again, this is just a dummy example to show you what happens. Now, if I re-execute the learn_variables macro without passing any variables, it will say, "hello DBT user, default username for this project."
+
+```yml
+models:
+  dbt_learn:
+    +materialized: view
+    +post-hook:
+      - "GRANT SELECT ON {{ this }} TO ROLE REPORTER"
+    dim:
+      +materialized: table
+    src:
+      +materialized: ephemeral
+
+vars:
+  user_name: default_user_name_for_this_project
+```
+
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_variables
+
+  07:35:40  Running with dbt=1.7.17
+  07:35:40  Registered adapter: snowflake=1.7.1
+  07:35:40  Found 8 models, 1 snapshot, 1 analysis, 22 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+  07:35:40  Hello Zoltan
+  07:35:40  Hello dbt user default_user_name_for_this_project!
+```
+
+What happens here is that when you execute DBT, it will first pick all the variables from the `vars` section in `dbt_project.yml`. If you have a command line argument for the variable, it will override the value from the YAML file. Let me show you. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run-operation learn_variables --vars '{user_name: AlexJust}'
+
+  07:23:10  Running with dbt=1.7.17
+  07:23:11  Registered adapter: snowflake=1.7.1
+  07:23:11  Unable to do partial parsing because config vars, config profile, or config target have changed
+  07:23:17  Found 8 models, 1 snapshot, 1 analysis, 22 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+  07:23:17  Hello Zoltan
+  07:23:17  Hello dbt user AlexJust!
+```
+
+If I override this now, you will see that the command line variable takes precedence. So we have the default value from the YAML file, and then the command line value, which takes precedence. 
+
+`{{ log("Hello dbt user " ~ var("user_name", "NO USERNAME IS SET!!") ~ "!", info=True) }}`
+
+If there is no default value and nothing is passed from the command line, then the default value will be used. This is how variable precedence works in DBT. Thank you.
+
+
+#### Using Date Ranges to Make Incremental Models Production-Ready
+
+
+
+### Orchestating dbt with Dagster
+
+Please open the factory views SQL. 
+
+```sql
+{{
+  config(
+    materialized = 'incremental',
+    on_schema_change = 'sync_all_columns'
+  )
+}}
+
+WITH src_reviews AS (
+  SELECT * FROM {{ ref('src_reviews') }}
+)
+
+SELECT 
+  {{ dbt_utils.generate_surrogate_key(['listing_id', 
+                                        'review_date', 
+                                        'reviewer_name', 
+                                        'review_text']) 
+  }} AS review_id,
+  *
+FROM src_reviews
+WHERE review_text IS NOT NULL
+{% if is_incremental() %}
+  AND review_date > (SELECT MAX(review_date) FROM {{ this }})
+{% endif %}
+```
+
+If you can recall, our implementation here for an incremental model is the standard naïve DBT implementation. That means if it's a full refresh, DBT won't get the incremental flag `is_incremental()`, which means DBT will check the incremental table. If it doesn't exist yet, DBT will determine it's a poor refresh, and its incremental value will evaluate to false.  If your table is already there, its incremental value will evaluate to true. In the standard implementation, we take all values from the source table that are not in the target table yet by adding a simple date-based condition `AND review_date > (SELECT MAX(review_date) FROM {{ this }})`.
+
+Now, in production, this usually amounts to nothing. In production, you often need to backfill different date ranges because things go wrong, and you need to reload them, and so on. It's standard practice to run incremental models with a parameterized date range to fill in and execute. I will show you a solution to that. I'll copy and paste this, and you will find it in the course resources. Here is the new code; let's take a look at it.
+
+```sql
+{% if is_incremental() %}
+  {% if var("start_date", False) and var("end_date", False) %}
+    {{ log('Loading ' ~ this ~ ' incrementally (start_date: ' ~ var("start_date") ~ ', end_date: ' ~ var("end_date") ~ ')', info=True) }}
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+  {% else %}
+    AND review_date > (select max(review_date) from {{ this }})
+    {{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}
+  {% endif %}
+{% endif %}
+```
+
+`{% if is_incremental() %}` - If this is not an incremental load, then nothing changes. It's the same code as earlier. 
+
+`{% if var("start_date", False) and var("end_date", False) %}` - If this is an incremental load, and you don't provide a start date and an end date, then again, we have the original implementation `AND review_date > (select max(review_date) from {{ this }})`, the original is-incremental implementation, but we also add a log message so that we know what's going on `{{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}`. 
+
+`{% if var("start_date", False) and var("end_date", False) %}` - If we have a start date and an end date, we will add extra conditions for this insert. `AND review_date >= '{{ var("start_date") }}'  AND review_date < '{{ var("end_date") }}'`
+
+One thing you need to know here is that the review date wasn't really a date; it was a time, down to the second. The same applies to the `start date` and `end date`. These are just unfortunate names; they are actually times. 
+
+
+So let me save this and execute my factory views model without any parameters. If I say "run and materialize factory views," my factory views table is already there, so it will be an incremental load. However, since we haven't provided any start date and end date, this was a full incremental load. 
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run --select fct_reviews     
+15:24:51  Running with dbt=1.7.17
+15:24:51  Registered adapter: snowflake=1.7.1
+15:24:52  Found 8 models, 1 snapshot, 1 analysis, 22 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+15:24:52  
+15:24:58  Concurrency: 1 threads (target='dev')
+15:24:58  
+15:24:58  1 of 1 START sql incremental model DEV.fct_reviews ............................. [RUN]
+15:24:58  Loading AIRBNB.DEV.fct_reviews incrementally (all missing dates)
+15:25:03  1 of 1 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 0 in 5.16s]
+15:25:03  
+15:25:03  Finished running 1 incremental model in 0 hours 0 minutes and 11.31 seconds (11.31s).
+15:25:03  
+15:25:03  Completed successfully
+15:25:03  
+15:25:03  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+Here we go. (all missing dates), right? This is the log message.
+
+
+`15:24:58  Loading AIRBNB.DEV.fct_reviews incrementally (all missing dates)` 
+
+Now let me go and define the start date and the end date, too. I will define it as our orchestration tool has by default: the start date is set at 00:00:00, and the end date is set to the end of the day. Now I'm passing these variables, and you will see right away that this is an incremental load with a start date and an end date parameter, set as they should be. So now I loaded a specific date range.
+
+`dbt run --select fct_reviews  --vars '{start_date: "2024-02-15 00:00:00", end_date: "2024-03-15 23:59:59"}'`
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ dbt run --select fct_reviews  --vars '{start_date: "2024-02-15 00:00:00", end_date: "2024-03-15 23:59:59"}'
+15:27:29  Running with dbt=1.7.17
+15:27:29  Registered adapter: snowflake=1.7.1
+15:27:29  Unable to do partial parsing because config vars, config profile, or config target have changed
+15:27:32  Found 8 models, 1 snapshot, 1 analysis, 22 tests, 1 seed, 3 sources, 1 exposure, 0 metrics, 809 macros, 0 groups, 0 semantic models
+15:27:32  
+15:27:38  Concurrency: 1 threads (target='dev')
+15:27:38  
+15:27:38  1 of 1 START sql incremental model DEV.fct_reviews ............................. [RUN]
+15:27:38  Loading AIRBNB.DEV.fct_reviews incrementally (start_date: 2024-02-15 00:00:00, end_date: 2024-03-15 23:59:59)
+15:27:41  1 of 1 OK created sql incremental model DEV.fct_reviews ........................ [SUCCESS 0 in 3.74s]
+15:27:41  
+15:27:41  Finished running 1 incremental model in 0 hours 0 minutes and 9.55 seconds (9.55s).
+15:27:41  
+15:27:41  Completed successfully
+15:27:41  
+15:27:41  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
+```
+
+`15:27:38  Loading AIRBNB.DEV.fct_reviews incrementally (start_date: 2024-02-15 00:00:00, end_date: 2024-03-15 23:59:59)`
+
+If I go to the target order, compile, and model factory views, you will see that the last time my model was compiled, these statements were added.
+
+```sh
+(dbt_env) ➜  dbt_learn git:(main) ✗ code target/compiled/dbt_learn/models/fct/fct_reviews.sql 
+```
+
+```sql
+WITH  __dbt__cte__src_reviews as (
+....
+    
+    AND review_date >= '2024-02-15 00:00:00'
+    AND review_date < '2024-03-15 23:59:59'
+``` 
+
+In this case, if you reload this data, ensure you delete the date range from the incremental model first.
+
+If you take DBT to the next level, you can have different incremental and merge strategies to ensure new data overrides the old data without producing duplicates. You will need a unique key for that, and a data warehouse that works with merge, then you will see the different ways to ensure new data overrides the old data without duplicating. Thank you.
+
+Reference - Working with incremental strategies: 
+https://docs.getdbt.com/docs/build/incremental-models#about-incremental_strategy
