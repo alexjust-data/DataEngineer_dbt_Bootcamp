@@ -5270,36 +5270,26 @@ https://docs.getdbt.com/docs/deploy/deployment-tools
 
 
 
-###### Airflow
-
-https://airflow.apache.org/docs/apache-airflow/stable/start.html
+###### [Airflow](https://airflow.apache.org/docs/apache-airflow/stable/start.html)
 
 Airflow is an open-source project from Apache and is the largest orchestration tool out there. If your priority is to find as many answers on Stack Overflow or the internet as possible, then Airflow is the tool for you. However, personally, I would go with another tool because Airflow's installation can be cumbersome, and you probably want something easier to get up and running. Additionally, Airflow doesn't integrate deeply with DBT. It can launch DBT tasks, but it won't provide detailed insights into your models. Airflow manages your whole DBT project as a unit rather than as a set of different models, tests, macros, etc. It has a more traditional approach to integration.
 
 
-###### Prefect
-
-https://docs.prefect.io/latest/
+###### [Prefect](https://docs.prefect.io/latest/)
 
 Next is Prefect, a much more modern ETL tool. Prefect is easy to install and very Pythonic, making it great for data engineers. It provides simple integration with DBT. 
 
 You can set up an environment to [integrate with DBT Cloud](https://www.prefect.io/blog/dbt-and-prefect) easily, especially with Prefect's proprietary solution, Prefect Cloud. However, if you want to stay open-source, integrating with DBT Core means Prefect will execute DBT build commands, but it doesn't offer a full-fledged integration.
 
-###### Azure Data Factory 
-
-https://azure.microsoft.com/en-us/products/data-factory/
+###### [Azure Data Factory](https://azure.microsoft.com/en-us/products/data-factory/)
 
 Azure Data Factory is another option. It's a point-and-click ETL orchestration tool. Initially, I was skeptical about Azure Data Factory because I came from a background of hard-coding orchestration logic. However, I eventually found it to be an amazing product for Azure-based orchestration. It doesn't tightly integrate with DBT but can execute DBT projects or workflows.
 
-###### DBT Cloud
-
-https://www.getdbt.com/
+###### [DBT Cloud](https://www.getdbt.com/)
 
 DBT Cloud is DBT Labs' proprietary offering. It allows you to create jobs, set commands to execute, and schedule them using cron syntax. This solution integrates tightly with DBT but requires a subscription.
 
-###### Dagster
-
-https://dagster.io/
+###### [Dagster](https://dagster.io/)
 
 We have chosen Dagster for DBT scheduling. Dagster, like Prefect, is a new-generation scheduling tool with several standout features for orchestrating DBT projects or any modern data stack project. Dagster's core concept, called an asset, is similar to DBT's models, making integration seamless. 
 
