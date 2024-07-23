@@ -71,6 +71,7 @@
     - [Manage, Orchestrate and Debug your dbt Project with Dagster](#manage-orchestrate-and-debug-your-dbt-project-with-dagster)
     - [I suggest you](#i-suggest-you)
     - [Advanced Dagster: Using Partitions with Incremental Models](#advanced-dagster-using-partitions-with-incremental-models)
+    - [Advanced Dagster: Using Partitions with Incremental Models](#advanced-dagster-using-partitions-with-incremental-models-1)
 
 ---
 ## Introduction
@@ -5482,7 +5483,7 @@ defs = Definitions(
 
 Let's begin with an overview of the files, starting from the top. We import the `DbtCliResource` resource from the Dagster-DBT package. My VS Code settings are strict about Python code quality, so you might see some warnings that can be ignored. Importing `DbtCliResource` allows Dagster to integrate with DBT. We create a definitions object, our Dagster model definition, which uses this `DbtCli` resource to enable `Dagster-dbt` integration.
 
-You see that later we create a definitions object. This is our our Dexter model definition or our Dexter assets definition. And here we say that we are using a resource which is exactly this DB2 CLI resource. And this simply tells Dexter that we want to use the Dexter DBT plugin in this project. 
+You see that later we create a definitions object. This is our our Daxter model definition or our Daxter assets definition. And here we say that we are using a resource which is exactly this DB2 CLI resource. And this simply tells Daxter that we want to use the Daxter DBT plugin in this project. 
 
 ```py
 from .assets import dbt_learn_dbt_assets
@@ -5525,7 +5526,7 @@ The `DbtCliResource` also configures Dagster to parse DBT projects on load.
 dbt = DbtCliResource(project_dir=os.fspath(dbt_project_dir))
 ```
 
-And then at the startup time it says that if the Dexter DBT parse project on load is enabled.
+And then at the startup time it says that if the Daxter DBT parse project on load is enabled.
 
 ```py
 # If DAGSTER_DBT_PARSE_PROJECT_ON_LOAD is set, a manifest will be created at run time.
@@ -5633,9 +5634,9 @@ When you start the Dagster server, it reads this definitions object, understandi
 
 #### Manage, Orchestrate and Debug your dbt Project with Dagster
 
-Once you open Dexter, you can see your dbt lineage right away. You can zoom in and out, and you'll see a very similar lineage to what you've already seen in dbt. Dexter reads the dbt configuration, ensuring it understands your dbt lineage so you can work with it immediately.
+Once you open Daxter, you can see your dbt lineage right away. You can zoom in and out, and you'll see a very similar lineage to what you've already seen in dbt. Daxter reads the dbt configuration, ensuring it understands your dbt lineage so you can work with it immediately.
 
-I want to show you a few features of Dexter because there are many. For example, if we want to materialize all these models and execute a dbt run, we can simply click `Materialize All`. You will see it says "Materializing," and a pop-up at the top indicates that a run has started. 
+I want to show you a few features of Daxter because there are many. For example, if we want to materialize all these models and execute a dbt run, we can simply click `Materialize All`. You will see it says "Materializing," and a pop-up at the top indicates that a run has started. 
 
 ![](/img/dragster/01.png)
 
@@ -5660,22 +5661,22 @@ I have two ways to do this: clicking Shift or Command and selecting "dim listing
 ![](/img/dragster/06.png)
 
 
-While these are materializing, let me show you the schedules. Here is an overview with many features, but I want to highlight the schedules. Here is the dbt-dexter project's materialized dbt model schedule, seen in the schedules.py file and uncommented. 
+While these are materializing, let me show you the schedules. Here is an overview with many features, but I want to highlight the schedules. Here is the dbt-Daxter project's materialized dbt model schedule, seen in the schedules.py file and uncommented. 
 
 ![](/img/dragster/07.png)
 
-If you don't see any schedule here, please rewind to the earlier lectures, uncomment the dbt schedule part in schedules.py, and re-execute the dexter server. 
+If you don't see any schedule here, please rewind to the earlier lectures, uncomment the dbt schedule part in schedules.py, and re-execute the Daxter server. 
 
 ```sh
 (dbt_env) ➜  dbt_dagster_project git:(main) ✗ DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
 ```
 
-By default, all schedules are switched off in Dexter, which you can change programmatically. If you just execute Dexter, the schedules will be switched off by default, so you need to switch them on. Now, this schedule is running, and the next tick will be at midnight when it will materialize these models.
+By default, all schedules are switched off in Daxter, which you can change programmatically. If you just execute Daxter, the schedules will be switched off by default, so you need to switch them on. Now, this schedule is running, and the next tick will be at midnight when it will materialize these models.
 
 ![](/img/dragster/10.png)
 
 
-If you're interested in what models the schedule materializes exactly, you can click the lineage graph icon, "Materialize dbt models" and see the dbt models that will be materialized. In our case, we want to materialize every model. Dexter allows you to independently schedule different subgraphs of models and offers many configuration choices.
+If you're interested in what models the schedule materializes exactly, you can click the lineage graph icon, "Materialize dbt models" and see the dbt models that will be materialized. In our case, we want to materialize every model. Daxter allows you to independently schedule different subgraphs of models and offers many configuration choices.
 
 Now you see "dim listings cleansed" and "dim listings with hosts" are materialized again. Let's go back to materializing a bunch of models. Pressing Shift is one way, but you can always look at the lineage of a specific model. For example, if I right-click "dim listings cleansed," I can choose "Show Upstream Graph" or "Show Downstream Graph." Selecting "Show Downstream Graph" shows that "dim listings cleansed" only affects "dim listings with hosts." 
 
@@ -5690,7 +5691,7 @@ To rematerialize everything contributing to "dim listings with hosts," right-cli
 
 ![](/img/dragster/16.png)
 
-Now, all three models are being materialized. Here, we have a new run that I can view. You've seen this process earlier, so the models are materializing. This might take a few seconds. While it's running, let's go back to the lineage by clicking the Dexter icon. You can see the models are materializing. 
+Now, all three models are being materialized. Here, we have a new run that I can view. You've seen this process earlier, so the models are materializing. This might take a few seconds. While it's running, let's go back to the lineage by clicking the Daxter icon. You can see the models are materializing. 
 
 ![](/img/dragster/17.png)
 
@@ -5698,9 +5699,9 @@ Clicking "dim listings with hosts" will show metadata on the side, including raw
 
 ![](/img/dragster/18.png)
 
-You will see nice metrics, and you can configure Dexter to collect more metrics. This concludes the Dexter part. Dexter integrates seamlessly with dbt. I've worked on projects where we integrated Dexter with dbt and a data integration layer like Airbyte. Dexter can orchestrate both seamlessly, offering full lineage from the source database to the pipeline's end across technologies. Integrating Python-based data sources to extract data from an API, load it into a data warehouse, and use dbt on top is super easy with Dexter. You can manage your whole pipeline without directly touching dbt in production because Dexter handles all tasks.
+You will see nice metrics, and you can configure Daxter to collect more metrics. This concludes the Daxter part. Daxter integrates seamlessly with dbt. I've worked on projects where we integrated Daxter with dbt and a data integration layer like Airbyte. Daxter can orchestrate both seamlessly, offering full lineage from the source database to the pipeline's end across technologies. Integrating Python-based data sources to extract data from an API, load it into a data warehouse, and use dbt on top is super easy with Daxter. You can manage your whole pipeline without directly touching dbt in production because Daxter handles all tasks.
 
-I hope this was helpful. If you work with dbt orchestration, consider using Dexter as a tool.
+I hope this was helpful. If you work with dbt orchestration, consider using Daxter as a tool.
 
 
 #### I suggest you 
@@ -5721,7 +5722,588 @@ Again, the next part is very technical. If it feels too advanced, that's complet
 
 #### Advanced Dagster: Using Partitions with Incremental Models
 
+[blog post on Dagster.io](https://dagster.io/blog/partitioned-data-pipelines)
+
+When working with data, understanding how to connect different components is essential. As Scholten mentioned, a data orchestrator is crucial for linking the steps of your data pipeline. However, as datasets grow, reprocessing the entire dataset becomes impractical. Instead, using an incremental model in DBT is more efficient.
+
+An incremental model divides the dataset into partitions, allowing data to accumulate over time without the need to reprocess it entirely. For example, if daily data is corrupted one day, you can reload the corrected data for that specific partition, ensuring downstream DBT models and other data assets update accordingly.
+
+![Example of Incremental Model](img/dragster/19.png)
+
+This method helps build high-quality, idempotent, scalable, and resource-efficient data pipelines.
+
+Partitions can be nested and mapped with time horizons, such as hourly data aggregated and reported daily or quarterly. For instance, if dataset A provides hourly data and dataset B provides daily data, the next data asset or join operation triggers only if both datasets are fresh and complete for a particular time.
+
+![Nesting Partitions](img/dragster/20.png)
+
+Explicitly modeling data dependencies allows the data orchestrator to work more efficiently, simplifying and accelerating your workflow while enhancing data quality.
+
+Additionally, partitions can be multi-dimensional, beneficial for complex use cases. It's crucial to understand this capability and ensure your orchestrator supports it.
+
+![Multi-dimensional Partitions](img/dragster/21.png)
+
+In DBT, incremental models facilitate this process. You can modify a DBT model to include a conditional statement for incremental execution, ensuring high-quality, idempotent data pipelines.
+
+```sql
+-- Example DBT model with incremental execution
+{% if is_incremental() %}
+  {% if var("start_date", False) and var("end_date", False) %}
+    {{ log('Loading ' ~ this ~ ' incrementally (start_date: ' ~ var("start_date") ~ ', end_date: ' ~ var("end_date") ~ ')', info=True) }}
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+  {% else %}
+    AND review_date > (select max(review_date) from {{ this }})
+    {{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}
+  {% endif %}
+{% endif %}
+```
+
+To make DBT and Dagster interoperate smoothly, you need to define partition types and specify the initial partition point. The DBT translator will pass variables, such as `start_date` and `end_date`, to DBT, ensuring the correct partition column is used. By feeding this additional metadata into Dagster, you can make the data assets partition-aware. This allows you to execute DBT commands with the appropriate partition values, optimizing resource use.
+
+Finally, you need to register partitioned assets in Dagster. The UI will reflect these changes, allowing you to select and run models for specific partitions efficiently.
+
+In summary, integrating DBT with Dagster for partition handling enables you to create efficient, scalable, and high-quality data pipelines. This approach ensures you only process necessary data partitions, conserving resources and improving performance.
+
+**Code Integration Details:**
+
+To make Dagster partition-aware, you need to define partition types and specify the initial partition point. The DBT translator will pass variables to DBT, injecting the right information for partition expressions. You then need to exclude new refuse dimensions to avoid duplicate loading and apply the partition definition and DBT translator to your models.
+
+**Example DBT Model with Incremental Execution:**
+
+`fct_reviews.sql`
+
+```sql
+{% if is_incremental() %}
+  {% if var("start_date", False) and var("end_date", False) %}
+    {{ log('Loading ' ~ this ~ ' incrementally (start_date: ' ~ var("start_date") ~ ', end_date: ' ~ var("end_date") ~ ')', info=True) }}
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+  {% else %}
+    AND review_date > (select max(review_date) from {{ this }})
+    {{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}
+  {% endif %}
+{% endif %}
+```
+If a model is to be executed in an incremental mode, you add this conditional statement:
+
+```sql
+{% if is_incremental() %}
+  {% if var("start_date", False) and var("end_date", False) %}
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+  {% else %}
+    AND review_date > (select max(review_date) from {{ this }})
+  {% endif %}
+{% endif %}
+```
+
+This ensures you are only operating on a specific subset of data, designated by the date period or time range from the review dates.
+
+**Making Dagster Partition-Aware:**
+
+To make Dagster partition-aware, you need to define partition types and specify the initial partition point. A DBT translator passes variables to DBT, injecting the correct information for partition expressions.
+
+`/dbt_dagster_project/assets.py`
+
+```py
+import json
+from typing import Any, Mapping
+from dagster import AssetExecutionContext, DailyPartitionsDefinition
+from dagster_dbt import DagsterDbtTranslator, DbtCliResource, dbt_assets, default_metadata_from_dbt_resource_props
+from .constants import dbt_manifest_path
+
+@dbt_assets(manifest=dbt_manifest_path)
+def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+
+daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
+
+class CustomDagsterDbtTranslator(DagsterDbtTranslator):
+    def get_metadata(self, dbt_resource_props: Mapping[str, Any]) -> Mapping[str, Any]:
+        metadata = {"partition_expr": "date"}
+        default_metadata = default_metadata_from_dbt_resource_props(dbt_resource_props)
+        return {**default_metadata, **metadata}
+
+@dbt_assets(manifest=dbt_manifest_path, select="fct_reviews", partitions_def=daily_partitions, dagster_dbt_translator=CustomDagsterDbtTranslator())
+def dbtlearn_partitioned_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    first_partition, last_partition = context.asset_partitions_time_window_for_output(list(context.selected_output_names)[0])
+    dbt_vars = {"start_date": str(first_partition), "end_date": str(last_partition)}
+    dbt_args = ["build", "--vars", json.dumps(dbt_vars)]
+    dbt_cli_task = dbt.cli(dbt_args, context=context, raise_on_error=False)
+    yield from dbt_cli_task.stream()
+
+```
+
+**Registering Assets in Dagster:**
+
+You need to register the assets, including partitioned ones, in Dagster.
+
+`definitions.py`
+
+```py
+import os
+from dagster import Definitions
+from dagster_dbt import DbtCliResource
+from .assets import dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets
+from .constants import dbt_project_dir
+from .schedules import schedules
+
+defs = Definitions(
+    assets=[dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets],
+    schedules=schedules,
+    resources={
+        "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+    },
+)
+
+```
+
+Now, with the non-partitioned assets, you also need to feed in the partitioned assets into the asset graph of Dagster.
+
+```py
+defs = Definitions(
+    assets=[dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets],
+    schedules=schedules,
+    resources={
+        "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+    },
+)
+```
+
+In any case, the context for Dagster will be partition-aware, and you can retrieve the start and end values from Dagster. You need to pass these values into the DBT command to compile and run the build command, which might also include tests if defined. By passing in these additional variables, you ensure the partition value from Dagster is used, optimizing the execution.
+
+```py
+(
+    first_partition,
+    last_partition,
+) = context.asset_partitions_time_window_for_output(
+    list(context.selected_output_names)[0]
+)
+dbt_vars = {"start_date": str(first_partition), "end_date": str(last_partition)}
+dbt_args = ["build", "--vars", json.dumps(dbt_vars)]
+dbt_cli_task = dbt.cli(dbt_args, context=context, raise_on_error=False)
+```
+
+The major difference to the previous setup is defining the partitions and passing the partitioning metadata from Dagster to DBT.
+
+`dbt_dagster_project/dbt_dagster_project/assets.py`
+
+```py
+import json
+from typing import Any, Mapping
+from dagster import AssetExecutionContext, DailyPartitionsDefinition
+from dagster_dbt import DagsterDbtTranslator, DbtCliResource, dbt_assets, default_metadata_from_dbt_resource_props
+from .constants import dbt_manifest_path
+
+@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+
+daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
+
+class CustomDagsterDbtTranslator(DagsterDbtTranslator):
+    def get_metadata(self, dbt_resource_props: Mapping[str, Any]) -> Mapping[str, Any]:
+        metadata = {"partition_expr": "date"}
+        default_metadata = default_metadata_from_dbt_resource_props(dbt_resource_props)
+        return {**default_metadata, **metadata}
+
+@dbt_assets(manifest=dbt_manifest_path, 
+            select="fct_reviews",
+            partitions_def=daily_partitions,
+            dagster_dbt_translator=CustomDagsterDbtTranslator())
+def dbtlearn_partitioned_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    first_partition, last_partition = context.asset_partitions_time_window_for_output(list(context.selected_output_names)[0])
+    dbt_vars = {"start_date": str(first_partition), "end_date": str(last_partition)}
+    dbt_args = ["build", "--vars", json.dumps(dbt_vars)]
+    dbt_cli_task = dbt.cli(dbt_args, context=context, raise_on_error=False)
+    yield from dbt_cli_task.stream()
+
+```
+
+**Final Registration of Assets:**
+
+Lastly, you have to register the assets. The final step involves ensuring that both normal and partitioned assets are included in the asset graph.
+
+`definitions.py`
+
+```py
+import os
+from dagster import Definitions
+from dagster_dbt import DbtCliResource
+from .assets import dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets
+from .constants import dbt_project_dir
+from .schedules import schedules
+
+defs = Definitions(
+    assets=[dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets],
+    schedules=schedules,
+    resources={
+        "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+    },
+)
+```
+
+By integrating DBT with Dagster for partition handling, you create efficient, scalable, and high-quality data pipelines. This approach ensures you only process necessary data partitions, conserving resources and improving performance.
+
+**Summary of Steps**
+
+1. **Define Partitions in DBT Models:**
+   - Modify your DBT models to handle incremental execution using partitions.
+   - Example:
+
+     `fct_reviews.sql`
+
+     ```sql
+     {% if is_incremental() %}
+       {% if var("start_date", False) and var("end_date", False) %}
+         {{ log('Loading ' ~ this ~ ' incrementally (start_date: ' ~ var("start_date") ~ ', end_date: ' ~ var("end_date") ~ ')', info=True) }}
+         AND review_date >= '{{ var("start_date") }}'
+         AND review_date < '{{ var("end_date") }}'
+       {% else %}
+         AND review_date > (select max(review_date) from {{ this }})
+         {{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}
+       {% endif %}
+     {% endif %}
+     ```
+
+2. **Configure Dagster to Handle Partitions:**
+   - Define partition types and specify the initial partition point.
+   - Create a custom DBT translator to pass partition variables to DBT.
+
+     `assets.py`
+
+     ```python
+     import json
+     from typing import Any, Mapping
+     from dagster import AssetExecutionContext, DailyPartitionsDefinition
+     from dagster_dbt import DagsterDbtTranslator, DbtCliResource, dbt_assets, default_metadata_from_dbt_resource_props
+     from .constants import dbt_manifest_path
+
+     @dbt_assets(manifest=dbt_manifest_path)
+     def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+         yield from dbt.cli(["build"], context=context).stream()
+
+     daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
+
+     class CustomDagsterDbtTranslator(DagsterDbtTranslator):
+         def get_metadata(self, dbt_resource_props: Mapping[str, Any]) -> Mapping[str, Any]:
+             metadata = {"partition_expr": "date"}
+             default_metadata = default_metadata_from_dbt_resource_props(dbt_resource_props)
+             return {**default_metadata, **metadata}
+
+     @dbt_assets(manifest=dbt_manifest_path, select="fct_reviews", partitions_def=daily_partitions, dagster_dbt_translator=CustomDagsterDbtTranslator())
+     def dbtlearn_partitioned_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+         first_partition, last_partition = context.asset_partitions_time_window_for_output(list(context.selected_output_names)[0])
+         dbt_vars = {"start_date": str(first_partition), "end_date": str(last_partition)}
+         dbt_args = ["build", "--vars", json.dumps(dbt_vars)]
+         dbt_cli_task = dbt.cli(dbt_args, context=context, raise_on_error=False)
+         yield from dbt_cli_task.stream()
+     ```
+
+3. **Register Assets in Dagster:**
+   - Register both normal and partitioned assets in Dagster to reflect changes in the UI and ensure smooth execution.
+
+     `definitions.py`
+
+     ```python
+     import os
+     from dagster import Definitions
+     from dagster_dbt import DbtCliResource
+     from .assets import dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets
+     from .constants import dbt_project_dir
+     from .schedules import schedules
+
+     defs = Definitions(
+         assets=[dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets],
+         schedules=schedules,
+         resources={
+             "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+         },
+     )
+     ```
+
+By following these steps, you enable smooth integration of DBT with Dagster for handling partitions. This ensures that you only process the necessary data partitions, significantly optimizing resource usage and improving the overall performance of your data pipelines. 
+
+Leveraging the capabilities of both DBT and Dagster allows you to construct highly efficient, scalable, and reliable data workflows that can adapt to the increasing complexity and size of your datasets.
 
 
 
 
+#### Advanced Dagster: Using Partitions with Incremental Models
+
+https://dagster.io/blog/partitioned-data-pipelines 
+
+When you want to work with data, it's important to understand how to connect the pieces. As Scholten mentioned, data orchestrator is crucial for connecting the steps of your data pipeline. However, as datasets grow larger, reprocessing the entire dataset is not always feasible. Instead, you should work with an incremental model in DBT.
+
+An incremental model is based on partitions of the dataset, allowing data to accumulate over time without needing to reprocess it from scratch. For example, with daily data, if you receive bad data one day, you can reload the refreshed and fixed data for that specific partition, ensuring downstream DBT models and other data assets update accordingly. 
+![](/img/dragster/19.png)
+This approach enables you to construct high-quality, idempotent, scalable, and resource-efficient data pipelines. 
+
+Partitions can also be nested and mapped with time horizons, such as hourly data rolled up and reported daily or quarterly. For instance, if you have datasets from sources A and B, where A provides hourly data and B provides daily data, you would trigger the next data asset or join operation only if both datasets are fresh and complete for a particular point in time. 
+![](/img/dragster/20.png)
+By explicitly modeling data dependencies, you can make the data orchestrator work in your favor, making your job easier, faster, and of higher quality.
+
+Additionally, partitions can be multi-dimensional, which is useful for complex use cases. It's important to understand this capability and ensure your orchestrator supports it.
+![](/img/dragster/21.png)
+In DBT, there are incremental models that facilitate this process. For example, you can modify a DBT model to include a conditional statement for incremental execution, ensuring high-quality, idempotent data pipelines. 
+
+To make DBT and Daxter interoperate smoothly, you need to define the type of partitions and specify the initial partition point. The DBT translator will pass variables, such as startDate and endDate, to DBT, ensuring the correct partition column is used. By feeding this additional metadata into Daxter, you can make the data assets partition-aware. This allows you to execute DBT commands with the appropriate partition values, optimizing resource use.
+
+Finally, you need to register partitioned assets in Daxter. The UI will reflect these changes, allowing you to select and run models for specific partitions efficiently.
+
+In summary, integrating DBT with Daxter for partition handling enables you to create efficient, scalable, and high-quality data pipelines. This approach ensures you only process necessary data partitions, conserving resources and improving performance.
+
+**Demo Details:**
+
+I have prepared a demo, starting with one of the DBT models you already know. Due to a loading issue, I will use a refuse model. This model prepares the data for downstream analysis, with a small conditional statement added for incremental execution.
+
+`fct_reviews.sql`
+
+```sql
+{% if is_incremental() %}
+  {% if var("start_date", False) and var("end_date", False) %}
+    {{ log('Loading ' ~ this ~ ' incrementally (start_date: ' ~ var("start_date") ~ ', end_date: ' ~ var("end_date") ~ ')', info=True) }}
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+  {% else %}
+    AND review_date > (select max(review_date) from {{ this }})
+    {{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}
+  {% endif %}
+{% endif %}
+```
+
+But if a model is to be executed in an incremental mode. Something else happens. You just add this conditional statement.
+
+```sql
+{% if is_incremental() %}
+  {% if var("start_date", False) and var("end_date", False) %}
+```
+
+So instead of always running a model in such a mode here that does not allow you to do backfills, which means it does not allow you to create idempotent data pipelines, which means it doesn't allow you to create high quality data pipelines. 
+
+```sql
+    AND review_date > (select max(review_date) from {{ this }})
+    {{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}
+```
+
+You would have a specific subset of data. So here, for example, designated by the date period or time range from the review dates. But you're operating on.
+
+```sql
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+```
+
+And this is basically all what you need to change from the DBT side to make DBT partition aware.
+
+To make Daxter partition-aware, you need to define partition types and specify the initial partition point. A DBT translator passes variables to DBT, injecting the right information for partition expressions. You then need to exclude new refuse dimensions to avoid duplicate loading and apply the partition definition and DBT translator to your models.
+
+What do you have to do to make Daxter partition aware? Or how can you connect DBT and Daxter to interoperate in an easy and smooth way? you've already scaffolded a simple DBT integration. That is looking something like this, and we need to extend it a little bit. In order to, um, accommodate the partitions.
+
+`/dbt_dagster_project/assets.py`
+
+```py
+@dbt_assets(manifest=dbt_manifest_path)
+def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+```
+
+First of all, we have to define like what type of partitions we are looking at.
+
+```py
+@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+
+
+# many dbt assets use an incremental approach to avoid
+# re-processing all data on each run
+# this approach can be modelled in dagster using partitions
+daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
+```
+
+So remember what I showed at the start. We have several styles of partitions assuming daily partitions here we also have to specify what is the initial or first point in time. We're looking at a partition. We need ways because of orchestrator, and it needs to know what data you would expect to have. Because otherwise it cannot give you the green light. But everything is all clear.
+
+Also we need something which is called DTE translator but is passing variables to DTE.
+
+```py
+
+@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+
+
+# many dbt assets use an incremental approach to avoid
+# re-processing all data on each run
+# this approach can be modelled in dagster using partitions
+daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
+
+class CustomDagsterDbtTranslator(DagsterDbtTranslator):
+    def get_metadata(self, dbt_resource_props: Mapping[str, Any]) -> Mapping[str, Any]:
+        metadata = {"partition_expr": "date"}
+        default_metadata = default_metadata_from_dbt_resource_props(dbt_resource_props)
+        return {**default_metadata, **metadata}
+```
+
+As you can see here, we have a variable start date and end date which is referenced.
+
+`fct_reviews.sql`
+
+```sql
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+```
+
+I think you're already aware of what a variable is from a concept perspective in DTE. And see nodding. So that's great.
+
+And we basically make use of this concept of variables and just need to inject the right information to dbt. So to do this we need the translator because every table might hopefully doesn't have, but might have a different column where you need to inject the partition expression the X does not intrinsically know. Which tables are, let's say, hourly partition or which one's daily partition, and what is the column that needs to be partitioned on? You have to basically feed this extra piece of metadata to Daxter. So here we are saying this table that we're looking at is partitioned on a column that is called `date` (in `metadata = {"partition_expr": "date"}`). And basically we just need to feed this additional metadata when in into this get metadata callback.
+
+Futhermore, We need to make this asset that we pass from the DBT graph partition aware. But before we do this, actually one step backwards here `@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")`, we need to exclude this new refuse dimension `exclude="fct_reviews"` because we don't want to load it twice like once without partitions, once with partitions. We only want to have it with the partitions. 
+
+This means here 
+```py
+@dbt_assets(manifest=dbt_manifest_path, 
+            select="fct_reviews",
+            partitions_def=daily_partitions,
+            dagster_dbt_translator=CustomDagsterDbtTranslator())
+```
+
+we explicitly select only the partitions `select="fct_reviews",`, because only this single model is an incremental model. As you see, we apply the particular partition definition that we have selected at the top `partitions_def=daily_partitions,`. Also, we pass in our custom Dbt translator `dagster_dbt_translator=CustomDagsterDbtTranslator())` that understands this particular model or this particular  range of models.
+
+Obviously, it would be quite sensible if you have some kind of development guidelines or naming conventions where you don't have to list thousands of tables with different partitioning names. So to basically standardize upon certain conventions that will make your life easier. 
+
+```py
+@dbt_assets(manifest=dbt_manifest_path, 
+            select="fct_reviews",
+            partitions_def=daily_partitions,
+            dagster_dbt_translator=CustomDagsterDbtTranslator())
+def dbtlearn_partitioned_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    (
+        first_partition,
+        last_partition,
+    ) = context.asset_partitions_time_window_for_output(
+        list(context.selected_output_names)[0]
+    )
+    dbt_vars = {"start_date": str(first_partition), "end_date": str(last_partition)}
+    dbt_args = ["build", "--vars", json.dumps(dbt_vars)]
+    dbt_cli_task = dbt.cli(dbt_args, context=context, raise_on_error=False)
+    
+    yield from dbt_cli_task.stream()
+```
+
+In any case, um, the actor or the context for Daxter provides is then going to be partition aware,
+
+and we can simply retrieve the start and end value from Daxter.
+
+```py
+    (
+        first_partition,
+        last_partition,
+    ) = context.asset_partitions_time_window_for_output(
+        list(context.selected_output_names)[0]
+```
+
+And what we now have to do is we have to feed this data into actually the DBT command. So DBT has this compile and run command of the build command. That might even include also tests in case you have tests defined. And we need to pass in these additional variables to the DBT build or run command.
+
+And here we're passing in these variables from the start date and end date. `start_date` and `end_date` And feeding it the partition value that we are getting from Daxter first partition and last partition. And in the end, basically this is executed and the results streamed back.
+
+```py
+    dbt_vars = {"start_date": str(first_partition), "end_date": str(last_partition)}
+    dbt_args = ["build", "--vars", json.dumps(dbt_vars)]
+    dbt_cli_task = dbt.cli(dbt_args, context=context, raise_on_error=False)
+```
+
+So the major difference to what we had before is we basically defining the partitions and passing the partitioning metadata. Now to Daxter from Daxter over into DBT.
+
+`dbt_dagster_project/dbt_dagster_project/assets.py`
+
+```py
+import json
+from typing import Any, Mapping
+
+from dagster import (AssetExecutionContext, DailyPartitionsDefinition,
+                     OpExecutionContext)
+from dagster_dbt import (DagsterDbtTranslator, DbtCliResource, dbt_assets,
+                         default_metadata_from_dbt_resource_props)
+
+from .constants import dbt_manifest_path
+
+
+@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+
+
+# many dbt assets use an incremental approach to avoid
+# re-processing all data on each run
+# this approach can be modelled in dagster using partitions
+daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
+
+class CustomDagsterDbtTranslator(DagsterDbtTranslator):
+    def get_metadata(self, dbt_resource_props: Mapping[str, Any]) -> Mapping[str, Any]:
+        metadata = {"partition_expr": "date"}
+        default_metadata = default_metadata_from_dbt_resource_props(dbt_resource_props)
+        return {**default_metadata, **metadata}
+
+
+@dbt_assets(manifest=dbt_manifest_path, 
+            select="fct_reviews",
+            partitions_def=daily_partitions,
+            dagster_dbt_translator=CustomDagsterDbtTranslator())
+def dbtlearn_partitioned_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    (
+        first_partition,
+        last_partition,
+    ) = context.asset_partitions_time_window_for_output(
+        list(context.selected_output_names)[0]
+    )
+    dbt_vars = {"start_date": str(first_partition), "end_date": str(last_partition)}
+    dbt_args = ["build", "--vars", json.dumps(dbt_vars)]
+    dbt_cli_task = dbt.cli(dbt_args, context=context, raise_on_error=False)
+    
+    yield from dbt_cli_task.stream()
+```
+
+Last but not least, um, on the X side you have to register the assets. And we basically not only have the normal well known assets.  
+
+`definitions.py`
+
+```py
+defs = Definitions(
+    assets=[dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets],
+    schedules=schedules,
+    resources={
+        "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+    },
+)
+```
+
+Now with a non partition, you also need to feed in the partitioned assets into the asset graph of text. So this for the code. `dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets`
+
+`definitions.py`  
+```py
+import os
+
+from dagster import Definitions
+from dagster_dbt import DbtCliResource
+
+from .assets import dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets
+from .constants import dbt_project_dir
+from .schedules import schedules
+
+defs = Definitions(
+    assets=[dbtlearn_dbt_assets, dbtlearn_partitioned_dbt_assets],
+    schedules=schedules,
+    resources={
+        "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+    },
+)
+```
+
+
+---
+
+Now, let's look at Daxter. How does this look? I have already loaded the changes. What you can see is that instead of a plain, normal dbt model or a non-partitioned Daxter asset, we now have a partitioned one. What does this mean? Instead of reprocessing all the data, we can now process the individual pieces of data to conserve resources. As you can see, the UI has reflected this change and already recognized that I have executed successfully once for one partition. It also tells me that a couple of others are still remaining, and so far, it has not registered any failed partitions. For the rest of the UI, it's pretty much like what you're already used to, so not much has changed here. The difference comes when you want to select or materialize and run the model. Daxter will pop up and ask you which partition you want to execute. You can select a specific range or use the intuitive selector. Alternatively, you can only use the latest or old partitions and produce multiple model runs if you need to backfill a specific longer time range.
+
+This is what I wanted to show here with a brief demo. Marrying DBT, which you already know, with variables to incremental models and chaining this to a data orchestrator named Daxter for very efficient and scalable partition handling gives you faster, high-quality data pipelines.
+
+Okay, so now we also want to discuss more advanced concepts.
