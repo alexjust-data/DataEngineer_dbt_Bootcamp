@@ -68,6 +68,9 @@
         - [Dagster](#dagster)
     - [Dagster Installation (All Platforms plus Github Codespace)](#dagster-installation-all-platforms-plus-github-codespace)
     - [Deep Dive into the Python Files of our Dagster-dbt Project](#deep-dive-into-the-python-files-of-our-dagster-dbt-project)
+    - [Manage, Orchestrate and Debug your dbt Project with Dagster](#manage-orchestrate-and-debug-your-dbt-project-with-dagster)
+    - [I suggest you](#i-suggest-you)
+    - [Advanced Dagster: Using Partitions with Incremental Models](#advanced-dagster-using-partitions-with-incremental-models)
 
 ---
 ## Introduction
@@ -5434,26 +5437,301 @@ We are now ready to explore Dagster integration.
 
 ![](/img/118.png)
 
+
 #### Deep Dive into the Python Files of our Dagster-dbt Project
 
 
-In this video, I would like to take a deep dive into our DAXO project. This is more in the realm of data engineering and software engineering, so if you are not very technical, feel free to skip this video. You will have the full experience even without understanding every line of the Python code. However, if you are interested in how DAXO works internally, I suggest spending the next few minutes following along as we look at how our PBT project fits together and is built in DAXO.
+Now I would like to take a deep dive into our Dagster project. This is more in the realm of data engineering and software engineering, so if you are not very technical, feel free to skip this part. You will have the full experience even without understanding every line of the Python code. However, if you are interested in how Dagster works internally, I suggest spending the next few minutes following along as we look at how our dBT project fits together and is built in Dagster.
 
-Here is my DAXO project. You can see that it contains a sub-project called PBT-DAXO-Project. This structure is typical for DAXO. If you delve deeper into DAXO, you will understand that it can manage different packages within projects, and currently, we have a single package. Let me close some files for clarity. In the main folder, PBT-DAXO-Project, you will find a `pyproject.toml`, a Python standard configuration file, and a setup file. These files are used to build a Python package from the DAXO project, which can then be published to your internal PIP repository. These files contain metadata for the project.
+Here is my Dagster project. 
 
-Within the PBT-DAXO-Project, you'll see a few gray files. These are Python internal files, such as bytecode caches and an `__init__.py` file, which indicates a Python module. The important files for us are four specific ones. When creating a DAXO project, you start with definitions. In DAXO, definitions can specify your DAG (directed acyclic graph), schedules, resources, and more.
+```sh
+(dbt_env) ➜  dbt_dagster_project git:(main) tree -L 3
+.
+├── __pycache__
+│   └── __init__.cpython-311.pyc
+├── dbt_dagster_project
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-311.pyc
+│   │   ├── assets.cpython-311.pyc
+│   │   ├── constants.cpython-311.pyc
+│   │   ├── definitions.cpython-311.pyc
+│   │   └── schedules.cpython-311.pyc
+│   ├── assets.py
+│   ├── constants.py
+│   ├── definitions.py
+│   └── schedules.py
+├── pyproject.toml
+└── setup.py
+```
 
-Let's begin with an overview of the files, starting from the top. We import the `dbt-cli` resource from the DAXO-DBT package. My VS Code settings are strict about Python code quality, so you might see some warnings that can be ignored. Importing `dbt-cli` allows DAXO to integrate with DBT. We create a definitions object, our DAXO model definition, which uses this `dbt-cli` resource to enable DAXO-DBT integration.
+You can see that it contains a sub-project called `dbt_dagster_project`. This structure is typical for Dagster. If you delve deeper into Dagster, you will understand that it can manage different packages within projects, and currently, we have a single package. Let me close some files for clarity. In the main folder, `dbt_dagster_project`, you will find a `pyproject.toml`, a Python standard configuration file, and a setup file. These files are used to build a Python package from the Dagster project, which can then be published to your internal PIP repository. These files contain metadata for the project.
 
-We have three primary components: `dbt_project_dir`, `schedules`, and `dbt_learn_dbt_assets`. Let's start with `constants.py` to cover the `dbt_project_dir`. The `dbt-cli` resource sets up a DBT plugin, pointing to the `dbt-project-dir` defined in `constants.py`. In a production setting, you might want a cleaner solution, but our relative path works for now.
+Within the `dbt_dagster_project`, you'll see a few gray files. These are Python internal files, such as bytecode caches and an `__init__.py` file, which indicates a Python module. The important files for us are four specific ones. 
 
-The `dbt-cli` resource also configures DAXO to parse DBT projects on load. This parsing command reads model definitions, tests, macros, and creates a manifest file (`manifest.json`). This file contains critical technical details about your DBT project, which DAXO uses to understand how to work with it.
+When creating a Dagster project, you start with `definitions`. In Dagster, `definitions.py` can specify your DAG (directed acyclic graph), schedules, resources, and more.
 
-Next, we have `assets.py`, where assets in DAXO are defined similarly to DBT models. This file uses the `dbt-cli` resource to execute DBT build commands based on `manifest.json`, informing DAXO how to materialize these assets.
+```py
+import os
+from dagster import Definitions
+from dagster_dbt import DbtCliResource
+
+from .assets import dbt_learn_dbt_assets
+from .constants import dbt_project_dir
+from .schedules import schedules
+
+defs = Definitions(
+    assets=[dbt_learn_dbt_assets],
+    schedules=schedules,
+    resources={
+        "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+    },
+)
+```
+
+Let's begin with an overview of the files, starting from the top. We import the `DbtCliResource` resource from the Dagster-DBT package. My VS Code settings are strict about Python code quality, so you might see some warnings that can be ignored. Importing `DbtCliResource` allows Dagster to integrate with DBT. We create a definitions object, our Dagster model definition, which uses this `DbtCli` resource to enable `Dagster-dbt` integration.
+
+You see that later we create a definitions object. This is our our Dexter model definition or our Dexter assets definition. And here we say that we are using a resource which is exactly this DB2 CLI resource. And this simply tells Dexter that we want to use the Dexter DBT plugin in this project. 
+
+```py
+from .assets import dbt_learn_dbt_assets
+from .constants import dbt_project_dir
+from .schedules import schedules
+
+Definitions(assets=[dbt_learn_dbt_assets],
+            schedules=schedules,
+            resources={
+                "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
+            },)
+```
+
+Here you see basically three different resources. 
+
+* `dbt_project_dir` - So to say one is the DBT project here.
+* `schedules` - defined that you touched in the earlier lecture.
+* `dbt_learn_dbt_assets` - and you also have DBT learn DBT assets which comes from the assets file.
+
+We have three primary components: `dbt_project_dir`, `schedules`, and `dbt_learn_dbt_assets`. 
+
+
+**`constants.py`**
+
+Let's start with `constants.py` to cover the `"dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),`. The `DbtCliResource`sets up a DBT plugin, pointing to the `dbt-project-dir` defined in `constants.py`. 
+
+```py
+dbt_project_dir = Path(__file__).joinpath("..", "..", "..", "dbt_learn").resolve()
+
+'''
+The final resolved path would be /home/user/dbt_learn (this path is an example and would vary based on the actual location of your script). This is the directory path three levels up from the script's location, with dbt_learn appended to it.
+'''
+```
+
+In a production setting, you might want a cleaner solution, but our relative path works for now.
+
+The `DbtCliResource` also configures Dagster to parse DBT projects on load. 
+
+```py
+dbt = DbtCliResource(project_dir=os.fspath(dbt_project_dir))
+```
+
+And then at the startup time it says that if the Dexter DBT parse project on load is enabled.
+
+```py
+# If DAGSTER_DBT_PARSE_PROJECT_ON_LOAD is set, a manifest will be created at run time.
+# Otherwise, we expect a manifest to be present in the project's target directory.
+if os.getenv("DAGSTER_DBT_PARSE_PROJECT_ON_LOAD"):
+    dbt_manifest_path = (
+        dbt.cli(
+            ["--quiet", "parse"],
+            target_path=Path("target"),
+        )
+        .wait()
+        .target_path.joinpath("manifest.json")
+    )
+else:
+    dbt_manifest_path = dbt_project_dir.joinpath("target", "manifest.json")
+```
+
+This code snippet checks if the environment variable `DAGSTER_DBT_PARSE_PROJECT_ON_LOAD` is set. If it is, it runs the dbt parse command quietly and sets `dbt_manifest_path` to the resulting `manifest.json` file in the target directory. If the environment variable is not set, it directly sets `dbt_manifest_path` to the `manifest.json` file in the target directory within the `dbt_project_dir`.
+
+`manifest.json` So if you're not familiar with with it, it is probably the most important technical file in your DBT. But the file that you probably never really interact with, it's a very like low level technical file
+
+```js
+(dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ jq . dbt_learn/target/manifest.json | head -n 40
+
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v11.json",
+    "dbt_version": "1.7.17",
+    "generated_at": "2024-07-22T18:23:16.608448Z",
+    "invocation_id": "b30bbff8-9527-479c-b74e-ea6edad0026c",
+    "env": {},
+    "project_name": "dbt_learn",
+    "project_id": "7d946d03de8dbf7d0b3a8d07fe2987ec",
+    "user_id": null,
+    "send_anonymous_usage_stats": false,
+    "adapter_type": "snowflake"
+  },
+  "nodes": {
+    "model.dbt_learn.dim_listings_w_hosts": {
+      "database": "AIRBNB",
+      "schema": "DEV",
+      "name": "dim_listings_w_hosts",
+      "resource_type": "model",
+      "package_name": "dbt_learn",
+      "path": "dim/dim_listings_w_hosts.sql",
+      "original_file_path": "models/dim/dim_listings_w_hosts.sql",
+      "unique_id": "model.dbt_learn.dim_listings_w_hosts",
+      "fqn": [
+        "dbt_learn",
+        "dim",
+        "dim_listings_w_hosts"
+      ],
+```
+
+What you will see here is everything a software needs to know about your DBT project. You see, here is a metadata about the DBT version and the project name and the adapter type.And then here we go with the the nodes. You see we have a DBT dim listings with host for example with the database schema definitions and so on, and also the the hooks and the sequels that are generated, you see right here at Row. When you generate a documentation in DBT, then all you need is this kind of a manifest Json file. So this is like the the core of core descriptor of everything you define in your DBT project, the extra data that DBT generated to it.
+
+
+**`assets.py`** 
+
+from `assets=[dbt_learn_dbt_assets]`
+
+Next, we have `assets.py`, where assets in Dagster are defined similarly to DBT models. This file uses the `DbtCliResource` to execute DBT build commands based on `manifest.json`, informing Dagster how to materialize these assets.
+
+```py
+from dagster import AssetExecutionContext
+from dagster_dbt import DbtCliResource, dbt_assets
+
+from .constants import dbt_manifest_path
+
+
+@dbt_assets(manifest=dbt_manifest_path)
+def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+```
+
+This code defines a Dagster asset using the `@dbt_assets` decorator, which connects to a DBT project. It imports necessary modules and constants, sets up the DBT CLI resource, and specifies a function `dbt_learn_dbt_assets` that runs the DBT build command, streaming the results as it executes. This allows for integration of DBT assets within a Dagster pipeline.
+
+**``schedules.py``**
+
 
 Lastly, `schedules.py` defines the schedules for running DBT models. The example schedule here is set to execute every midnight, materializing all DBT models. The job name is `materialize_dbt_models`, and it uses a cron syntax for scheduling.
 
-In summary, the constants file defines our DBT project directory, the assets file defines how to build DBT models, and the schedules file sets up the execution schedule. All of these are integrated into a definitions object in DAXO, which the system uses to manage the DBT project.
+```py
+from dagster_dbt import build_schedule_from_dbt_selection
 
-When you start the DAXO server, it reads this definitions object, understanding all the configurations for your DBT project. This allows DAXO to manage and execute your DBT tasks efficiently.
+from .assets import dbt_learn_dbt_assets
+
+schedules = [
+    build_schedule_from_dbt_selection(
+        [dbt_learn_dbt_assets],
+        job_name="materialize_dbt_models",
+        cron_schedule="0 0 * * *",
+        dbt_select="fqn:*",
+    ),
+]
+```
+This code snippet imports necessary functions and assets, then defines a schedule for a job that materializes DBT models. The schedule is created using `build_schedule_from_dbt_selection`, which selects models based on their fully qualified names (fqn) and sets the job to run daily at midnight.
+
+---
+
+In summary, the constants file defines our DBT project directory, the assets file defines how to build DBT models, and the schedules file sets up the execution schedule. All of these are integrated into a definitions object in Dagster, which the system uses to manage the DBT project.
+
+When you start the Dagster server, it reads this definitions object, understanding all the configurations for your DBT project. This allows Dagster to manage and execute your DBT tasks efficiently.
+
+
+#### Manage, Orchestrate and Debug your dbt Project with Dagster
+
+Once you open Dexter, you can see your dbt lineage right away. You can zoom in and out, and you'll see a very similar lineage to what you've already seen in dbt. Dexter reads the dbt configuration, ensuring it understands your dbt lineage so you can work with it immediately.
+
+I want to show you a few features of Dexter because there are many. For example, if we want to materialize all these models and execute a dbt run, we can simply click `Materialize All`. You will see it says "Materializing," and a pop-up at the top indicates that a run has started. 
+
+![](/img/dragster/01.png)
+
+This is my latest run, materializing my dbt models at the moment. I can go to "Runs," where I see a `manually launched` run (not by a scheduler). The status is "Sucess," and it has been running for around a minute now. 
+
+![](/img/dragster/04.png)
+
+Here you see the recording date and the `Run ID`. I click the run, and now we are on the run page. You can see it is indeed running. You can look at the dbt logs and see the actual dbt command and model. Scrolling to the bottom, you see everything has been materialized. This is now a successful run.
+
+![](/img/dragster/02.png)
+
+Let me go back to deployment. Here we go. This is my project. I can look at the `View lineage`, and now you see it's all materialized. 
+
+![](/img/dragster/03.png)
+
+It says we're all good. If I only want to execute everything that "dim listings with hosts" depends on, I can right-click "dim listings with hosts," and click "Materialize" to materialize this specific model and its dependencies. 
+
+![](/img/dragster/05.png)
+
+I have two ways to do this: clicking Shift or Command and selecting "dim listings," "dim listings cleansed," and "dim hosts cleansed." Then, I can say "Materialize Selected" to re-execute these specific models. Super easy, right?
+
+![](/img/dragster/06.png)
+
+
+While these are materializing, let me show you the schedules. Here is an overview with many features, but I want to highlight the schedules. Here is the dbt-dexter project's materialized dbt model schedule, seen in the schedules.py file and uncommented. 
+
+![](/img/dragster/07.png)
+
+If you don't see any schedule here, please rewind to the earlier lectures, uncomment the dbt schedule part in schedules.py, and re-execute the dexter server. 
+
+```sh
+(dbt_env) ➜  dbt_dagster_project git:(main) ✗ DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
+```
+
+By default, all schedules are switched off in Dexter, which you can change programmatically. If you just execute Dexter, the schedules will be switched off by default, so you need to switch them on. Now, this schedule is running, and the next tick will be at midnight when it will materialize these models.
+
+![](/img/dragster/10.png)
+
+
+If you're interested in what models the schedule materializes exactly, you can click the lineage graph icon, "Materialize dbt models" and see the dbt models that will be materialized. In our case, we want to materialize every model. Dexter allows you to independently schedule different subgraphs of models and offers many configuration choices.
+
+Now you see "dim listings cleansed" and "dim listings with hosts" are materialized again. Let's go back to materializing a bunch of models. Pressing Shift is one way, but you can always look at the lineage of a specific model. For example, if I right-click "dim listings cleansed," I can choose "Show Upstream Graph" or "Show Downstream Graph." Selecting "Show Downstream Graph" shows that "dim listings cleansed" only affects "dim listings with hosts." 
+
+![](/img/dragster/11.png)
+
+You also see a selector similar to the dbt selector. To return to the full picture, click "Clear Query."
+
+![](/img/dragster/13.png)
+
+
+To rematerialize everything contributing to "dim listings with hosts," right-click "dim listings with hosts," select "Show Upstream Graph," and then select the models and click "Materialize All." 
+
+![](/img/dragster/16.png)
+
+Now, all three models are being materialized. Here, we have a new run that I can view. You've seen this process earlier, so the models are materializing. This might take a few seconds. While it's running, let's go back to the lineage by clicking the Dexter icon. You can see the models are materializing. 
+
+![](/img/dragster/17.png)
+
+Clicking "dim listings with hosts" will show metadata on the side, including raw SQL, last runs, debug information, execution duration, and more.
+
+![](/img/dragster/18.png)
+
+You will see nice metrics, and you can configure Dexter to collect more metrics. This concludes the Dexter part. Dexter integrates seamlessly with dbt. I've worked on projects where we integrated Dexter with dbt and a data integration layer like Airbyte. Dexter can orchestrate both seamlessly, offering full lineage from the source database to the pipeline's end across technologies. Integrating Python-based data sources to extract data from an API, load it into a data warehouse, and use dbt on top is super easy with Dexter. You can manage your whole pipeline without directly touching dbt in production because Dexter handles all tasks.
+
+I hope this was helpful. If you work with dbt orchestration, consider using Dexter as a tool.
+
+
+#### I suggest you 
+
+The next part is a real deep dive into advanced orchestration with dbt and Dagster. I suggest you read [Georg's and Alexander's blog post](https://georgheiler.com/2023/12/11/dagster-dbt-duckdb-as-new-local-mds/) before you watch it; this blog post serves as the basis for the next discussion.
+
+You'll find the code presented in our [GitHub repo](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero/tree/main/dbt_dagster_project)
+
+
+
+In case of questions, don't hesitate to reach out to the authors directly:
+
+* [Georg's LinkedIn](https://www.linkedin.com/in/georg-heiler-019b3767/)
+* [Aleksandar's Linkedin](https://www.linkedin.com/in/aleksandar-milicevic-8b788a154/)
+
+Again, the next part is very technical. If it feels too advanced, that's completely OK; it's enough if you get the intuition of it. Have fun :)
+
+
+#### Advanced Dagster: Using Partitions with Incremental Models
+
+
+
+
 
