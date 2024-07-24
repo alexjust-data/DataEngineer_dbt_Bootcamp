@@ -1000,7 +1000,7 @@ Creating a new model in the `models/src/` folder called `src_hosts.sql`:
   
 Materializations are different race, how your models can be stored and managed in the data warehouse. There are 4th materializations
 
-![](/img/43.png)
+![](/img/dbt/43.png)
 
 * A view is the default materialization in dbt. When you select the "view" materialization, dbt will create a database view for your model. Views are virtual tables that display the results of a stored query. They are lightweight because they don’t store data themselves but instead fetch data dynamically whenever queried.
   With a `view`, you want to use it when you need a lightweight representation of your data and don’t need to recreate a table at every execution. However, avoid using views if you need to read from the same `view` multiple times in quick succession, as each access will require the underlying query to be executed, potentially impacting performance.
@@ -1061,7 +1061,7 @@ SELECT ...
 
 If you look at the preview of the SRC_LISTINGS Snowflake table, you will notice that several instances in the MINIMUM_NIGHTS column contain zeros. And this is a problem i the data, thre is the minimun of nigths is 1 night that needs to bo booked in order to reserve this Airbnb. And also the price now gold price SDR. It is in a string format, So let's just pass this into our numeric form.
 
-![](/img/45.png)
+![](/img/dbt/45.png)
 
 I have created this file above VSCode app with de extension dbt and jinja configuration.
 
@@ -1119,9 +1119,9 @@ dbt run
   07:41:24  Done. PASS=4 WARN=0 ERROR=0 SKIP=0 TOTAL=4
 ```
 
-![](/img/49.png)
+![](/img/dbt/49.png)
 
-![](/img/46.png)
+![](/img/dbt/46.png)
 
 ---
 
@@ -1275,7 +1275,7 @@ table means that dbt will create a physical table for each model in the dim subd
 ```
 and look in the snowflake:
 
-![](/img/50.png)
+![](/img/dbt/50.png)
 
 #### Incremental materialization
 
@@ -1283,7 +1283,7 @@ and look in the snowflake:
 
 Here we have associate **reviews**, which you are already familiar with, which has a `listing_ID`, `review_dates`, `reviewe_name`, `reviewe_text` and also the `review_sentiment`.
 
-![](/img/60.png)
+![](/img/dbt/60.png)
 
 Now we are performing our two steps in the following order:
 1. Cleansing: We ensure that only reviews containing actual text are included in our effective table.
@@ -1406,12 +1406,12 @@ Non-Incremental (Full Refresh) or in a full refresh mode, every time the model r
 ```
 
 
-![](/img/52.png)
+![](/img/dbt/52.png)
 
 
 Let's create an incremental load now. For an incremental load, we need some incremental data, right? First of all, let's take a look at the reviews for listing ID 3176.
 
-![](/img/53.png)
+![](/img/dbt/53.png)
 
 
 **Practical Example**
@@ -1427,7 +1427,7 @@ INSERT INTO AIRBNB.RAW.RAW_REVIEWS VALUES (3176, CURRENT_TIMESTAMP(),
 
 This INSERT command adds a new review to the RAW_REVIEWS table in the RAW schema of the AIRBNB database. It includes the listing ID 3176, the current timestamp as the review date, "Zoltan" as the reviewer's name, "Excellent stay!" as the review text, and "positive" as the sentiment.
 
-![](/img/54.png)
+![](/img/dbt/54.png)
 
 And now with dbt run, we pick up and recreate the first reviews and and the two dimensional tables and execute an incremental load on the six model, the fact reviews.
 
@@ -1467,7 +1467,7 @@ SELECT * FROM AIRBNB.DEV.FCT_REVIEWS WHERE listing_id=3176;
 
 The incremental configuration `(materialized = 'incremental')` in dbt is useful for saving time and resources by processing only the new data that hasn’t been processed previously. The clause `AND review_date > (select max(review_date) from {{ this }})` is crucial in this context to ensure only new records are selected and processed.
 
-![](/img/55.png)
+![](/img/dbt/55.png)
 
 Now, just one more trick before we go to our next session: what happens if you want to rebuild the entire table? You can do this by running the command `dbt run --full-refresh`.
 
@@ -1626,7 +1626,7 @@ This is a simple and effective way to combine the listings and hosts into our fi
   17:08:33  Done. PASS=7 WARN=0 ERROR=0 SKIP=0 TOTAL=7
 ```
 
-![](/img/62.png)
+![](/img/dbt/62.png)
 
 Now that we are done with our basic modeling, let's clean up the materialization settings.
 
@@ -1691,11 +1691,11 @@ Then every model in the source layer will be converted to CTEs and won't be recr
 
 To verify this behavior, you can check the current views in Snowflake. If you still see views for the source models, it means they were not automatically dropped. You'll need to manually drop these views. After doing so, running dbt run again will ensure that these views are not recreated, confirming that the source models are now correctly treated as ephemeral models
 
-![](/img/58.png)
+![](/img/dbt/58.png)
 
 The reason for this is that dbt will not automatically drop views or tables in these cases. So you need to do it yourself. 
 
-![](/img/59.png)
+![](/img/dbt/59.png)
 
 Let's go ahead and drop these views. Here we go. Now, these views are dropped. So if I come back and execute dbt run again, we will see that these views will not be recreated. So here we go. Refresh, no views, right?
 
@@ -1882,7 +1882,7 @@ So let's execute DBT for the last time, and make sure that we have now views ins
 
 Now we have it like views
 
-![](/img/63.png)
+![](/img/dbt/63.png)
 
 
 
@@ -1954,7 +1954,7 @@ You see that this year is a single currency week, but you don't necessarily need
 18:23:34  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 TOTAL=1
 ```
 
-![](/img/64.png)
+![](/img/dbt/64.png)
 
 DBT internally analyzes your CSV files and automatically determines the schema, including the data types of columns.
 
@@ -2023,7 +2023,7 @@ Now we are ready to implement our fourth layer, which will be our Mart layer. Th
   18:42:27  Done. PASS=5 WARN=0 ERROR=0 SKIP=0 TOTAL=5
 ```
 
-![](/img/65.png)
+![](/img/dbt/65.png)
 
 #### Sources
 
@@ -2146,7 +2146,7 @@ I will not execute this with dbt run, because we have another command just for c
 In a production setting, you probably want to have some kind of monitoring in place to ensure that your data ingestion works on schedule and correctly. One way to do this is to check the last timestamp of the ingested data. If the ingested data is somewhat stale, it should trigger a warning, and if it is significantly delayed, it should trigger an error. DBT has a built-in functionality called source freshness to help with this.
 
 
-![](/img/66.png)
+![](/img/dbt/66.png)
 
 Let's see this in action. Here, we have the raw_reviews table, which we converted to a source. This table contains a date column that stores the review date. We can define source freshness constraints in the sources.yml file. Here's an example configuration:
 
@@ -2216,7 +2216,7 @@ In an analytical data pipeline, maintaining this history is crucial. DBT handles
 
 How DBT Handles Changes
 
-![](/img/67.png)
+![](/img/dbt/67.png)
 
 1. **Original Record**: Each record has `valid_from` and `valid_to` columns.
 2. **Current Record**: For a current record, `valid_to` is `null`.
@@ -2255,7 +2255,7 @@ First, it's important to know that the snapshots path is defined in `dbt.project
 
 Next, let's take a look at the raw listings table.  Our goal is to snapshot the `raw data` so we can track any changes right at the source. This way, if any new data comes in or changes occur, we can capture those changes immediately. You can choose different strategies based on your use case, such as snapshotting already cleaned data, but we'll focus on raw data to catch changes as early as possible.
 
-![](/img/68.png)
+![](/img/dbt/68.png)
 
 We have the raw listings table, which contains an ID and various properties, including a `minimum_nights` field and an `updated_at` field. Our aim is to ensure that any changes to a record, identified by the `updated_at` field, are tracked.
 
@@ -2324,7 +2324,7 @@ When you execute `dbt snapshot`, it confirms that we have created a snapshot nam
 
 Checking the Snapshot Table
 
-![](/img/69.png)
+![](/img/dbt/69.png)
 
 Upon refreshing, you’ll see the `scd_raw_listings` table. This table will have additional columns compared to the original table, including:
 
@@ -2345,7 +2345,7 @@ WHERE id = 3176;
 
 Before executing the update, check the current state of the raw listings table to confirm the change. For instance, if the current `minimum_nights` value for ID 3176 is 62, update it to 30 and refresh the `updated_at` field.
 
-![](/img/70.png)
+![](/img/dbt/70.png)
 
 **Running dbt Snapshot Again**
 
@@ -2377,7 +2377,7 @@ After updating the data, re-execute the `dbt snapshot` command. This will:
 
 Upon re-executing `dbt snapshot`, check the `scd_raw_listings` table again. You should see two records for the listing ID 3176:
 
-![](/img/72.png)
+![](/img/dbt/72.png)
 
 1. The initial record with `minimum_nights` set to 62 and `dbt_valid_to` updated to today's date.
 2. A new record with `minimum_nights` set to 30 and `dbt_valid_to` set to `NULL`.
@@ -2435,7 +2435,7 @@ Let’s review the `DIMM Listings Clean` view in Snowflake. Here's a brief descr
 - **Room Type**: This column should contain only preset values such as "entire home or apartment", "private room", or "shared room".
 - **Host ID**: This column is an external reference to the host table, so every ID here must correlate to an existing host ID in the host table.
 
-![](/img/73.png)
+![](/img/dbt/73.png)
 
 **Creating the Tests**
 
@@ -3034,7 +3034,7 @@ I want to use a specific function from this package called [surrogate_key](https
 
 For example, if I go to Snowflake and take a look at the `fact_reviews` table, you will see that it doesn't have any key. It has `listing_id`, `review_date`, `reviewer_name`, `review_text`, and `review_sentiment`. Not all these columns are primary keys, but we can combine them to make a primary key.
 
-![](/img/74.png)
+![](/img/dbt/74.png)
 
 Let's do this:
 
@@ -3132,7 +3132,7 @@ It started an incremental run of `dev_fact_reviews`, and it's completely rebuilt
 
 This process shows how simple it is to use any of the built-in packages from dbt hub or third-party providers. You can also create your own packages and distribute them publicly or internally within your organization.
 
-![](/img/75.png)
+![](/img/dbt/75.png)
 
 ### Documentation
 
@@ -3232,11 +3232,11 @@ You can view this structured schema definition and documentation by opening cata
 
 For production, you might want to use a more robust server, like serving the static files behind an Nginx server. However, for our purposes, the lightweight server is sufficient. Starting the server with dbt docs serve will allow you to view the documentation in a web interface.
 
-![](/img/76.png)
+![](/img/dbt/76.png)
 
 In this interface, you can explore the documentation for sources, models, macros, tests, snapshots, and third-party packages. For example, expanding the Airbnb and Dev sections will show the `dim_listings_cleansed` documentation. This includes descriptions, statistics, metadata, ownership information, package details, Snowflake relations, and column information such as types and descriptions. You can also view tests defined on the model and any referencing models. Clicking on a test shows its code and the combined code executed by Snowflake. Additionally, you can see dependencies and the model's source code, including the Jinja template and compiled code.
 
-![](/img/77.png)
+![](/img/dbt/77.png)
 
 This concludes our overview of generating and serving DBT documentation. We will delve deeper into exploring these features in the next lessons.
 
@@ -3337,17 +3337,17 @@ Here, we specify `dim_listing_cleansed__minimum_nights`. This is an arbitrary na
 04:46:19  Catalog written to /Users/alex/Desktop/DataEngineer_dbt_Bootcamp/dbt_learn/target/catalog.json
 ```
 
-![](/img/78.png)
+![](/img/dbt/78.png)
 
 ---
 
-![](/img/79.png)
+![](/img/dbt/79.png)
 
 **overview page**
 
 Next, let's work on the overview page. The overview page is currently a built-in page. I want to show you how to replace it with something more meaningful, such as our data model schema as an image and an intro text. 
 
-![](/img/80.png)
+![](/img/dbt/80.png)
 
 To do this, create a new Markdown file in Models, named overview.md, to keep it separate. Copy the docs block for the overview. The overview uses a special tag, `__overview__`. If you create a tag like this, everything you put in it will be rendered as Markdown and set as your overview page.
 
@@ -3395,7 +3395,7 @@ Let's regenerate the documentation by pressing CTRL-C to stop the documentation 
 
 Now, the overview page is replaced, and you will see our image here. If you look at the MD file, you'll see that this image comes directly from our S3 bucket `![input schema](https://dbtlearn.s3.us-east-2.amazonaws.com/input_schema.png)` as input_schema.png.
 
-![](/img/81.png)
+![](/img/dbt/81.png)
 
 Often, you don't want your images to be publicly accessible. You want to bundle them with your documentation, which is possible through the asset folder. Let me show you how to import this into assets.
 
@@ -3469,7 +3469,7 @@ Save it, and run dbt docs generate. When the documentation is generated, all fil
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs serve  
 ```
 
-![](/img/81.png)
+![](/img/dbt/81.png)
 
 
 Start the documentation server again with dbt docs serve. You will see the same image, but now it’s local. If you access the assets through your local server, you'll see the image under assets. Bundling everything together into your documentation is a good idea for production. You can then take the target folder and host it statically or use a development server behind an Nginx instance, or work with your DevOps team to productionize it.
@@ -3481,52 +3481,52 @@ Another important part of the Docs Serving Interface that we haven't covered yet
 
 When you click on the DAG, you'll see the lineage of your data. 
 
-![](/img/86.png)
+![](/img/dbt/86.png)
 
 Hopefully, yours looks very similar to this. The DAG provides a good overview of how the data flows and how models are built on top of each other. Let's take a closer look.
 
-![](/img/82.png)
+![](/img/dbt/82.png)
 
 
 In the DAG view, you see all the sources as green boxes. You can also see the dependencies, tests, models, sources, and many other components. For example, if you're only interested in data components like models, snapshots, and sources, you can filter the view accordingly. 
 
-![](/img/83.png)
+![](/img/dbt/83.png)
 
 You might see tests and models, such as `no_nights` and `dim_listings_minimum_nights`. These are shown in gray, indicating they are not part of the current selection. If you click "Update Graph," the excluded items will disappear from the view.
 
-![](/img/84.png)
+![](/img/dbt/84.png)
 
 You can dive deeper into any part of the DAG. For example, clicking on `src_hosts` will show its entire lineage. Right-clicking it allows you to refocus on the node or view its documentation. Viewing the documentation will take you to the relevant section for `src_hosts`.
 
-![](/img/87.png)
+![](/img/dbt/87.png)
 
 By clicking the tag again, 
 
-![](/img/86.png)
+![](/img/dbt/86.png)
 
 you can see the entire lineage graph of everything that `src_hosts` depends on and everything that depends on `src_hosts`. You can also return to a full lineage view by clicking a specific button. This tool is important for understanding dependencies and how you use the dbt run command.
 
 The DAG view can also display specific selectors. For example, `+SFC_hosts+` shows everything `src_hosts` depends on (indicated by the preceding plus) and everything that builds on `src_hosts` (indicated by the trailing plus). 
 
-![](/img/88.png)
+![](/img/dbt/88.png)
 
 If you want to see only what `src_hosts` builds on, remove the trailing plus. Conversely, if you want to see only what depends on `src_hosts`, remove the preceding plus.
 
-![](/img/89.png)
+![](/img/dbt/89.png)
 
 I can also go to a model and just say that I want to hide this,
 
-![](/img/90.png)
+![](/img/dbt/90.png)
 
 , and if I wanted to hide this, it goes into the exclude parameter. So you see that it says, hide dbt with host and everything that depends on dbt with host.
 
-![](/img/91.png)
+![](/img/dbt/91.png)
 
 You can search by text, if you put text on your model, or explore different packages if you have a multi-package project, and before this, your resources. 
 
-![](/img/92.png)
+![](/img/dbt/92.png)
 
-![](/img/93.png)
+![](/img/dbt/93.png)
 
 
 The DAG is quite useful, and I want to show you one last thing about selectors and excludes. The same selectors used in the DAG can be applied to dbt run. For example, if you stop the server and execute dbt run, you can use the --help parameter to see various options, including `-m` and `-s`. The -s parameter allows you to select specific criteria.
@@ -3655,7 +3655,7 @@ target/compiled/dbt_learn/analyses/full_moon_no_sleep.sql (END)
 
 Now, I will demonstrate this process in Snowflake. After compiling, I have a proper query that I can execute against the data warehouse. Here is the query execution. 
 
-![](/img/94.png)
+![](/img/dbt/94.png)
 
 As you can see, we have performance metrics versus negative, positive, and neutral reviews. Although this data does not yet determine how performance affects these reviews, we will set up a dashboard in the next lessons to visualize and analyze this further.
 
@@ -3707,15 +3707,15 @@ GRANT USAGE ON SCHEMA AIRBNB.DEV TO ROLE REPORTER;
 -- GRANT SELECT ON FUTURE VIEWS IN SCHEMA AIRBNB.DEV TO ROLE REPORTER;
 ```
 
-![](/img/95.png)
+![](/img/dbt/95.png)
 
 Now, we have the "reporter" role in place. You might need to refresh Snowflake to see this role. After refreshing your browser, you should see the "reporter" role. 
 
-![](/img/96.png)
+![](/img/dbt/96.png)
 
 If you switch to the "reporter" role, you might notice that it doesn't have access to the actual schema. This is not a problem. Although the "reporter" role can see the Airbnb and dev schemas, it cannot see any tables or views.
 
-![](/img/97.png)
+![](/img/dbt/97.png)
 
 To ensure that the tables and views generated by dbt are visible to the "reporter," we will set up a hook for that. Let's return to our coding application, open the dbt project, and set up a post-hook to grant select permissions on the models to the "reporter."
 
@@ -3776,7 +3776,7 @@ Let’s save this configuration and execute dbt run.
 
 As you can see, the models are now recreated or incremented. If we go back to Snowflake, refresh with the "reporter" role, and check the Airbnb schema, you will see that the tables and views are now visible, and we have select rights on them. This confirms that our hooks work correctly.
 
-![](/img/98.png)
+![](/img/dbt/98.png)
 
 Now, let's move on and create our first dashboard.
 
@@ -3827,7 +3827,7 @@ Now, let's move on and create our first dashboard.
 3. Click "Connect" and then "Continue with default settings."
 
 **Step 3: Create a Dataset**
-![](/img/99.png)
+![](/img/dbt/99.png)
 1. Navigate to "Datasets" in Preset.
 2. Click "`+ Dataset`" (plus icon).
 3. Fill in the dataset details:
@@ -3836,7 +3836,7 @@ Now, let's move on and create our first dashboard.
    - **Table**: Mark Full Moon Reviews
 4. Click "Create Dataset."
    
-![](/img/100.png)
+![](/img/dbt/100.png)
 
 **Step 4: Create a Chart**
 1. After creating the dataset, proceed to create a chart.
@@ -3848,7 +3848,7 @@ Now, let's move on and create our first dashboard.
    - **Dimensions**: Review sentiment (positive, neutral, or negative)
 5. Click "Create Chart."
 
-   ![](/img/102.png)
+   ![](/img/dbt/102.png)
 
 **Step 5: Customize the Chart**
 
@@ -3860,7 +3860,7 @@ Now, let's move on and create our first dashboard.
    - Choose "Stack" in the style options.
 3. Review the chart to see the distribution of review sentiments during full moon and no full moon.
    
-   ![](/img/103.png)
+   ![](/img/dbt/103.png)
 
    So a little bit more negative with full moon than without full moon. But this difference is so little that I would say it's not significant. But you can go and check in with a resident data scientist in your company to apply a statistical test on it to figure out if it's a significant difference or not.
 
@@ -3884,7 +3884,7 @@ Now, let's move on and create our first dashboard.
 4. Add the saved chart to the dashboard by dragging it from the right panel.
 5. Optionally, add a header and other elements to enhance the dashboard.
    
-   ![](/img/104.png)
+   ![](/img/dbt/104.png)
 
 **Step 7: Save and Share the Dashboard**
 
@@ -3967,13 +3967,13 @@ Once the exposure is defined, let's see how it translates into practice when we 
 (dbt_env) ➜  dbt_learn git:(main) ✗ dbt docs serve  
 ```
 
-![](/img/105.png)
+![](/img/dbt/105.png)
 
 Additionally, these exposures appear in your lineage graph. You will see the "Executive Dashboard" and the complete lineage showing how data flows into this dashboard.
 
-![](/img/106.png)
+![](/img/dbt/106.png)
 
-![](/img/107.png)
+![](/img/dbt/107.png)
 
 Now we have come full circle. We created our first models, seeds, and snapshots, built models with data cleansing on top of each other, implemented tests and documentation, and finally, we have a proper dashboard integrated with dbt. 
 
@@ -4291,7 +4291,7 @@ It's a simple test, so let's see if it works by executing our test file.
 
 Oh, it failed. It appears we have AirBnBs priced above \$5,000. To investigate further, I'll query Snowflake to get the maximum price in the AirBnB table, AirBnB.dev.LimitedReports. 
 
-![](/img/108.png)
+![](/img/dbt/108.png)
 
 The maximum price is \$8,000. This could be legitimate or a listing error. To handle this, we can keep the test but change its severity from Error to Warn. This means we'll still get notified, but it won't require immediate action. Setting the severity to Warn is configurable for any test. 
 
@@ -4350,7 +4350,7 @@ tests:
 
 What should it be? Is it like floating point or numeric or integer? It very much depends on your backend. And we use the Snowflake backend. So if we come here and take a look at the database. And here in Airbnb, let's say, we have schema. Here in the tab, we have table listing with costs. And if I take a look, here is the price column. I'm going to click view definition. You'll see that the price here in Snowflake is called a number. So let us put number.
 
-![](/img/109.png)
+![](/img/dbt/109.png)
 
 Like this in you schema.yml:
 
@@ -4422,7 +4422,7 @@ With this function, you can ensure that columns dealing with categorical variabl
 
 For example, if we look at the room type in our raw tables, and I query the room type from Airbnb raw listings, you'll see that we have four different room types. Let's make sure this doesn't change.
 
-![](/img/110.png)
+![](/img/dbt/110.png)
 
 Let's go to our editor and add this test to our sources. As you might guess, you won't be able to add this to your sources in schema.yml; instead, you will do this in the `sources.yml` file.
 
@@ -4490,7 +4490,7 @@ To achieve this, we can write a test using a technique called Regex, which is sh
 
 Now, let's define a regular expression that matches the price format: a dollar sign, followed by one or two numbers, a dot, and then a few more numbers. 
 
-![](/img/111.png)
+![](/img/dbt/111.png)
 
 In DBT, we have a column expectation called [expect_column_values_to_match_regex](https://github.com/calogica/dbt-expectations/tree/main?tab=readme-ov-file#expect_column_values_to_match_regex). We will use this on the price column. This function ensures that every value in the column matches the specified regular expression.
 
@@ -4678,22 +4678,22 @@ from validation_errors
 
 Let me copy and paste this directly into Snowflake. When I execute this test, it says, "the problem is that all the expressions are false." 
 
-![](/img/112.png)
+![](/img/dbt/112.png)
 
 If we clean this up a bit, we can take a closer look.  First, it checks the price column, which is okay, and it adds my regular expression to the price column using Snowflake's built-in function `regex_instr` to check for matches. If the return value of this column is greater than zero, it means there is a match. So, this value should always be positive in my case. The validation errors indicate that we should collect all the non-matching return values of this SQL query, called expression, and count them.
 
 To simplify, let's strip it down to the core. We'll select the price and the regular expression itself as the expression. Executing this query, we now see the price and the compiled expression. 
 
-![](/img/113.png)
+![](/img/dbt/113.png)
 
 We have a problem here. Let's see what happens if I specify that the string needs to start with a dollar sign `'^\$'`. Relaxing this condition to find the bug, we still get false results even though all strings start with a dollar sign. This suggests an escaping issue. The solution is likely that Snowflake needs double escaping, converting double backslashes into a single backslash for its regular expression engine. 
 
-![](/img/114.png)
+![](/img/dbt/114.png)
 
 Testing with double backslashes, the expression is now true. So, we need double escaping. 
 
 
-![](/img/115.png)
+![](/img/dbt/115.png)
 
 Given our sources already have double expressions, Snowflake converts double backslashes into single backslashes. To ensure Snowflake receives two backslashes, we must use four backslashes in our code. 
 
@@ -4793,7 +4793,7 @@ This way, you can insert log messages anywhere in your DBT project, whether in t
 
 Later, I will show you how to use variables and perform more sophisticated logging.
 
-![](/img/116.png)
+![](/img/dbt/116.png)
 
 #### Logging to the dbtLog file
 
@@ -4820,7 +4820,7 @@ So dbt.run operation. Learn logging.
 
 And there we go. So now this is on our screen. Amazing. And if you take a look at the dbt.log file, you will see that it's here with an info log level too. Very, very good.
 
-![](/img/117.png)
+![](/img/dbt/117.png)
 
 
 #### Disabling Log Messages
@@ -5426,7 +5426,7 @@ We will continue our work on the dagster UI at http://localhost:3000/
 
 We are now ready to explore Dagster integration.
 
-![](/img/118.png)
+![](/img/dbt/118.png)
 
 
 #### Deep Dive into the Python Files of our Dagster-dbt Project
@@ -6432,13 +6432,60 @@ Relaunch dagster dev
 (dbt_env) ➜  dbt_dagster_project git:(main) ✗ DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
 ```
 
+I have already loaded the changes. What you can see is that instead of a plain, normal dbt model or a non-partitioned Daxter asset, we now have a partitioned one. What does this mean? Instead of reprocessing all the data, we can now process the individual pieces of data to conserve resources. As you can see, the UI has reflected this change and already recognized that I have executed successfully once for one partition. It also tells me that a couple of others are still remaining, and so far, it has not registered any failed partitions. 
 
+![](/img/dragster/26.png)
 
-I have already loaded the changes. What you can see is that instead of a plain, normal dbt model or a non-partitioned Daxter asset, we now have a partitioned one. What does this mean? Instead of reprocessing all the data, we can now process the individual pieces of data to conserve resources. As you can see, the UI has reflected this change and already recognized that I have executed successfully once for one partition. It also tells me that a couple of others are still remaining, and so far, it has not registered any failed partitions. For the rest of the UI, it's pretty much like what you're already used to, so not much has changed here. The difference comes when you want to select or materialize and run the model. Daxter will pop up and ask you which partition you want to execute. You can select a specific range or use the intuitive selector. Alternatively, you can only use the latest or old partitions and produce multiple model runs if you need to backfill a specific longer time range.
+For the rest of the UI, it's pretty much like what you're already used to, so not much has changed here. The difference comes when you want to select or materialize and run the model. 
+
+![](/img/dragster/25.png)
+
+Daxter will pop up and ask you which partition you want to execute. You can select a specific range or use the intuitive selector. Alternatively, you can only use the latest or old partitions and produce multiple model runs if you need to backfill a specific longer time range.
+
+![](/img/dragster/27.png)
 
 This is what I wanted to show here with a brief demo. Marrying DBT, which you already know, with variables to incremental models and chaining this to a data orchestrator named Daxter for very efficient and scalable partition handling gives you faster, high-quality data pipelines.
 
 Okay, so now we also want to discuss more advanced concepts.
 
+---
+
+So far, you have mainly heard about Snowflake as a sample database. It is very convenient and scalable, but it only runs in the cloud, which simplifies some things while complicating others. Alex and I ([Georg's and Alexander's blog post](https://georgheiler.com/2023/12/11/dagster-dbt-duckdb-as-new-local-mds/)) want to share that there are other options, detailed in our blog post. Let's go through it step by step. Our goal is to create high-quality, cost-efficient, and resource-efficient data pipelines that are simple and easy for developers to use. We will heavily reuse the concept of partitioning to achieve this.
+
+![](/img/dragster/28.png)
+
+Alexander, could you briefly explain what we are looking at and what changes when moving from Snowflake to DuckDB?
+
+In our blog post, we examined various concepts that have evolved over time and described how we implemented them in our projects. This high-level architecture shows the components we use: 
+* Dugster as the orchestrator, 
+* DBT as the SQL transformation framework, 
+* and DuckDB as the engine. 
+
+We use remote storage from a cloud provider as both the source and target.
+
+In the blog, we also describe the data structure in a project. On the left are files and data from object storage, which are ingested into DuckDB, transformed, and then outputted back to object storage. This process creates a source layer, transformation layer, and serving layer.
+
+![](/img/dragster/30.png)
+
+We further discuss the importance of partitioning. As Georg explained, we use partitions extensively. DBT variables and Dugster as a partition manager are crucial concepts here. We compare the Snowflake model, with remote execution, to the in-memory execution model with DuckDB.
+
+![](/img/dragster/31.png)
+
+When using DBT with Snowflake, the DBT project serves as the executor of SQL statements on a remote data warehouse. With DuckDB, the code executes in the DBT adapter's memory, providing benefits such as containerizing your entire data pipeline. This means you don't rely on external cloud services but can use existing hardware, like your notebook, efficiently.
+
+
+The current DBT state involves each developer having their own DBT project on their local machine, with models compiled and executed on a remote data warehouse. With DuckDB, the execution engine is also on the developer's machine in a container, allowing local execution and remote storage writing. You can run Dugster locally, combining DuckDB, DBT, and Dugster, leveraging all the features shown in the last video.
+
+This new approach gives you end-to-end control of the pipeline and the capability for testing. DuckDB is powerful enough for most data needs, eliminating the need for a distributed system that consumes more resources and costs more. By scaling down the pipeline to a single laptop, it becomes easier to test and debug, leading to faster, higher-quality data asset delivery.
+
+This is the key message of the blog post, which is also included in the courseware material. If you have questions or comments, feel free to contact us for discussion.
+
+![](/img/dragster/32.png)
+
+What we see here is that what you already should know, is how the DBT execution model works, and this is that every developer has its own DBT project on its local machine, and how actually the model is compiled and executed on some data warehouse over data. This is right now the way how the DBT is actually used with every provider. This is the current DBT state, so to say. 
+
+For Snowflake, for example, this is how you are operating. I guess you have seen in the class so far. I would say to the next picture, yes. What we see here now is the way how it actually changes over time, and how the execution model with the DugDB inside of the DBT looks like. This is actually that each developer now has also the execution engine on its own machine, in a container, and that the DBT or DugDB actually pulls in the data on your machine and writes out on some other remote storage. What is also here important to see is that you can also own the Dugster locally, so to say, and you can combine DugDB, DBT, and Dugster together, and you can leverage all of that what Georg showed in the last video. What is also important here to say is that those projects are also independent, that you can run for one partition DBT, develop, and debug, and when you are ready to go big scale, then you can actually start the Dugster, and you can do many partitions together. 
+
+Maybe one more time, why maybe the change of this traditional way? It gives you an end-to-end control of the pipeline and the capability for testing, and these new databases like DugDB are very powerful. That means for the largest, like 80% of your data, you probably don't need a distributed system that is consuming a large amount of resources and needs a lot of, let's say, fine-tuning, or at least costing you a lot if it's a cloud data warehouse. So you're using something that is simple, is easier to operate for you, but also cheaper. And because it is allowing you to scale down the whole data pipeline onto a single laptop, it's easier to test and easier to debug if something goes wrong. So you're going to ship higher quality data assets fast. But I think this is the key message on the blog post. Also, this will be included in the courseware material, so you can take a deep dive on it.
 
 
