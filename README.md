@@ -5744,6 +5744,8 @@ Additionally, partitions can be multi-dimensional, beneficial for complex use ca
 
 In DBT, incremental models facilitate this process. You can modify a DBT model to include a conditional statement for incremental execution, ensuring high-quality, idempotent data pipelines.
 
+`fct_reviews.sql`
+
 ```sql
 -- Example DBT model with incremental execution
 {% if is_incremental() %}
@@ -5757,6 +5759,31 @@ In DBT, incremental models facilitate this process. You can modify a DBT model t
   {% endif %}
 {% endif %}
 ```
+
+If a model is to be executed in an incremental mode. Something else happens. You just add this conditional statement.
+
+```sql
+{% if is_incremental() %}
+  {% if var("start_date", False) and var("end_date", False) %}
+```
+
+So instead of always running a model in such a mode here that does not allow you to do backfills, which means it does not allow you to create idempotent data pipelines, which means it doesn't allow you to create high quality data pipelines. 
+
+```sql
+    AND review_date > (select max(review_date) from {{ this }})
+    {{ log('Loading ' ~ this ~ ' incrementally (all missing dates)', info=True)}}
+```
+
+You would have a specific subset of data. So here, for example, designated by the date period or time range from the review dates. But you're operating on.
+
+```sql
+    AND review_date >= '{{ var("start_date") }}'
+    AND review_date < '{{ var("end_date") }}'
+```
+
+And this is basically all what you need to change from the DBT side to make DBT partition aware.
+
+---
 
 To make DBT and Dagster interoperate smoothly, you need to define partition types and specify the initial partition point. The DBT translator will pass variables, such as `start_date` and `end_date`, to DBT, ensuring the correct partition column is used. By feeding this additional metadata into Dagster, you can make the data assets partition-aware. This allows you to execute DBT commands with the appropriate partition values, optimizing resource use.
 
@@ -6053,13 +6080,30 @@ Finally, you need to register partitioned assets in Daxter. The UI will reflect 
 
 In summary, integrating DBT with Daxter for partition handling enables you to create efficient, scalable, and high-quality data pipelines. This approach ensures you only process necessary data partitions, conserving resources and improving performance.
 
-**Demo Details:**
+**Code Integration Details:**
 
 I have prepared a demo, starting with one of the DBT models you already know. Due to a loading issue, I will use a refuse model. This model prepares the data for downstream analysis, with a small conditional statement added for incremental execution.
 
-`fct_reviews.sql`
+**Example DBT Model with Incremental Execution:**
+
+This is what it looks `dbt_learn/models/fct/fct_reviews.sql`
 
 ```sql
+{{
+  config(
+    materialized = 'incremental',
+    on_schema_change='fail'
+    )
+}}
+
+WITH src_reviews AS (
+  SELECT * FROM {{ ref('src_reviews') }}
+)
+SELECT 
+  {{ dbt_utils.generate_surrogate_key(['listing_id', 'review_date', 'reviewer_name', 'review_text']) }} as review_id,
+  *
+FROM src_reviews
+WHERE review_text is not null
 {% if is_incremental() %}
   {% if var("start_date", False) and var("end_date", False) %}
     {{ log('Loading ' ~ this ~ ' incrementally (start_date: ' ~ var("start_date") ~ ', end_date: ' ~ var("end_date") ~ ')', info=True) }}
@@ -6072,7 +6116,7 @@ I have prepared a demo, starting with one of the DBT models you already know. Du
 {% endif %}
 ```
 
-But if a model is to be executed in an incremental mode. Something else happens. You just add this conditional statement.
+If a model is to be executed in an incremental mode. Something else happens. You just add this conditional statement.
 
 ```sql
 {% if is_incremental() %}
@@ -6095,21 +6139,37 @@ You would have a specific subset of data. So here, for example, designated by th
 
 And this is basically all what you need to change from the DBT side to make DBT partition aware.
 
-To make Daxter partition-aware, you need to define partition types and specify the initial partition point. A DBT translator passes variables to DBT, injecting the right information for partition expressions. You then need to exclude new refuse dimensions to avoid duplicate loading and apply the partition definition and DBT translator to your models.
+---
 
-What do you have to do to make Daxter partition aware? Or how can you connect DBT and Daxter to interoperate in an easy and smooth way? you've already scaffolded a simple DBT integration. That is looking something like this, and we need to extend it a little bit. In order to, um, accommodate the partitions.
+What do you have to do to make Daxter partition aware? Or how can you connect DBT and Daxter to interoperate in an easy and smooth way? you've already scaffolded a simple DBT integration. That is looking something like this, and we need to extend it a little bit. In order to accommodate the partitions.
 
-`/dbt_dagster_project/assets.py`
+This is what it looks  `/dbt_dagster_project/assets.py`
 
 ```py
-@dbt_assets(manifest=dbt_manifest_path)
-def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+import json
+from typing import Any, Mapping
+from dagster import (AssetExecutionContext, DailyPartitionsDefinition,OpExecutionContext)
+from dagster_dbt import (DagsterDbtTranslator, DbtCliResource, dbt_assets,
+                         default_metadata_from_dbt_resource_props)
+from .constants import dbt_manifest_path
+
+
+@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 ```
 
-First of all, we have to define like what type of partitions we are looking at.
+First of all, we have to define like what type of partitions we are looking at. So remember what I showed at the start. We have several styles of partitions assuming daily partitions here we also have to specify what is the initial or first point in time. We're looking at a partition. We need ways because of orchestrator, and it needs to know what data you would expect to have. Because otherwise it cannot give you the green light. But everything is all clear.
 
 ```py
+import json
+from typing import Any, Mapping
+from dagster import (AssetExecutionContext, DailyPartitionsDefinition,OpExecutionContext)
+from dagster_dbt import (DagsterDbtTranslator, DbtCliResource, dbt_assets,
+                         default_metadata_from_dbt_resource_props)
+from .constants import dbt_manifest_path
+
+
 @dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
 def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
@@ -6121,16 +6181,22 @@ def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
 daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
 ```
 
-So remember what I showed at the start. We have several styles of partitions assuming daily partitions here we also have to specify what is the initial or first point in time. We're looking at a partition. We need ways because of orchestrator, and it needs to know what data you would expect to have. Because otherwise it cannot give you the green light. But everything is all clear.
 
-Also we need something which is called DTE translator but is passing variables to DTE.
+
+Also we need something which is called DTE **translator** but is passing variables to DTE.
 
 ```py
+import json
+from typing import Any, Mapping
+from dagster import (AssetExecutionContext, DailyPartitionsDefinition,OpExecutionContext)
+from dagster_dbt import (DagsterDbtTranslator, DbtCliResource, dbt_assets,
+                         default_metadata_from_dbt_resource_props)
+from .constants import dbt_manifest_path
+
 
 @dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
 def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
-
 
 # many dbt assets use an incremental approach to avoid
 # re-processing all data on each run
@@ -6144,9 +6210,7 @@ class CustomDagsterDbtTranslator(DagsterDbtTranslator):
         return {**default_metadata, **metadata}
 ```
 
-As you can see here, we have a variable start date and end date which is referenced.
-
-`fct_reviews.sql`
+As you can see here, we have a variable start date and end date which is referenced in file `dbt_learn/models/fct/fct_reviews.sql`
 
 ```sql
     AND review_date >= '{{ var("start_date") }}'
@@ -6155,7 +6219,9 @@ As you can see here, we have a variable start date and end date which is referen
 
 I think you're already aware of what a variable is from a concept perspective in DTE. And see nodding. So that's great.
 
-And we basically make use of this concept of variables and just need to inject the right information to dbt. So to do this we need the translator because every table might hopefully doesn't have, but might have a different column where you need to inject the partition expression the X does not intrinsically know. Which tables are, let's say, hourly partition or which one's daily partition, and what is the column that needs to be partitioned on? You have to basically feed this extra piece of metadata to Daxter. So here we are saying this table that we're looking at is partitioned on a column that is called `date` (in `metadata = {"partition_expr": "date"}`). And basically we just need to feed this additional metadata when in into this get metadata callback.
+And we basically make use of this concept of variables and just need to inject the right information to dbt. So to do this we need the **translator** because every table might hopefully doesn't have, but might have a different column where you need to inject the partition expression the X does not intrinsically know. 
+
+Which tables are, let's say, hourly partition or which one's daily partition, and what is the column that needs to be partitioned on? You have to basically feed this extra piece of metadata to Daxter. So here we are saying this table that we're looking at is partitioned on a column that is called `date` (in `metadata = {"partition_expr": "date"}`). And basically we just need to feed this additional metadata when in into this get metadata callback.
 
 Futhermore, We need to make this asset that we pass from the DBT graph partition aware. But before we do this, actually one step backwards here `@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")`, we need to exclude this new refuse dimension `exclude="fct_reviews"` because we don't want to load it twice like once without partitions, once with partitions. We only want to have it with the partitions. 
 
@@ -6172,6 +6238,34 @@ we explicitly select only the partitions `select="fct_reviews",`, because only t
 Obviously, it would be quite sensible if you have some kind of development guidelines or naming conventions where you don't have to list thousands of tables with different partitioning names. So to basically standardize upon certain conventions that will make your life easier. 
 
 ```py
+import json
+from typing import Any, Mapping
+
+from dagster import (AssetExecutionContext, DailyPartitionsDefinition,
+                     OpExecutionContext)
+from dagster_dbt import (DagsterDbtTranslator, DbtCliResource, dbt_assets,
+                         default_metadata_from_dbt_resource_props)
+
+from .constants import dbt_manifest_path
+
+
+@dbt_assets(manifest=dbt_manifest_path, exclude="fct_reviews")
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+    yield from dbt.cli(["build"], context=context).stream()
+
+
+# many dbt assets use an incremental approach to avoid
+# re-processing all data on each run
+# this approach can be modelled in dagster using partitions
+daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
+
+class CustomDagsterDbtTranslator(DagsterDbtTranslator):
+    def get_metadata(self, dbt_resource_props: Mapping[str, Any]) -> Mapping[str, Any]:
+        metadata = {"partition_expr": "date"}
+        default_metadata = default_metadata_from_dbt_resource_props(dbt_resource_props)
+        return {**default_metadata, **metadata}
+
+
 @dbt_assets(manifest=dbt_manifest_path, 
             select="fct_reviews",
             partitions_def=daily_partitions,
