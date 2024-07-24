@@ -5385,7 +5385,7 @@ remove de coments
 ```py
 schedules = [
 #     build_schedule_from_dbt_selection(
-#         [dbt_learn_dbt_assets],
+#         [dbtlearn_dbt_assets],
 #         job_name="materialize_dbt_models",
 #         cron_schedule="0 0 * * *",
 #         dbt_select="fqn:*",
@@ -5396,7 +5396,7 @@ schedules = [
 ```py
 schedules = [
      build_schedule_from_dbt_selection(
-         [dbt_learn_dbt_assets],
+         [dbtlearn_dbt_assets],
          job_name="materialize_dbt_models",
          cron_schedule="0 0 * * *",
          dbt_select="fqn:*",
@@ -5468,12 +5468,12 @@ import os
 from dagster import Definitions
 from dagster_dbt import DbtCliResource
 
-from .assets import dbt_learn_dbt_assets
+from .assets import dbtlearn_dbt_assets
 from .constants import dbt_project_dir
 from .schedules import schedules
 
 defs = Definitions(
-    assets=[dbt_learn_dbt_assets],
+    assets=[dbtlearn_dbt_assets],
     schedules=schedules,
     resources={
         "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
@@ -5486,11 +5486,11 @@ Let's begin with an overview of the files, starting from the top. We import the 
 You see that later we create a definitions object. This is our our Daxter model definition or our Daxter assets definition. And here we say that we are using a resource which is exactly this DB2 CLI resource. And this simply tells Daxter that we want to use the Daxter DBT plugin in this project. 
 
 ```py
-from .assets import dbt_learn_dbt_assets
+from .assets import dbtlearn_dbt_assets
 from .constants import dbt_project_dir
 from .schedules import schedules
 
-Definitions(assets=[dbt_learn_dbt_assets],
+Definitions(assets=[dbtlearn_dbt_assets],
             schedules=schedules,
             resources={
                 "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
@@ -5501,9 +5501,9 @@ Here you see basically three different resources.
 
 * `dbt_project_dir` - So to say one is the DBT project here.
 * `schedules` - defined that you touched in the earlier lecture.
-* `dbt_learn_dbt_assets` - and you also have DBT learn DBT assets which comes from the assets file.
+* `dbtlearn_dbt_assets` - and you also have DBT learn DBT assets which comes from the assets file.
 
-We have three primary components: `dbt_project_dir`, `schedules`, and `dbt_learn_dbt_assets`. 
+We have three primary components: `dbt_project_dir`, `schedules`, and `dbtlearn_dbt_assets`. 
 
 
 **`constants.py`**
@@ -5586,7 +5586,7 @@ What you will see here is everything a software needs to know about your DBT pro
 
 **`assets.py`** 
 
-from `assets=[dbt_learn_dbt_assets]`
+from `assets=[dbtlearn_dbt_assets]`
 
 Next, we have `assets.py`, where assets in Dagster are defined similarly to DBT models. This file uses the `DbtCliResource` to execute DBT build commands based on `manifest.json`, informing Dagster how to materialize these assets.
 
@@ -5598,11 +5598,11 @@ from .constants import dbt_manifest_path
 
 
 @dbt_assets(manifest=dbt_manifest_path)
-def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 ```
 
-This code defines a Dagster asset using the `@dbt_assets` decorator, which connects to a DBT project. It imports necessary modules and constants, sets up the DBT CLI resource, and specifies a function `dbt_learn_dbt_assets` that runs the DBT build command, streaming the results as it executes. This allows for integration of DBT assets within a Dagster pipeline.
+This code defines a Dagster asset using the `@dbt_assets` decorator, which connects to a DBT project. It imports necessary modules and constants, sets up the DBT CLI resource, and specifies a function `dbtlearn_dbt_assets` that runs the DBT build command, streaming the results as it executes. This allows for integration of DBT assets within a Dagster pipeline.
 
 **``schedules.py``**
 
@@ -5612,11 +5612,11 @@ Lastly, `schedules.py` defines the schedules for running DBT models. The example
 ```py
 from dagster_dbt import build_schedule_from_dbt_selection
 
-from .assets import dbt_learn_dbt_assets
+from .assets import dbtlearn_dbt_assets
 
 schedules = [
     build_schedule_from_dbt_selection(
-        [dbt_learn_dbt_assets],
+        [dbtlearn_dbt_assets],
         job_name="materialize_dbt_models",
         cron_schedule="0 0 * * *",
         dbt_select="fqn:*",
@@ -5840,7 +5840,7 @@ from dagster_dbt import DagsterDbtTranslator, DbtCliResource, dbt_assets, defaul
 from .constants import dbt_manifest_path
 
 @dbt_assets(manifest=dbt_manifest_path)
-def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 
 daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
@@ -6007,7 +6007,7 @@ By integrating DBT with Dagster for partition handling, you create efficient, sc
      from .constants import dbt_manifest_path
 
      @dbt_assets(manifest=dbt_manifest_path)
-     def dbt_learn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+     def dbtlearn_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
          yield from dbt.cli(["build"], context=context).stream()
 
      daily_partitions = DailyPartitionsDefinition(start_date="2022-01-24")
@@ -6393,11 +6393,52 @@ defs = Definitions(
 )
 ```
 
+relaunch server
 
----
+```sh
+(dbt_env) ➜  dbt_dagster_project git:(main) ✗ DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
+```
 
-Now, let's look at Daxter. How does this look? I have already loaded the changes. What you can see is that instead of a plain, normal dbt model or a non-partitioned Daxter asset, we now have a partitioned one. What does this mean? Instead of reprocessing all the data, we can now process the individual pieces of data to conserve resources. As you can see, the UI has reflected this change and already recognized that I have executed successfully once for one partition. It also tells me that a couple of others are still remaining, and so far, it has not registered any failed partitions. For the rest of the UI, it's pretty much like what you're already used to, so not much has changed here. The difference comes when you want to select or materialize and run the model. Daxter will pop up and ask you which partition you want to execute. You can select a specific range or use the intuitive selector. Alternatively, you can only use the latest or old partitions and produce multiple model runs if you need to backfill a specific longer time range.
+![](/img/dragster/22.png)
+
+
+What Happens if You Do a `Launch Backfill` without `dagster.yaml`?
+
+If you do a `Launch Backfill` without configuring `dagster.yaml` to use a `QueuedRunCoordinator`, Dagster will use the `DefaultRunLauncher`. This means that the backfill runs will be launched immediately and in the same process, without any queuing or concurrency management. This can be sufficient for testing and small environments. Here are the pros and cons of this approach:
+
+| Pros                               | Cons                                                                                 |
+|------------------------------------|--------------------------------------------------------------------------------------|
+| **Simplicity**: No need to configure Redis, Celery, or any additional files. | **Scalability Limitations**: If there are many concurrent runs, you might encounter performance issues or errors due to the lack of concurrency management. |
+| **Quick Setup**: You can start working immediately without worrying about extra configurations. | **No Prioritization or Limits**: You cannot apply prioritization policies or concurrency limits, which might be an issue in larger environments. |
+
+
+Launching the Backfill without `dagster.yaml`: If you decide to proceed without configuring `dagster.yaml`, simply click on `Launch backfill` in the Dagster UI. Here’s what will happen:
+
+1. **Dagster will use `DefaultRunLauncher`**: All runs will be launched immediately.
+2. **No Concurrency Management**: There will be no queuing or concurrency management, which can lead to suboptimal performance if there are many concurrent runs.
+
+Minimal Recommended Configuration : If you find that you need a bit more control without adding too much complexity, you could use a minimal configuration in `dagster.yaml` like this:
+
+```yaml
+instance:
+  run_launcher:
+    module: dagster._core.launcher
+    class: DefaultRunLauncher
+```
+
+Relaunch dagster dev
+
+```sh
+(dbt_env) ➜  dbt_dagster_project git:(main) ✗ DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev
+```
+
+
+
+I have already loaded the changes. What you can see is that instead of a plain, normal dbt model or a non-partitioned Daxter asset, we now have a partitioned one. What does this mean? Instead of reprocessing all the data, we can now process the individual pieces of data to conserve resources. As you can see, the UI has reflected this change and already recognized that I have executed successfully once for one partition. It also tells me that a couple of others are still remaining, and so far, it has not registered any failed partitions. For the rest of the UI, it's pretty much like what you're already used to, so not much has changed here. The difference comes when you want to select or materialize and run the model. Daxter will pop up and ask you which partition you want to execute. You can select a specific range or use the intuitive selector. Alternatively, you can only use the latest or old partitions and produce multiple model runs if you need to backfill a specific longer time range.
 
 This is what I wanted to show here with a brief demo. Marrying DBT, which you already know, with variables to incremental models and chaining this to a data orchestrator named Daxter for very efficient and scalable partition handling gives you faster, high-quality data pipelines.
 
 Okay, so now we also want to discuss more advanced concepts.
+
+
+

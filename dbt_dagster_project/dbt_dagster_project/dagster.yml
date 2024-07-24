@@ -1,0 +1,4 @@
+instance:
+  run_launcher:
+    module: dagster._core.launcher
+    class: DefaultRunLauncher
