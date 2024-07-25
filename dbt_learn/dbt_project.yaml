@@ -27,6 +27,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 #dbt_project.yml
 vars:
   surrogate_key_treat_nulls_as_empty_strings: true #turn on legacy behaviour
+  user_name: default_user_name_for_this_project
 
 
 # Configuring models
@@ -45,6 +46,3 @@ models:
       +materialized: table
     src:
       +materialized: ephemeral
-
-vars:
-  user_name: default_user_name_for_this_project

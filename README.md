@@ -72,6 +72,13 @@
     - [I suggest you](#i-suggest-you)
     - [Advanced Dagster: Using Partitions with Incremental Models](#advanced-dagster-using-partitions-with-incremental-models)
     - [Advanced Dagster: Using Partitions with Incremental Models](#advanced-dagster-using-partitions-with-incremental-models-1)
+  - [Accelerate dbt Development Using Power User for dbt Core](#accelerate-dbt-development-using-power-user-for-dbt-core)
+    - [How to Get an API Key for the Advanced Features](#how-to-get-an-api-key-for-the-advanced-features)
+    - [Use AI to Generate Documentation](#use-ai-to-generate-documentation)
+    - [How to Generate a DBT Model from a Source File or SQL Query](#how-to-generate-a-dbt-model-from-a-source-file-or-sql-query)
+    - [Working with Column-Level Lineage](#working-with-column-level-lineage)
+    - [Generate and edit dbt Tests](#generate-and-edit-dbt-tests)
+    - [Find Problems in your dbt Project with Health Check](#find-problems-in-your-dbt-project-with-health-check)
 
 ---
 ## Introduction
@@ -6489,3 +6496,302 @@ For Snowflake, for example, this is how you are operating. I guess you have seen
 Maybe one more time, why maybe the change of this traditional way? It gives you an end-to-end control of the pipeline and the capability for testing, and these new databases like DugDB are very powerful. That means for the largest, like 80% of your data, you probably don't need a distributed system that is consuming a large amount of resources and needs a lot of, let's say, fine-tuning, or at least costing you a lot if it's a cloud data warehouse. So you're using something that is simple, is easier to operate for you, but also cheaper. And because it is allowing you to scale down the whole data pipeline onto a single laptop, it's easier to test and easier to debug if something goes wrong. So you're going to ship higher quality data assets fast. But I think this is the key message on the blog post. Also, this will be included in the courseware material, so you can take a deep dive on it.
 
 
+### Accelerate dbt Development Using Power User for dbt Core
+
+#### How to Get an API Key for the Advanced Features
+
+1. **Visit Website**: Go to [www.altimate.ai](https://www.altimate.ai/).
+2. **Start for Free**: Click on the "Start for Free" button on the right-hand side.
+3. **Fill Out Form**:
+   - Enter your business email address (e.g., ultimate.ai).
+   - Choose an instance name (e.g., uni-test).
+4. **Email Confirmation**: 
+   - Check your email for a confirmation message from Ultimate AI.
+5. **Log In**: After verifying your email, log in to your Ultimate AI account.
+6. **Access API Key**:
+   - Navigate to "Settings" in the UI.
+   - Go to the "API Key" menu.
+   - Note down your API key and instance name displayed.
+      ![](/img/ultimate/02.png)
+
+**Configure Extension in VS Code**
+
+7. **Open VS Code Settings**:
+   - Click on the cogwheel at the bottom of VS Code.
+   - Choose "Settings" from the menu.
+8. **Search for Ultimate Settings**:
+   - In the search bar, type "Ultimate Settings".
+9. **Enter API Key and Instance Name**:
+   - Find the fields for "Ultimate AI Key" and "Ultimate Instance Name".
+   - Paste your API key into the "Ultimate AI Key" field.
+   - Paste your instance name into the "Ultimate Instance Name" field.
+      ![](/img/ultimate/01.png)
+
+**Enable Advanced Features**
+
+10.  **Complete Configuration**: With the API key and instance name entered, you can now access advanced features like:
+   - Generation of GPT models from SQL.
+   - Generation of GPT tests.
+   - Generation of GPT documentation.
+   - Column-level lineage.
+   - Project governance checks.
+   - Collaboration functionality.
+
+**Final Note**  
+You are now set up to utilize all the advanced functionalities offered by the Ultimate AI extension in your development environment.
+
+#### Use AI to Generate Documentation
+
+[`"Power User for dbt Core"`](https://docs.myaltimate.com/document/generatedoc/) extension to VSC
+
+Let's start with the Documentation Generation Functionality. In the Standard Features section, I demonstrated how to use the Documentation Editor Panel from the VS Code Extension to write a description and click "Save" at the bottom to save the documentation to a schema YAML file or another YAML file of your choice. When I wrote that documentation, I used a simple sample description for the model. However, placeholder text like this is not very useful.
+
+The extension provides functionality to automatically generate descriptions for models and columns. Once you add a key, you'll see a "Generate" button that you can click. By making a call to the SAS API, the extension will generate the documentation automatically. The process is straightforward: you click "Generate," and the extension generates the model documentation.
+
+For example, the extension can write that the `mart_Full_Moon_Reviews.sql` model combines another fact table with the dates dimension table to determine whether each review was written during the full moon. It adds columns indicating whether the review date aligns with the full moon date and tries to predict what this information can be used for. This data can be used to analyze potential correlations between full moons and customer reviews.
+
+![](/img/ultimate/06.png)
+
+You can add more details to this description or use options to make it shorter, longer, more fun, or more focused on a business user's perspective. For example, if you choose to make it longer and hit "Go," it will generate an extended description. This functionality is also available at the column level.
+
+If no columns are present in the manifest, you can synchronize columns with the database directly. The extension will show the available columns from the database schema. For instance, you can add a description for a column named "Review Sentiment" by clicking the "Generate" button, and the extension will write a similar description for the column. You can repeat this process for all columns, making documentation much easier and ensuring thorough coverage for your DVD projects.
+
+Once all descriptions are written, you can click "Save Documentation." The extension will detect your YAML file and save all the documentation there. For example, the `mart_Full_Moon_Reviews.sql` model's description and different columns' descriptions are updated automatically.
+
+In summary, this functionality is super simple and very useful for improving the documentation of our DVD projects.
+
+#### How to Generate a DBT Model from a Source File or SQL Query
+
+Next, we will look at how to generate a DBT model from a source file or a source definition. I will also show you how to convert your existing SQL queries into a DBT model. The definition can replace the pieces of the SQL query with the right references based on what models are present in your project.
+
+![](/img/ultimate/03.png)
+
+
+**Open `sources.yml` File**: Navigate to the `sources.yml` file in your project.  
+- **Generate Model Prompts**: Look for small prompts labeled "generate model" next to each source definition in the `sources.yml` file. Ensure your extension is configured correctly.
+- **Click on Generate Model**: For a specific source definition, such as "reviews," click on the "generate model" prompt. 
+  - This action will automatically generate the Jinja SQL code for the DBT model.
+  - A new file, named `base_airbnb_reviews.sql`, will be created with the generated code.
+- **Minor Adjustments**: Sometimes you have to add column names, etc in addition to what it generated, but these are minor changes to the generated code.
+  
+  ![](/img/ultimate/04.png)
+
+**Running the New Model**
+
+- **Run the Model**: Execute the newly generated model.
+  - Confirm that the model runs successfully.
+  ![](/img/ultimate/05.png)
+  - This process streamlines the creation of multiple models from source definitions.
+
+**Generating a DBT Model from an Existing SQL Query**
+
+- **Create a SQL File**: Start by creating a file named `test.sql`.
+  ```sql
+  (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/mart/test.sql 
+  
+      with fct_reviews AS (
+          select * from fct_reviews
+      ),
+      full_moon_dates AS (
+          select * from airbnb.dev.seed_full_moon_dates
+      )
+
+      select
+          r.*,
+          case
+              when fm.full_moon_date is null then 'not full moon'
+              else 'full moon'
+          end as is_full_moon
+      from
+          fct_reviews r
+          left join full_moon_dates fm 
+          on TO_DATE(r.review_date) = DATEADD(DAY, 1, fm.full_moon_date)
+  ```
+- **Add Existing SQL Query**: Insert the SQL query you want to convert into a DBT model into `test.sql`.
+- **Convert to DBT Model**:
+  - **Right-Click Option**: Right-click on the SQL file and select the option "convert to DBT model."
+  - **Menu Bar Option**: Alternatively, use the menu bar at the top and select the action with the "convert to DBT model" icon.
+    ![](/img/ultimate/05.png)
+- **Automatic Conversion**:
+  - The extension will detect which file is open.
+  - It will automatically change the SQL query to include references to existing models in your project.
+  ```sql
+  (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/mart/test.sql
+        WITH fct_reviews AS (
+          SELECT
+            *
+          FROM fct_reviews
+        ), full_moon_dates AS (
+          SELECT
+            *
+          FROM {{ ref('seed_full_moon_dates') }} AS seed_full_moon_dates
+        )
+        SELECT
+          r.*,
+          CASE WHEN fm.full_moon_date IS NULL THEN 'not full moon' ELSE 'full moon' END AS is_full_moon
+        FROM fct_reviews AS r
+        LEFT JOIN full_moon_dates AS fm
+          ON TO_DATE(r.review_date) = DATEADD(DAY, 1, fm.full_moon_date)%    
+  ```
+
+**Benefits of Conversion**
+
+- **Efficiency**: Accelerates the process of transitioning from SQL-based environments to DBT.
+- **Reference Detection**: Automatically detects and includes references in the converted DBT model.
+
+
+#### Working with Column-Level Lineage
+
+Now, let's look at how to view column-level lineage in VS Code using the GPT Power User Extension. In the earlier Standard Features section, I showed how to view the lineage of models. Once you add the key, it unlocks additional column-level views.
+
+To view lineages, open your model file and go to the lineage panel enabled by the extension. In this view, you will see several connected models. There are plus and minus buttons for zooming in and out. I will make this view larger, and you can adjust it as needed.
+
+![](/img/ultimate/07.png)
+
+To view data, click on "View Data," which will display a list of columns. You can also sync with the database to show all columns present in the model, even those not specified in the GPT code. Clicking on a specific column will show its lineage, indicating where the column originates from or if it is being used in a downstream model.
+
+![](/img/ultimate/10.png)
+
+For example, let's choose "Listing ID." Clicking on it fetches metadata and displays the column-level lineage for that particular column. The "Listing ID" column from the "Factor Views" model is being used in the "Mark_Full_Moon_Reviews" model as "Listing ID." Similarly, you can view the lineage for other columns. For instance, selecting "Review ID" will show how this column is carried over.
+
+![](/img/ultimate/09.png)
+
+This lineage view is very useful for understanding how columns are taken from parent models, transformed, and used in the current model or a child model. This feature is especially valuable when dealing with complex sets of models.
+
+The lineage graph that visually represents how data flows through various models and tables in a database, specifically focusing on the "listing_id" column. This lineage view is enabled by the DBT Power User Extension in VS Code.
+
+**Components of the Graph**
+
+1. **Nodes**: Represent different entities in the database, such as source tables, models, and views.
+2. **Edges (Lines with Arrows)**: Indicate the flow of data between these entities.
+
+**Explanation of the Graph**
+
+1. **Source Table (`reviews`)**:
+   - This is the initial source of the `listing_id` column.
+   - The node labeled "reviews" shows that it contains the `listing_id` column.
+
+2. **Intermediate Model (`src_reviews`)**:
+   - This model appears to process or aggregate data from the `reviews` table.
+   - The `listing_id` column is passed from the `reviews` table to this model.
+
+3. **Model (`fct_reviews`)**:
+   - This node indicates another stage of processing, labeled as an incremental model.
+   - The `listing_id` column from `src_reviews` is used in `fct_reviews`.
+
+4. **Model (`mart_full_moon_reviews`)**:
+   - This model further processes the data and uses the `listing_id` column.
+   - It combines data from `fct_reviews` and potentially other sources (e.g., `seed_full_moon_dates`).
+
+5. **Downstream Models/Views**:
+   - `full_moon_no_sleep`: This view/model consumes data from `mart_full_moon_reviews`.
+   - `executive_dashboard`: This is another consumer of data from `mart_full_moon_reviews`.
+
+**Functionality**
+
+- **Zoom In/Out**: The plus and minus buttons allow you to zoom in and out of the graph to get a better view of the lineage.
+- **View Data**: Clicking on "View Data" would show the list of columns for a selected model or table.
+- **Sync with Database**: This allows you to synchronize the columns with the actual database schema, ensuring you have the most up-to-date information.
+
+**Practical Use**
+
+This lineage view helps in understanding the transformation and flow of data at a granular level (column level). It is particularly useful for:
+
+- Tracking the origin of specific columns.
+- Understanding how data is transformed across different stages.
+- Ensuring data integrity and consistency.
+- Identifying potential impacts of changes in the data model.
+
+In this specific case, the graph helps you track the `listing_id` column from its origin in the `reviews` table through various transformations and models, up to its use in the `mart_full_moon_reviews` model and beyond.
+
+
+#### Generate and edit dbt Tests
+
+In this section, we are going to look at how to write DBT-Test easily, in fact generate GPT-Test, and how to edit existing tests also. So in our repository, we have this ModFullMoonReviewsModel. To manipulate tests, you want to go to the Documentation Editor panel, and now there is a new tab called Test. If it's not enabled by default, click on this checkbox, and it will get enabled for you. First and foremost, this panel shows you the existing tests that have already been written. 
+
+![](/img/ultimate/12.png)
+
+For example, somebody has written a unique test for the new ID, or if I keep scrolling, we have already written a test which is a relationships test for the new sentiment. 
+
+![](/img/ultimate/13.png)
+
+You can click on these tests, and of course, you can edit this test by clicking on the pencil icon and updating the values, or you can simply delete the test also. Then automatically the extension shows you a path where the tests are saved. You hit Save, and then the update gets saved. As you can see, editing and deleting tests is super easy, just a few clicks, but don't forget to save the changes in a YAML file. Otherwise, those changes won't get persisted. In this way, you can edit and delete tests very easily for default tests.
+
+Now let's look at how to add additional tests. Before I even jump into adding tests, if you don't see all the columns that are present in the database, click on this `Sync with Database button`, and it will populate all the columns that are present in the database. 
+
+Now let's start with adding tests. So how I add that test back is, click on the plus sign, and you will see the options. Four default tests that are available in dbt, like Accepted Values, Not Null, Relationships, and Unique, are available right here. Of course, you can add custom tests also, which I'm going to show you in a moment. You can add extra packages like dbt utils or expectations, etc. 
+
+![](/img/ultimate/14.png)
+
+But let's start simple. Let's add a default test first. A super simple test, unique test. I click here. Usually, no additional configuration is required to add a unique test. You're just checking if the values are unique. You click it. It gets added. You hit Save, and that test gets saved in that schema here in the file. 
+
+![](/img/ultimate/15.png)
+
+```yml
+    columns:
+      - name: review_id
+        description: The unique identifier for each review. This is a string field.
+        data_type: varchar
+        tests:
+          - unique
+```
+
+And you already have the test. Let's try to add something a little bit more complicated. For example, here I have a bunch of different columns, right? Let's see. There is this Review Sentiment column. What are the review sentiments? Usually positive, negative, etc. And already a relationship test is present there. But I want to add an Accepted Values test. So I want to only take, say, positive and negative as a review sentiment. So you click on Plus. A side screen comes in which asks for additional configuration. Because obviously for Accepted Values, you need to specify which values are accepted. The extension has a nifty feature where you can click on this button, get distinct column values, and the extension will automatically pull distinct values for that column. So you click on this here. It uses dbt profile to connect to your database and pulls those values. As you can see, in our database, the values for Review Sentiment are neutral, negative, and positive. 
+
+![](/img/ultimate/16.png)
+
+After that, you can just hit Add and save the test. Or you can, of course, change the values or add additional values, etc. It depends on your situation. But in our case, these are the distinct values: neutral, negative, positive for Review Sentiment. Makes sense. I hit Add. And then, as you can see, that test has been added. 
+
+![](/img/ultimate/17.png)
+
+As always, after all the changes are done, hit Save. And then those changes will get saved in the YAML file for you. 
+
+```yml
+      - name: review_sentiment
+        description: The sentiment of the review, determined through sentiment analysis
+          of the review text. This is a string field and can contain values such
+          as 'positive', 'negative', or 'neutral'.
+        data_type: varchar
+        tests:
+          - relationships:
+              field: HOST_ID
+              to: ref('dim_listings_cleansed')
+```
+
+So no mucking around in the YAML file. Just use this interface to manage your tests. As you can see, we can add, edit, and delete all tests very easily.
+
+Now let's try to add a custom test. For example, here we have a column named Review Date. If I want to add a custom test, let's think. Maybe I want to be sure that Review Date is in the last three months. I don't want to have Review Date which is, say, one year old or something like that. How you add it is, click on Custom Test. On the left-hand side, a new sort of chat window will open, which is a Datapilot chat. You need to tell it what you're looking for. So, Date should be in the last three months. You type it, hit Enter. 
+
+![](/img/ultimate/18.png)
+
+After that, what Datapilot does is, it automatically detects the packages that are installed in your environment. In my environment right now, there's dbt-utils installed, dbt-expectations installed. So as you can see from Datapilot, the response here is saying, hey, you can use the recency test from dbt-utils. It has knowledge of all the different tests that are available in utils, expectations, and other packages. Here is how you can set it up in your YAML application. You can look here. There's a code that Datapilot has already written. Just make sure it is right in terms of the three months. Date is reputed. It looks great. You just hit Insert. As soon as you hit Insert, dbt-utils recency test is added here for the due date. Again, save the file. And that test is saved in your schema.yaml file. So as you can see here, it's very easy to add tests, even custom tests, and modify existing tests. If the particular test that you are trying to write is not present in a particular package, Datapilot can write custom tests for you and can write that code for you as well. 
+
+![](/img/ultimate/19.png)
+
+```yml
+      - name: review_date
+        description: The date when the review was made. This is a timestamp field.
+        data_type: timestamp_ntz
+        tests:
+          - unique
+          - dbt_utils.recency:
+              datepart: month
+              interval: 3
+```
+
+So that's it for this subsection about how to generate new dbt tests and how to edit existing tests as well. Thank you.
+
+
+#### Find Problems in your dbt Project with Health Check
+
+
+
+Another great functionality that DBT User Extension offers is the detection of problems in your DBT project. To use this functionality, go into the left-hand side pane, which you can make visible by clicking on the extension icon. If it is not visible in your VS Code, click on the three dots and select it from the list. In my VS Code, it's visible, so I'm going to click on it. Here you will see different options such as Model Test, Parent Models, etc., but at the bottom there is a section called Ultimate Scan. Go there and click on Start Scan. It will scan your entire DBT project and show you the problems present in that DBT project.
+
+![](/img/ultimate/20.png)
+
+For example, let me clear this pane by clicking here. It highlighted that documentation is missing for a particular model and that the model does not even exist in the database because I haven't run this model yet. Issues like that will automatically surface in this pane. It will also identify columns that you have tried to use but do not exist in the database, not just the models.
+
+Once you are done with the analysis and have fixed your problems, you can clear the screen by clicking on Clear Problems. Then, start the scan again by clicking on Start Scan, and it will find those problems for you. For example, let's try this. For `test-model.sql`, documentation is missing. Click on this, and the test model schema SQL will open. You can go to the documentation console, generate documentation for the test model, and save it.
+
+Now, since it is saved, let's go to the problems area, and start the scan again. For `test-model.sql`, after adding the documentation, the earlier error indicating that documentation was missing for this model has been fixed. The idea is you can run this scan, and if there are any issues in your model, you can get those fixed very easily.
