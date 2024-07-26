@@ -91,19 +91,19 @@ OBJECTIVES
 * dbt fundamentals
 * Analytics Engineering
   
-![](img/1.png)
+![](/img/dbt/1.png)
 
 **ETL**
-![](img/02.png)
+![](/img/dbt/02.png)
 
 **ELT**
 So the world has changed, as you know, of storage costs like two cents these days for every one GB of data. So it was logical to reorganize the traditional ETL workflow.
-![](img/03.png)
+![](/img/dbt/03.png)
 Data warehouses like Snowflake Redshift and BigQuery are extremely scalable and performant, so it makes sense to do two transformations inside the database rather than external processing layer.
 
 **Data Warehouse**
 storing structured data
-![](img/04.png)
+![](/img/dbt/04.png)
 Typically, you interact with the data warehouse by executing SQL against it. So data warehouses is nothing more than a performance engine that lets us do analytics workloads on our data using sequel. 
 
 **External Tables**
@@ -112,15 +112,15 @@ First of all, you pay for the compute nodes, whether they are used or they are n
 Second, you can set up auto scaling, but it does that does not necessarily mean you can scale to meet your peak workloads.
 
 There is this concept called external tables.
-![](img/06.png)
-![](img/07.png)
+![](/img/dbt/06.png)
+![](/img/dbt/07.png)
 We have the option to store large files outside of the data warehouse in, for example, Amazon S3 or blob storage. So we can decouple the compute component from the storage component. At this point, we can scale the compute and the storage independently from the data that warehousing the istances.
 
 So now we handle the storage and compute for structured data, but what do we do in case we have unstructured data like images and video videos or text files? Data Lake.
 
 **Data Lake**
 unstructured or send structured
-![](img/05.png)
+![](/img/dbt/05.png)
 You can think of a data lake as a repository where you can put all kinds of data ranging from Rome cleanest, unstructured, semi-structured and so on. It is like a very scalable fire system on premise, this will be called GFS or Hadoop distributed file system, but for cloud. There are others like Amazon S3 or Asia. Is your data lake storage Gen2 a.k.a. address to. 
 
 The point of the data lake is to store files so they have no computer integrated. This means that if you're analytical, workloads increase. You can scale your compute instances independently from storage and your cloud provider will take care of handling external tables itself. If you use `Databricks` or `Snowflake`, these providers will store your data in the data lake by default. And they will only provide you with analytical clusters that you can set up the way you want.
@@ -128,20 +128,20 @@ The point of the data lake is to store files so they have no computer integrated
 **Data Lakehouse**
 
 Emerged due to the limitations of data lakes. 
-![](img/08.png)
+![](/img/dbt/08.png)
 It essentially combines the best features of data lakes and data warehouses. In the case of a lake house, we have very similar data structure and data management features that we have in our data warehouse. However, it sits on top of a low cost cloud storage.  What's great in a lake houses is the cost efficient storage provided by your cloud provider. Also, the acid transactional support so you can ensure consistency and that the scheme of the data is stored in a Lake House metal store. Additionally, you can evolve the schema of your tables without having to make a copy of the dataset. As for governance, you can control and authorize access to your data, and we'll get an interface with which you can connect to visitors to the Lake House. 
 
 **ETL process**
 The transformations and normalization typically happened in the staging area before the load of the application of the data or the cleansing of the data were performed. As storage prices were high.
-![](img/09.png)
+![](/img/dbt/09.png)
 
 
 **ELT process**
 We are now able to shift away from the ETL, extract, transform load data integration, transition of processes to extract loads, transform for easy,
-![](img/10.png)
+![](/img/dbt/10.png)
 
 ### Modern data Stack in the AI Era
-![](img/11.png)
+![](/img/dbt/11.png)
 Fivetran and Stitch are one of the most popular extracts and those tools that we have available today. The transformation layer sits on top of a cloud data warehouse and it uses DVT. You have Looker as a BI tool, for example, and sensors for reverse ETL. 
 
 Now, the modern data stack is structured differently than traditional legacy tools. For example, in a traditional data stack, your BI tool would not only handle visualizations but also act as a data warehouse with integrated storage. So, you would have done everything within your BI tool. These tools were massive and complicated. They were vertically integrated since they included storage within the data warehouse, and you performed visualizations in them as well. However, the modern data stack really flattens this out. It is a horizontally integrated set of tools that are fully managed, cloud-based, and both cheap and easy to use. Because corporations realize that data is a product in itself, we now see that DevOps tools are evolving. Not just tools but also practices are becoming part of this modern data stack space and are gaining a lot of popularity. Today, we perform data engineering and analytics engineering, which follow software engineering and DevOps best practices.
@@ -154,18 +154,18 @@ Think of these as particular data, but it changes rarely and unpredictably, requ
 In some cases, storing history data might not be worthwhile, as it might have become obsolete or entirely useless. But for some businesses, historic facts might remain relevant in the future. For example, for historical analyses has simply erasing it would cause the loss of valuable data. There are a number of approaches to considering the data management and data warehousing of seeds called the seed types. Some acid types are used more frequently than others, and there is a reason for that. In the following steps, we will walk through SCD type zero to three and look at some benefits and drawbacks.
 
 > **SCD Type 0**: We want to implement it if some detail may not become worthwhile to maintain anymore for the business.The dimension change is only applied to the source stable and is not transferred to the data warehouse stable.
-> ![](img/12.png)
+> ![](/img/dbt/12.png)
 > * For Airbnb, think of a scenario when a property owner changes his specs, no, he was provided to Airbnb when he first joined the platform.
 > Back in 2008, when Airbnb launched businesses, they still used tax numbers to some extent as Airbnb gathered these facts numbers of its clients. By 2010's faxing went entirely out of fashion. Hence, there is no point for Airbnb to apply changes to facts data in its data warehouses anymore. In this case, Airbnb will use seed type zero and simply keep updating the facts data column in the data warehouse table.
 >
 
 > **SCD Type 1** : In some cases, when a dying engine changes, only the new value could be important. The reason for the change could be that the original data has become obsolete. In this case, we want to make sure that the new value is transferred to the data warehouse. While there is no point in maintaining historical data. In these scenarios, SCD Type 1 will be our choice, which consists of applying the same dimension change to the corresponding record in a data warehouse as the change that was applied to the record in teh sourde table.
-> ![](img/13.png)
+> ![](/img/dbt/13.png)
 > * When looking for accommodation on Airbnb, you can filter for accommodation with air conditioning, and property owners can provide whether they have air conditioning installed at their place. Now, imagine a situation when a property owner started marketing his flat on Airbnb a while ago, when his flat didn't have air conditioning. But since then he's stalled or decided to install air conditioning at his place to please customers, and therefore he updated his information of its listing to show that his base now has air conditioning installed.
 > * For Airbnb, it is no longer relevant that the property did not used to have air conditioning.It only matters that it does now. And so Airbnb will use SCD Type 1 and apply the same data change to their records in the source and the data warehouse staple.
 
 > **SCD Type 2** : There are also situations when both the current and the history data might be important for our business. Besides the current value, history data might also be used for reporting or could be necessary to maintain for future validation. The first approach revealed look at two tackling such a situation is SCD Type 2, when a dimension change leads to an additional rule being added to the data warehouse table four for the new data. But the original or previous data is maintained, so we have a whole overview of what happened. The benefit of actually type two is that all historical historical data is saved after each change, so all historic data remains recoverable from the data warehouse.
-> ![](img/14.png)
+> ![](/img/dbt/14.png)
 > * Additional columns are added to each, according to data warehouse stable, to indicate the time range of validity of the data and to show whether the record contains the current data.
 > * Consider rental pricing data for Airbnb property owners may increase or decrease their rental prices whenever they wish. Airbnb wants to perform detailed analysts on changes in the rental prices to understand the market, and so they must maintain all historical data on rental prices.
 > * If a property owner changes the rental price of their flat on Airbnb, Airbnb will store both the current and historic rental price. In this case, using gas, the SCD Type 2 can be a good choice for Airbnb as it will transfer the current data to the data warehouse while also making sure historic data is maintained from SCD Type 2.
@@ -176,7 +176,7 @@ In some cases, storing history data might not be worthwhile, as it might have be
 > **SCD Type 3** : 
 > There can be scenarios been keeping some history data sufficient. For example, if processing speed is a concern. In these cases, we can decide to do a trade off between not maintaining or history data for the sake of keeping the number of records in our data warehouse stable lower. 
 > In case of silly type three, Collins new set of additional rules are used for recording the dimension changes, this type will not maintain historic values other than the original and the current values. So if a dimension changes or it happens more than once, all in the original and the current values will be recoverable from the date of our house. 
-> ![](img/15.png)
+>![](/img/dbt/15.png)
 > * When looking for accommodation on Airbnb, you can choose between three different types of places: shared rooms, private rooms, and entire places. Now, imagine a property owner started renting a room as a private room. Let's say, some years later, they decide to move out and market their flat as an entire place. Airbnb may want to analyze how properties have had their type changed since joining the platform, but they don't really care about changes that are no longer valid. So, let's say this person who now rents out their entire place decides to move back and lease it as a shared room.
 > * In this case, Airbnb no longer keeps the history of the private room, the way the place was listed originally. They only care about the room type that came right before the current one. So, in this case, you care about the fact that the entire place was listed. Therefore, Airbnb can decide to use SCD Type 3, adding additional columns to the data warehouse table to store both the original and the current type of the property. The benefit of Type 3 is that it keeps the number of records lower in the data warehouse table, which allows for more efficient processing.
 > * On the other hand, it does not allow for maintaining all historical data and can make the data more difficult to comprehend, as it has to be specified which column contains the original and the current value.
@@ -184,7 +184,7 @@ In some cases, storing history data might not be worthwhile, as it might have be
 ### dbt™ Overview
 
 In short **dbt** is the `T` in
-![](img/03.png)
+![](/img/dbt/03.png)
 **dbt** doesn't or extract like [fivetran](https://www.fivetran.com/pricing) or [Stitch](https://www.stitchdata.com/), but it transforms data that's loaded in the data warehouse with SQL, select statements.
 
 Let's say we are in a dark room, and your goal is to see what's happening in that room. On the one hand, you can light a candle, but it won't provide enough light to see the entire room. If there are others in the room with you, it will be rather hard for them to see. Once the candle burns out, you are back in the dark. This is a bit like executing a SQL statement: once it's done, it's done.
@@ -272,7 +272,7 @@ Here we are at the Snowflake master user registration page. You see, this is the
 Snowflake :
 * `+ create : SQL WorkSheet`
 
-![](img/18.png)
+![](/img/dbt/18.png)
 
 ### Snowflake user creation
 
@@ -386,11 +386,11 @@ this is a public bucket on a street `from 's3://dbtlearn/listings.csv'` from Air
 
 Refesh the page:
 
-![](img/19.png)
+![](/img/dbt/19.png)
 
 And you ca see the news tables. Database and be in a schema called RAW
 
-![](img/20.png)
+![](/img/dbt/20.png)
 
 **Setup instructions and Prerequisites**
 
@@ -489,6 +489,23 @@ You have the information here:
 `threads (1 or more) [1]:` This means that when you execute DB and there are multiple parallel transformations that DB can run, how many DB should use in parallel? It might matter for larger projects when you need to decide how much you want to overload your data wharehouse.
 
 As you see here, it says we have now a DBT profiles YAML created and this stores `.dbt/profiles.yml`.
+
+```sh
+➜  .dbt cat profiles.yml
+dbt_learn:
+  outputs:
+    dev:
+      account: hvarlan-bb40961
+      database: AIRBNB
+      password: dbtPassword123
+      role: transform
+      schema: DEV
+      threads: 1
+      type: snowflake
+      user: dbt
+      warehouse: COMPUTE_WH
+  target: dev
+```
 
 ```sh
 (dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) tree -L 1
@@ -649,13 +666,13 @@ my_new_project/
 
 #### VSC extension : [vscode-dbt-power-user](https://marketplace.visualstudio.com/items?itemName=innoverio.vscode-dbt-power-user)
 
-![](img/21.png)
+![](/img/dbt/21.png)
 
-![](img/22.png)
+![](/img/dbt/22.png)
 
-![](img/23.png)
+![](/img/dbt/23.png)
 
-![](img/24.png)
+![](/img/dbt/24.png)
 
 When you are creating a new dbt project and you don't have a `packages.yml `file nor know what dependencies you might need, you can start with an empty packages.yml file. Then, as you develop your project and discover which additional packages might be useful, you can add those dependencies to the file.
 
@@ -666,7 +683,7 @@ packages:
     version: 1.2.0
 ```
 
-![](img/26.png)
+![](/img/dbt/26.png)
 
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) tree -L 1                   
@@ -696,18 +713,18 @@ As you see in green, we have three input tables: `Costs, listings, and reviews`.
 * Additionally, we will use an external table and send data to Snowflake via dbt. 
 * With the help of dbt, we will create a few so-called `mart_fullmoon_reviews` tables, which will be used by an executive dashboard. As we do this, we will also create a set of tests, which you can see here in the square.
 
-![](img/33.png)
+![](/img/dbt/33.png)
 
 
 
-![](img/35.png)
+![](/img/dbt/35.png)
 
 
 And let's go and start building our first three mortars, SSD hosts, associate listings and SSD reviews.
 
 INPUT DATA MODEL
 
-![](img/27.png)
+![](/img/dbt/27.png)
 
 Three of these are directly connected to Airbnb. 
 * First, the `listing`. 
@@ -717,19 +734,19 @@ Three of these are directly connected to Airbnb.
 
 Previously, we have created [these tables](#snowflake-data-import)
 
-![](img/28.png)
+![](/img/dbt/28.png)
 
 raw listing
 
-![](img/29.png)
+![](/img/dbt/29.png)
 
 raw host
 
-![](img/30.png)
+![](/img/dbt/30.png)
 
 raw reviews
 
-![](img/31.png)
+![](/img/dbt/31.png)
 
 ### Models
 
@@ -805,7 +822,7 @@ Lastly, CTEs can also be defined in functions, stored procedures, triggers, or e
 
 #### Creating our first model: Airbnb listings
 
-![](img/36.png)
+![](/img/dbt/36.png)
 
 As you can see in our raw layer, we have three input tables: `raw_listings`, `raw_hosts`, and `raw_reviews`.  
 
@@ -823,7 +840,7 @@ Creating a new model in the `models/src/` folder called `src_rlisting.sql`:
 
 So let's implement our first select statement where we are changing these column names. And it's a standard practice in the analytics community to use CTE common table expressions For all of our input sources. I will create a comfortable expression which points to the role listing stable.
 
-![](img/38.png)
+![](/img/dbt/38.png)
 
 So now it's time to integrate Discovery into DBT. And let's create our first one.
 
@@ -890,7 +907,7 @@ dbt run
 
 Let's take a look in Snowflake. Refresh and look the view
 
-![](img/39.png)
+![](/img/dbt/39.png)
 
 
 ---
@@ -902,24 +919,24 @@ Creating a new model in the `models/src/` folder called `src_reviews.sql`:
   * sentiment to review_sentiment
 * Execute `dbt run` and verify that your model has been created
 
-![](img/40.png)
+![](/img/dbt/40.png)
 
 ```sh
 (dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ touch dbt_learn/models/src/src_reviews.sql
 (dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ nano dbt_learn/models/src/src_reviews.sql 
 (dbt_env) ➜  DataEngineer_dbt_Bootcamp git:(main) ✗ cat dbt_learn/models/src/src_reviews.sql
 
-  WITH raw_reviews AS (
-      SELECT * FROM AIRBNB.RAW.RAW_REVIEWS
-  )
-  SELECT
-      listing_id,
-      date AS review_date,
-      reviewer_name,
-      comments AS review_text,
-      sentiment AS review_sentiment
-  FROM
-      raw_reviews
+WITH raw_reviews AS (
+    SELECT * FROM AIRBNB.RAW.RAW_REVIEWS
+)
+SELECT
+    listing_id,
+    date AS review_date,
+    reviewer_name,
+    comments AS review_text,
+    sentiment AS review_sentiment
+FROM
+    raw_reviews
 ```
 
 dbt run  
@@ -945,7 +962,7 @@ dbt run
   04:43:26  Done. PASS=2 WARN=0 ERROR=0 SKIP=0 TOTAL=2
 ```
 
-![](img/41.png)
+![](/img/dbt/41.png)
 
 ---
 Creating a new model in the `models/src/` folder called `src_hosts.sql`:
@@ -959,17 +976,18 @@ Creating a new model in the `models/src/` folder called `src_hosts.sql`:
 (dbt_env) ➜  dbt_learn git:(main) ✗ touch models/src/src_hosts.sql            
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano models/src/src_hosts.sql 
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/src/src_hosts.sql
-  WITH raw_hosts AS (
-      SELECT * FROM AIRBNB.RAW.RAW_HOSTS
-  )
-  SELECT
-      id AS host_id,
-      NAME AS host_name,
-      is_superhost,
-      created_at,
-      updated_at
-  FROM
-      raw_hosts
+
+WITH raw_hosts AS (
+    SELECT * FROM AIRBNB.RAW.RAW_HOSTS
+)
+SELECT
+    id AS host_id,
+    NAME AS host_name,
+    is_superhost,
+    created_at,
+    updated_at
+FROM
+    raw_hosts
 ```
 
 ```sh
@@ -996,7 +1014,7 @@ Creating a new model in the `models/src/` folder called `src_hosts.sql`:
 
 **Created our first model: Airbnb listings**
 
-![](img/36.png)
+![](/img/dbt/36.png)
 
 ### Materializations
 
@@ -1033,11 +1051,11 @@ So we will see an example to all of those in the upcoming lessons.
 
 We are going to build out a new layer, the core layer, core layer comes with a bunch of chambers. From `src_listing` we are going to create `dim_lisitng_cleansed`, etc
 
-![](img/47.png)
+![](/img/dbt/47.png)
 
 And you're going to create our final dimension table by joining these two tables together.
 
-![](img/48.png)
+![](/img/dbt/48.png)
 
 you will see how we can define dependencies between models and how we can create different materializations and apply them in snowflake.
 
@@ -1075,29 +1093,29 @@ I have created this file above VSCode app with de extension dbt and jinja config
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_cleansed.sql 
 
-  WITH src_liting AS (
-      SELECT * FROM {{ ref('src_listings') }}
-  )
-  SELECT
-    listing_id,
-    listing_name,
-    room_type,
-    CASE
-      WHEN minimum_nights = 0 THEN 1
-      ELSE minimum_nights
-    END AS minimum_nights,
-    host_id,
-    REPLACE(
-      price_str,
-      '$'
-    ) :: NUMBER(
-      10,
-      2
-    ) AS price,
-    created_at,
-    updated_at
-  FROM
-    src_listings
+WITH src_liting AS (
+    SELECT * FROM {{ ref('src_listings') }}
+)
+SELECT
+  listing_id,
+  listing_name,
+  room_type,
+  CASE
+    WHEN minimum_nights = 0 THEN 1
+    ELSE minimum_nights
+  END AS minimum_nights,
+  host_id,
+  REPLACE(
+    price_str,
+    '$'
+  ) :: NUMBER(
+    10,
+    2
+  ) AS price,
+  created_at,
+  updated_at
+FROM
+  src_listings
 ```
 
 dbt run
@@ -1360,20 +1378,20 @@ From **scr_reviews**, which has a `listing_ID`, `review_dates`, `reviewe_name`, 
 
 ```SQL
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/fct/fct_reviews.sql
-  {{
-      config(
-      materialized = 'incremental',
-      on_schema_change='fail'
-      )
-  }}
-  WITH src_reviews AS (
-      SELECT * FROM {{ ref("src_reviews") }}
-  )
-  SELECT * FROM src_reviews
-  WHERE review_text is not null
-  {% if is_incremental() %}
-    AND review_date > (select max(review_date) from {{ this }})
-  {% endif %}
+{{
+    config(
+    materialized = 'incremental',
+    on_schema_change='fail'
+    )
+}}
+WITH src_reviews AS (
+    SELECT * FROM {{ ref("src_reviews") }}
+)
+SELECT * FROM src_reviews
+WHERE review_text is not null
+{% if is_incremental() %}
+  AND review_date > (select max(review_date) from {{ this }})
+{% endif %}
 ```
 
 When the model is configured as incremental, the goal is to add only the new data that hasn’t been processed previously. This is useful for saving time and resources by avoiding the processing of old data that hasn't changed. The clause `AND review_date > (select max(review_date) from {{ this }})` ensures that only the data more recent than the data already present in the target table is selected. Here’s the logic:
@@ -1569,31 +1587,32 @@ So, this is what we will do: we will create the final table `dim_listings_with_h
 (dbt_env) ➜  dbt_learn git:(main) touch models/dim/dim_listings_w_hosts.sql
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano models/dim/dim_listings_w_hosts.sql
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_w_hosts.sql
-  WITH
-  l AS (
-      SELECT
-          *
-      FROM
-          {{ ref('dim_listings_cleansed') }}
-  ),
-  h AS (
-      SELECT * 
-      FROM {{ ref('dim_hosts_cleansed') }}
-  )
 
-  SELECT 
-      l.listing_id,
-      l.listing_name,
-      l.room_type,
-      l.minimum_nights,
-      l.price,
-      l.host_id,
-      h.host_name,
-      h.is_superhost as host_is_superhost,
-      l.created_at,
-      GREATEST(l.updated_at, h.updated_at) as updated_at
-  FROM l
-  LEFT JOIN h ON (h.host_id = l.host_id)
+WITH
+l AS (
+    SELECT
+        *
+    FROM
+        {{ ref('dim_listings_cleansed') }}
+),
+h AS (
+    SELECT * 
+    FROM {{ ref('dim_hosts_cleansed') }}
+)
+
+SELECT 
+    l.listing_id,
+    l.listing_name,
+    l.room_type,
+    l.minimum_nights,
+    l.price,
+    l.host_id,
+    h.host_name,
+    h.is_superhost as host_is_superhost,
+    l.created_at,
+    GREATEST(l.updated_at, h.updated_at) as updated_at
+FROM l
+LEFT JOIN h ON (h.host_id = l.host_id)
 ```
 
 This script creates a CTE (Common Table Expression) for our listings and hosts.
@@ -1797,65 +1816,65 @@ Now you already know, if you take a look at the Factory Views table, how to crea
 And the way to go will be simply just adding this materialization `config `here, saying that I don't want these to be materialized as Tables, I want these to be materialized as Views, like this. Okay, let's go ahead and do the same with the Hosts table.
 
 ```SQL
-(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_cleansed.sql 
+(dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_hosts_cleansed.sql
 
-  -- models/dim/dim_hosts_cleansed.sql
-  {{
-    config(
-      materialized = 'view'
-      )
-  }} 
-  WITH src_hosts AS (
-      SELECT
-          *
-      FROM
-          {{ ref('src_hosts') }}
-  )
-  SELECT
-      host_id,
-      NVL(
-          host_name,
-          'Anonymous'
-      ) AS host_name,
-      is_superhost,
-      created_at,
-      updated_at
-  FROM
-      src_hosts
+-- models/dim/dim_hosts_cleansed.sql
+{{
+  config(
+    materialized = 'view'
+    )
+}} 
+WITH src_hosts AS (
+    SELECT
+        *
+    FROM
+        {{ ref('src_hosts') }}
+)
+SELECT
+    host_id,
+    NVL(
+        host_name,
+        'Anonymous'
+    ) AS host_name,
+    is_superhost,
+    created_at,
+    updated_at
+FROM
+    src_hosts
 ```
 
 ```SQL
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/dim/dim_listings_cleansed.sql 
 
-  -- models/dim/dim_listings_cleansed.sql
-  {{
-    config(
-      materialized = 'view'
-      )
-  }} 
-  WITH src_listings AS (
-      SELECT * FROM {{ ref('src_listings') }}
-  )
-  SELECT 
-    listing_id,
-    listing_name,
-    room_type,
-    CASE
-      WHEN minimum_nights = 0 THEN 1
-      ELSE minimum_nights
-    END AS minimum_nights,
-    host_id,
-    REPLACE(
-      price_str,
-      '$'
-    ) :: NUMBER(
-      10,
-      2
-    ) AS price,
-    created_at,
-    updated_at
-  FROM
-    src_listings
+-- models/dim/dim_listings_cleansed.sql
+{{
+  config(
+    materialized = 'view'
+    )
+}} 
+WITH src_listings AS (
+    SELECT * FROM {{ ref('src_listings') }}
+)
+SELECT 
+  listing_id,
+  listing_name,
+  room_type,
+  CASE
+    WHEN minimum_nights = 0 THEN 1
+    ELSE minimum_nights
+  END AS minimum_nights,
+  host_id,
+  REPLACE(
+    price_str,
+    '$'
+  ) :: NUMBER(
+    10,
+    2
+  ) AS price,
+  created_at,
+  updated_at
+FROM
+  src_listings
 ```
 
 So `dim_listings_w_host` materializers table, because everything in `/dim/` is by default materialized as table, right? Based on my project YAML. And `factory` views materializes an incremental table, and `dim_listings_cleansed`, and `dim_hosts_cleaned`, materializes views. And `SRC` listings not materialized at all, so materializes ephemeral. 
@@ -1972,29 +1991,29 @@ Now we are ready to implement our fourth layer, which will be our Mart layer. Th
 ```sh
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/mart/mart_full_moon_reviews.sql
 
-  {{ config(
-    materialized = 'table',
-  ) }}
+{{ config(
+  materialized = 'table',
+) }}
 
-  WITH fct_reviews AS (
-      SELECT * FROM {{ ref('fct_reviews') }}
-  ),
-  full_moon_dates AS (
-      SELECT * FROM {{ ref('seed_full_moon_dates') }}
-  )
+WITH fct_reviews AS (
+    SELECT * FROM {{ ref('fct_reviews') }}
+),
+full_moon_dates AS (
+    SELECT * FROM {{ ref('seed_full_moon_dates') }}
+)
 
-  SELECT
-    r.*,
-    CASE
-      WHEN fm.full_moon_date IS NULL THEN 'not full moon'
-      ELSE 'full moon'
-    END AS is_full_moon
-  FROM
-    fct_reviews
-    r
-    LEFT JOIN full_moon_dates
-    fm
-    ON (TO_DATE(r.review_date) = DATEADD(DAY, 1, fm.full_moon_date))
+SELECT
+  r.*,
+  CASE
+    WHEN fm.full_moon_date IS NULL THEN 'not full moon'
+    ELSE 'full moon'
+  END AS is_full_moon
+FROM
+  fct_reviews
+  r
+  LEFT JOIN full_moon_dates
+  fm
+  ON (TO_DATE(r.review_date) = DATEADD(DAY, 1, fm.full_moon_date))
 ```
 
 * Configures the model to be materialized as a table.
@@ -2275,20 +2294,20 @@ Here is the snapshot definition you can use:
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano snapshots/scd_raw_listings.sql
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat snapshots/scd_raw_listings.sql
 
-  {% snapshot scd_raw_listings %}
-    {{
-      config(
-          target_schema='DEV',
-          unique_key='id',
-          strategy='timestamp',
-          updated_at='updated_at',
-          invalidate_hard_deletes=True
-      )
-    }}
+{% snapshot scd_raw_listings %}
+  {{
+    config(
+        target_schema='DEV',
+        unique_key='id',
+        strategy='timestamp',
+        updated_at='updated_at',
+        invalidate_hard_deletes=True
+    )
+  }}
 
-    select * FROM {{ source('airbnb', 'listings') }}
+  select * FROM {{ source('airbnb', 'listings') }}
 
-  {% endsnapshot %}
+{% endsnapshot %}
 ```
 
 Explanation of the Snapshot Definition:
@@ -2480,6 +2499,8 @@ If you're interested in the actual SQL queries dbt executes, you can find them i
 By following these steps, you can ensure that your dim_Listings_Cleaned table adheres to the necessary data quality standards.
 
 ```sh
+(dbt_env) ➜  dbt_learn dbt test
+
 07:07:05  Running with dbt=1.7.17
 07:07:05  Registered adapter: snowflake=1.7.1
 07:07:06  Found 8 models, 1 seed, 1 snapshot, 2 tests, 3 sources, 0 exposures, 0 metrics, 546 macros, 0 groups, 0 semantic models
@@ -2860,7 +2881,7 @@ To refer to the macro, use double curly braces, similar to ref. The syntax looks
 ```SQL
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat tests/no_nulls_in_dim_listings.sql 
 
-  {{ no_nulls_in_columns(ref('dim_listings_cleansed')) }}
+{{ no_nulls_in_columns(ref('dim_listings_cleansed')) }}
 ```
 
 Now that the macro is set up, let's execute all the tests to ensure everything works correctly.
@@ -2906,14 +2927,14 @@ Custom generic tests reside in the macros folder since they are macros. I'll cre
 (dbt_env) ➜  dbt_learn git:(main) ✗ touch macros/positive_value.sql       
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat macros/positive_value.sql
 
-  {% test positive_value(model, column_name) %}
-  SELECT
-      *
-  FROM
-      {{ model }}
-  WHERE
-      {{ column_name}} < 1
-  {% endtest %}
+{% test positive_value(model, column_name) %}
+SELECT
+    *
+FROM
+    {{ model }}
+WHERE
+    {{ column_name}} < 1
+{% endtest %}
 ```
 
 This macro has a special signature indicating it is a test. It is named `positive_value`, though the actual name used in your SQL can be different. The critical part is the macro name. The macro takes two parameters: `model` and `column_name`. When added to your `schema.yml` file, these parameters will be automatically filled in, allowing you to create SQL as if it were a singular test. This example selects all records from the model where the specified column contains values less than one, ensuring all values are positive.
