@@ -79,6 +79,11 @@
     - [Working with Column-Level Lineage](#working-with-column-level-lineage)
     - [Generate and edit dbt Tests](#generate-and-edit-dbt-tests)
     - [Find Problems in your dbt Project with Health Check](#find-problems-in-your-dbt-project-with-health-check)
+    - [Use AI to Interpret Queries via Query Explanations](#use-ai-to-interpret-queries-via-query-explanations)
+    - [dbt Project Governance](#dbt-project-governance)
+    - [Query Translation (SQL dialects)](#query-translation-sql-dialects)
+- [Best Practices for Introducing and Using dbt in your Company](#best-practices-for-introducing-and-using-dbt-in-your-company)
+- [How to prepare for the certification exam?](#how-to-prepare-for-the-certification-exam)
 
 ---
 ## Introduction
@@ -3211,7 +3216,6 @@ models:
               values: ['Entire home/apt', 'Private room', 'Shared room', 'Hotel room']
 
       - name: minimum_nights
-        description: '{{ doc("dim_listing_cleansed_minimum_nights") }}'
         tests:
           - positive_value%   
 ```
@@ -3329,14 +3333,14 @@ This will be managed through Markdown (MD). Typically, you create a documentatio
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano models/docs.md
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/docs.md
 
-    {% docs dim_listing_cleansed__minimum_nights %}
+{% docs dim_listing_cleansed__minimum_nights %}
 
-    Minimum number of nights required to rent this property. 
+Minimum number of nights required to rent this property. 
 
-    Keep in mind that old listings might have `minimum_nights` set 
-    to 0 in the source tables. Our cleansing algorithm updates this to `1`.
+Keep in mind that old listings might have `minimum_nights` set 
+to 0 in the source tables. Our cleansing algorithm updates this to `1`.
 
-    {% enddocs %}
+{% enddocs %}
 ```
 
 You can get this from the class resources as usual. This file contains a Jinja template that includes a documentation block. Here is the documentation itself, in Markdown format, with some Markdown formatting. This is the documentation's key: `{% docs dim_listing_cleansed__minimum_nights %}`, named dim_listing_cleansed__minimum_nights. In the description tag, add the doc.jinja value. 
@@ -3345,7 +3349,7 @@ Now that we have this documentation in place, let's connect it to DimListingsMin
 
 ```yml
       - name: minimum_nights
-        description: {{doc("dim_listing_cleansed__minimum_nights")}}
+        description: '{{ doc("dim_listing_cleansed__minimum_nights") }}'
         tests:
           - positive_value
 ```
@@ -3471,15 +3475,15 @@ Replace the link in your Markdown file to point to the assets folder `![input sc
 (dbt_env) ➜  dbt_learn git:(main) ✗ nano models/overview.md 
 (dbt_env) ➜  dbt_learn git:(main) ✗ cat models/overview.md
 
-  {% docs __overview__ %}
-  # Airbnb pipeline
+{% docs __overview__ %}
+# Airbnb pipeline
 
-  Hey, welcome to our Airbnb pipeline documentation!
+Hey, welcome to our Airbnb pipeline documentation!
 
-  Here is the schema of our input data:
-  ![input schema](assets/input_schema.png)
+Here is the schema of our input data:
+![input schema](assets/input_schema.png)
 
-  {% enddocs %}
+{% enddocs %}
 ```
 
 Save it, and run dbt docs generate. When the documentation is generated, all files from the assets folder will be included. Check the target folder, where you'll find the assets folder containing the input_schema.png.
@@ -6813,6 +6817,202 @@ Another great functionality that DBT User Extension offers is the detection of p
 
 For example, let me clear this pane by clicking here. It highlighted that documentation is missing for a particular model and that the model does not even exist in the database because I haven't run this model yet. Issues like that will automatically surface in this pane. It will also identify columns that you have tried to use but do not exist in the database, not just the models.
 
+
+
 Once you are done with the analysis and have fixed your problems, you can clear the screen by clicking on Clear Problems. Then, start the scan again by clicking on Start Scan, and it will find those problems for you. For example, let's try this. For `test-model.sql`, documentation is missing. Click on this, and the test model schema SQL will open. You can go to the documentation console, generate documentation for the test model, and save it.
 
 Now, since it is saved, let's go to the problems area, and start the scan again. For `test-model.sql`, after adding the documentation, the earlier error indicating that documentation was missing for this model has been fixed. The idea is you can run this scan, and if there are any issues in your model, you can get those fixed very easily.
+
+
+#### Use AI to Interpret Queries via Query Explanations
+
+Many times, GPT development happens in a team, and you will encounter GPT models written by other team members. In that situation, you will have a file like this, and you might quickly need to figure out what exactly this model does. In such situations, the GPT Power User Extension can be used to get a quick summary or explanation of the query written in the particular GPT model. Here’s how you do that: open the model file, and if you have the extension installed, you will see this toolbar on the right-hand side. Look for the light bulb button. Click on it, and the extension will understand the query and automatically write a summary for that query here.
+
+For example, for the particular "Mark_Full_Moon_Reviews" model, it provided a clear explanation that the purpose of this query is to retrieve all the records from the Fact Reviews table and join it with another table based on a condition. This query also includes a case statement to determine if the review date is a full moon date or not. The result will include all the columns from the Fact Reviews table along with an additional column. This description will help you quickly understand what exactly this model or respective query is about.
+
+Additional guidelines: this check is done via an open-source Python package called Datapilot CLI. If you go to the documentation at datapilotreads.ox.io, you can see the list of all the checks it performs. For example, it looks for duplicate sources, hard-coded references, and model family issues where you create multiple child models from a single model. There should be some sort of limit to that. Similarly, you can see chain view linking checks or issues like missing primary key-type tests or project structure checks, etc. There are many checks available.
+
+
+#### dbt Project Governance
+
+In this section, we are going to look at the Project Governance functionality of the extension. It allows you to check your GPT project against a bunch of GPT best practices and organizational guidelines. This check is done via an open-source Python package called Datapilot CLI. If you go to the [documentation at datapilot.doc.io](https://datapilot.readthedocs.io/en/latest/insights.html), you can see the list of all the checks it performs. For example, it looks for `duplicate sources`, `hard-coded references`, and `model panels` where you are creating multiple child models from a single model. There has to be some sort of limit to that. Similarly, you can see `chain view linking checks` or issues like `using private key tags` or `project structure checks`. There are a bunch of checks available in this open-source Python package.
+
+Now, this package can be integrated into git-citb, and it is also integrated into the Power BI extension. Here’s how it works: go to your extension, open the actions panel, and go to the Project Governance tab. Under the Project Governance tab, you can either run all the checks or run specific checks. Let me show you how to run all the checks first.
+
+First, you choose the project. If you have a project repository, you can select your project here. Click on "Start Scan," and it will ask you to install the package if it's not already installed. Click here, and the package will automatically get installed and start its check. Let’s give it a few seconds.
+
+
+![](/img/ultimate/21.png)
+
+Now, if you scroll below, you will see that some issues have been detected across different models. You can filter based on file name or check type, as shown in the documentation.
+
+Let’s look at a particular model. For example, it might show issues like missing documentation, missing primary key tests, or a bad model directory structure. If you want to know details about a specific check in the extension, you can click on the "Details" tab to see the description of that particular check. For example, it might state that "Listing Clients is incorrectly placed in the directory." It should be located in the marked directory. It will provide reasons and recommendations for each check.
+
+![](/img/ultimate/22.png)
+
+There are many complex checks it performs, and you’ll get more information by running these checks. Now, let's say you don't want to run all the checks in your development environment. Maybe for the production environment, it is fine, and you want to configure only specific checks. There are two ways to do this. One is **manual**, where you create a YAML file to configure the checks you want. You can select the config file of that YAML and provide it as an input. For more details on how to write that YAML file, refer to the [documentation at data-guide.link.docs.io](https://datapilot.readthedocs.io/en/latest/configuration.html), which includes sample YAML files. You can list the disabled insights,  specify patterns for different model types, and configure specific insights.
+
+```yml
+version: v1
+
+# Insights to disable
+disabled_insights:
+  - source_staging_model_integrity
+  - downstream_source_dependence
+  - Duplicate_Sources
+  - hard_coded_references
+  - rejoining_upstream_concepts
+  - model_fanout
+  - multiple_sources_joined
+
+# Define patterns to identify different types of models
+model_type_patterns:
+  staging: "^stg_.*"       # Regex for staging models
+  mart: "^(mrt_|mart_|fct_|dim_).*"  # Regex for mart models
+  intermediate: "^int_.*"  # Regex for intermediate models
+  base: "^base_.*"         # Regex for base models
+
+# Configure insights
+insights:
+  # Set minimum test coverage percent and severity for 'Low Test Coverage in DBT Models'
+  dbt_low_test_coverage:
+    min_test_coverage_percent: 30
+    severity: WARNING
+
+  # Configure maximum fanout for 'Model Fanout Analysis'
+  model_fanout.max_fanout: 10
+
+  # Configure maximum fanout for 'Source Fanout Analysis'
+  source_fanout.max_fanout: 10
+
+  # Define model types considered as downstream for 'Staging Models Dependency Check'
+  staging_models_dependency.downstream_model_types:
+    - mart
+```
+
+The second method is to use Ultimately iSaaS, which is freely available. Go to your instance, log in, go to the governance section, and create a new configuration. 
+
+
+![](/img/ultimate/23.png)
+
+Provide a name, description, specify patterns for matching different types of models, and select which checks you want or don't want. If a particular check has additional configurations, like the number of models in the configuration for model framework analysis, you can change the number here.
+
+![](/img/ultimate/24.png)
+
+In the governance tab, you can create a few configs. Once you create your config and put the key in the extension, those configs will be available in the select config area. You can choose a config, clear the earlier problems, and start again. This config selection functionality allows you to configure your checks based on projects, teams, and environments, and run them in your Qiskode extension. This Python package can also be integrated into CICB.
+
+![](/img/ultimate/25.png)
+
+![](/img/ultimate/26.png)
+
+As shown earlier, the number of checks and issues are available here. You can click to see the problems and hopefully get them fixed. This functionality is very helpful for following best practices and governance guidelines for your GPT algorithm.
+
+#### Query Translation (SQL dialects)
+
+Hi there. Many times we find ourselves in a situation where we need to move our data workflows from one data platform to another. For example, you might need to move workflows from CNAPs to BigQuery, or from Snowflake to Postgres, or vice versa. Usually, the direct translation or migration of SQL workflows is painful. One of the functionalities available with Power User Extension actually makes that process super simple with auto-translation between different SQL dialects. As you already know, once you have the SQL query, you can easily convert it into a DBD model using the Power User Extension, which I covered in an earlier section.
+
+In this section, let me show you how the SQL query direct translation works. Here, I have created a new SQL file called "Office SQL," and I have included one of my queries written for Snowflake. As you can see, it's a pretty standard query with a date function and an electron happening, etc. Now, imagine I need to convert this query into Postgres because I am moving this workflow. To convert this query into Postgres SQL dialect, you simply right-click in the file, choose Data Pilot, and select "Translate to other SQL dialect."
+
+![](/img/ultimate/27.png)
+
+Data Pilot will then ask you for the source SQL dialect and the destination SQL dialect. In this case, I want to translate from Snowflake to Postgres. As you can see, there are various SQL dialects supported, such as ClickHouse, Databricks, Hive, Oracle, Spark, Teradata, Trino, etc. Here, I select Snowflake as the source and Postgres as the destination, then hit the Translate button. Data Pilot performs the query translation very easily. The translated query appears, and you can hit the Replace button to replace the existing text in the file.
+
+![](/img/ultimate/28.png)
+
+But that's not the most interesting part. It also shows you the differences between the translations. For example:
+
+1. `Date Arithmetic`: In Snowflake, the date function is used to add a specific interval to a date. In Postgres, this is done using the plus operator. You can see the date function replaced with the plus sign.
+
+2. `Alias Usage`: In Snowflake, table aliases can be used without the AS keyword. However, in Postgres, the AS keyword is required. This difference is reflected in the translated query.
+   
+When you hit Replace, the query uses the plus sign for date arithmetic and includes the AS keyword for table aliases.
+
+This is how the query translation works. And, as always, if you want to convert this into a DBD model, click on the corresponding button, choose the model, and the references will be automatically replaced.
+
+![](/img/ultimate/30.png)
+
+
+
+## Best Practices for Introducing and Using dbt in your Company
+
+Hi everyone, I'm here with Janos Por, who is the Head of Data Governance and Data Utilization at Vienna Insurance Group, one of the major insurance companies out there. Janos, welcome to the course.
+
+Thank you for having me.
+
+So, we worked a little bit earlier with Janos and his company to introduce DBT, and Janos has been kind enough to propose sharing a bit about DBT, their use case, how they introduced DBT, the general challenges, success stories, and why DBT was chosen. So, I suggest we dive right in.
+
+Janos, can you share a little bit about the company itself, your use case, and how your department is structured at VIG?
+
+Yeah, sure. Hi everybody, it's great to be here. Vienna Insurance Group is a large insurance company in the Central Eastern Region, actively selling insurance in this area. We are very strong in the insurance business, and while the business itself is quite complex from a data perspective, there are a lot of sales channels, many products, and different lines of services. Our most important service is settling insurance claims.
+
+From a data perspective, my team is a small data engineering and data governance team. We own a mid-size data platform that collects and integrates data from over 20 different source systems. We focus mainly on contract, customer, and service-related data. Within the company, we refer to this data platform as the Business Development Data Platform. The data sets created in this platform are used by business domains to build products and services. This means we are not a reporting platform; our main purpose is not financial reporting to authorities or auditors. Our use case is for business domains to test and diagnose their products and services based on the data, and also to train their new machine learning models.
+
+Another important detail is that our team is composed of engineers and data stewards. Our data engineers build and maintain data pipelines, while the data stewards act as a bridge between the business and engineering domains. The data steward's job is to ensure that the business not only accesses but also understands and trusts the data sets we build. They create data glossaries, data catalogs, and processes for measuring and improving data quality. We keep these two functions together because it's crucial for business transparency and clarity.
+
+Can you share a little bit about your journey of how you ended up using DBT and what problem you were looking to solve?
+
+Absolutely. We took over the platform about a year ago. It was a legacy platform that had been running for 10 years, with many pipelines and data marts built in it. There were quite a few data marts that were well-documented and maintained, but many others had limited or missing documentation and transparency. Our main challenge was to understand and take ownership of the business logic implemented in those pipelines. At the same time, we had a steady demand for new data marts and needed a new methodology to build them faster, more transparently, and with better testing and documentation.
+
+In recent years, there has been a lot of buzz about DBT and its capabilities. We were curious about what DBT could do for us and how it could solve our problems.
+
+When you say that you wanted to take ownership, can you break this down for us a little bit about what ownership means?
+
+Sure. Ownership in this context means that when we publish data, business domains ask many questions about what the data means, whether they can trust it, and what certain columns or definitions mean. To answer these questions, we need a clear lineage of how each data element is created from the source through transformation until publication. If this is all in code, we can read and analyze the code, but it’s a slow and tedious process. Business domains typically don't have that much time to wait for answers. We wanted to be fast and responsive, so we needed better ownership of the pipeline to know what sources we aggregate, the intermediate steps, and to pinpoint any part of the pipeline to discuss meaningfully with the business domain.
+
+So you decided to give DBT a shot. Did you consider any alternatives?
+
+No, actually. Since DBT is the main application for warehouse transformations in the data stack right now, we definitely wanted to start with it. We were opportunistic: if it worked out, great; if not, we would look for another solution.
+
+I usually do the same. It's still the go-to technology for data transformation. DBT has a managed solution provided by DBT Labs, but it's also open-source. Did you consider the managed solution or were you certain that open-source was the way to go?
+
+At the moment, we are working with the open-source solution because our stack is on-premise. We are not a cloud company yet, although that may change in the future. We wanted to test and fail fast if needed with DBT, so we didn't want to spend time arranging for a cloud solution. The team is fluent in command-line tooling and Python, so it was an obvious choice to try the open-source version.
+
+That makes sense. You mentioned time to market and failing early. Can you share your general approach to introducing DBT at a POC level? What actions did you take to ensure DBT was the right solution for you?
+
+Being compressed with time doesn't mean we should skip experimentation and proof of concept. We envisioned two stages for our journey with DBT. Stage one was to ensure that DBT was a good fit from a business perspective, providing transparency, faster implementation, documentation, and data lineage. We wanted to see if it could solve our challenge of being more transparent and flexible in pipeline design and maintenance.
+
+Stage two was to address technical issues, fitting DBT into our existing stack and ensuring it worked with our other tools. We didn't start with this because we first needed to see if it solved the business problem.
+
+We took your course to learn how to use DBT, and then we worked together on a small POC to refactor one of the legacy pipelines with it. We wanted to test the full capability of the tool and identify any rough edges. The process took about three months to rebuild an existing data mart completely with DBT, and it was very convincing. DBT delivered what it promised, and we saw how much value it brought by breaking down complex pipelines in a modular way and quickly surfacing quality issues.
+
+This successful POC took about three months, after which we were ready to move DBT into production.
+
+Another thing I wanted to ask about is the resources. How much resource did this POC take, and what functions of the company did you have to interact with or pull in to make it happen?
+
+Here is the improved version with corrected orthographic errors and better clarity:
+
+---
+
+The POC was mostly done by my team, so two engineers worked on it over the span of about three months. We had to involve the business side at certain points as well. The artifact we chose for the pilot was a large customer database, which integrates customer data from different source systems. It tackles the challenge of different systems handling various data elements of the customer domain differently, requiring aggregation, cleaning, and publication in a new pipeline. This process involved more than just engineering, so we set up a few workshops with the business to clarify parts of the logic we needed to work on. This was a legacy pipeline, so while there were existing answers for every question, we had to ensure they were still valid. After about three months, this data part was up and running in DBT, replicating the functionality we had built with other tools before.
+
+You built quite a lot of functionality during the proof-of-concept phase. You mentioned that DBT solved several problems for you, such as tracking lineage, ensuring data quality, and improving documentation. Can you summarize the most useful features for you and which ones you enjoy the most?
+
+Absolutely. The modular development of data pipeline code is a killer feature of DBT. In real-life, large, complex pipelines built out of component models, this brings a lot of value. When there are issues, such as a business misunderstanding or a data quality problem, having clear lineage and breaking down business logic into digestible steps makes it easy to have meaningful conversations about solving problems, making changes, and implementing tests.
+
+From a technical perspective, DBT abstracts away dependency management from models and materialization, so you don't have to write custom code for this. It allows you to focus on building the logic, and DBT handles the technical background, which is greatly appreciated.
+
+In terms of data stewardship and governance, having lineage and documentation as first-class citizens in DBT is a significant advantage. It's gratifying to see engineers discussing how to improve documentation, which makes it easier to convey information to the business in an understandable and trustworthy way.
+
+Once we moved into production, we found that DBT's integration with the Python ecosystem and its lightweight nature made it easy to deploy. Using containers and integrating it into our CI/CD pipeline was surprisingly fast, allowing us to put it to work quickly on the company's infrastructure.
+
+Selling DBT to IT and other parts of the company can be challenging, especially in large enterprises. How did you manage this?
+
+In large enterprises, even though open-source tooling is becoming more popular, we had to make a strong case for DBT in terms of fitting our architecture, security, and compliance requirements. We had to present it to IT, security, and compliance boards to show how it would integrate into our processes and architecture. However, there was a lot of curiosity and support for open-source tools, especially from IT functions, because they recognize the value these tools bring.
+
+Selling it to the business was easier because the transparency, flexibility, and speed of DBT are easy to communicate. The business quickly saw the benefits.
+
+It sounds like a success story. Are there any other success stories you'd like to share?
+
+We've been working with DBT for a little over a year and already have about four data marts fully developed and running, which are highly valued by the business. Refactoring our legacy codebases has also made significant progress, resulting in greater transparency and trust in our data sets. From a personal perspective, as a team lead, seeing my team happy and inspired by working with DBT is a big success.
+
+Finally, if someone in the course is considering introducing DBT to their company, what advice would you give them to ensure success?
+
+Based on our experience, taking an experimental approach was beneficial. We didn't start with a large business case; instead, we positioned DBT as an experiment to see if it would bring value. This approach reduced pressure and allowed us to enjoy working with the tool. It gave the team time to get comfortable with it, and once we were convinced of its business fit, tackling later challenges like production deployment was much easier. This approach might work well in other contexts too.
+
+Thank you, Janos, for your time. This has been incredibly useful, and I hope all the students enjoy it.
+
+Thank you very much. Best of luck to everyone with their DBT journey. Have fun!
+
+
+
+## How to prepare for the certification exam? 

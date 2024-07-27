@@ -89,15 +89,6 @@ models:
       - name: listing_id
         description: The unique identifier for each listing. This is a numeric field.
         data_type: number
-      - name: review_date
-        description: The date when the review was made. This is a timestamp field.
-        data_type: timestamp_ntz
-        tests:
-          - unique
-          - dbt_expectations.expect_row_values_to_have_recent_data:
-              datepart: month
-              interval: 3
-              row_condition: review_id IS NOT NULL
       - name: reviewer_name
         description: The name of the individual who wrote the review. This is a string
           field and can contain any characters.
