@@ -96,10 +96,11 @@ OBJECTIVES
 * dbt fundamentals
 * Analytics Engineering
   
-![](/img/dbt/1.png)
+![](/img/dbt/01.png)
 
 **ETL**
-![](/img/dbt/02.png)
+
+![](/img/dbt/002.png)
 
 **ELT**
 So the world has changed, as you know, of storage costs like two cents these days for every one GB of data. So it was logical to reorganize the traditional ETL workflow.
