@@ -2,7 +2,7 @@
 
 - [Introduction](#introduction)
   - [Modern data Stack in the AI Era](#modern-data-stack-in-the-ai-era)
-  - [slowly changing dimensions SCD](#slowly-changing-dimensions-scd)
+  - [slowly changing dimensions SCD - `dim SCR`](#slowly-changing-dimensions-scd---dim-scr)
   - [dbt™ Overview](#dbt-overview)
 - [Project Overview (Analytics Engineering with Airbnb)](#project-overview-analytics-engineering-with-airbnb)
   - [resources](#resources)
@@ -108,26 +108,35 @@ So the world has changed, as you know, of storage costs like two cents these day
 Data warehouses like Snowflake Redshift and BigQuery are extremely scalable and performant, so it makes sense to do two transformations inside the database rather than external processing layer.
 
 **Data Warehouse**
+
 storing structured data
+
 ![](/img/dbt/04.png)
+
 Typically, you interact with the data warehouse by executing SQL against it. So data warehouses is nothing more than a performance engine that lets us do analytics workloads on our data using sequel. 
 
 **External Tables**
+
 First of all, you pay for the compute nodes, whether they are used or they are not used. And we are not talking about lethal amounts here. In case you have large datasets, that's very pricey. Even if you're a data warehouse. Storage is underutilized as you have small amounts of data, but it requires high analytical workloads.
 
 Second, you can set up auto scaling, but it does that does not necessarily mean you can scale to meet your peak workloads.
 
 There is this concept called external tables.
 ![](/img/dbt/06.png)
+
+We have the option to store large files outside of the data warehouse in, for example, [Amazon S3](https://aws.amazon.com/s3/) or `blob storage` ( a type of cloud storage for `unstructured data` [[1]](https://www.cloudflare.com/en-gb/learning/cloud/what-is-blob-storage/), [[2]](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) ). So we can decouple the compute component from the storage component. At this point, we can scale the compute and the storage independently from the data that warehousing the istances.
+
 ![](/img/dbt/07.png)
-We have the option to store large files outside of the data warehouse in, for example, Amazon S3 or blob storage. So we can decouple the compute component from the storage component. At this point, we can scale the compute and the storage independently from the data that warehousing the istances.
 
 So now we handle the storage and compute for structured data, but what do we do in case we have unstructured data like images and video videos or text files? Data Lake.
 
 **Data Lake**
-unstructured or send structured
+
+Unstructured or semi-structured
+
 ![](/img/dbt/05.png)
-You can think of a data lake as a repository where you can put all kinds of data ranging from Rome cleanest, unstructured, semi-structured and so on. It is like a very scalable fire system on premise, this will be called GFS or Hadoop distributed file system, but for cloud. There are others like Amazon S3 or Asia. Is your data lake storage Gen2 a.k.a. address to. 
+
+You can think of a data lake as a repository where you can store all kinds of data, ranging from raw, unstructured, semi-structured, and so on. It is like a very scalable file system on-premise, which would be called GFS or [Hadoop Distributed File System ([HDFS](https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html)), but for the cloud. There are others like [Amazon S3](https://aws.amazon.com/s3/) or [Azure](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction). Your data lake storage could be Gen2, also known as [ADLS Gen2](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction).
 
 The point of the data lake is to store files so they have no computer integrated. This means that if you're analytical, workloads increase. You can scale your compute instances independently from storage and your cloud provider will take care of handling external tables itself. If you use `Databricks` or `Snowflake`, these providers will store your data in the data lake by default. And they will only provide you with analytical clusters that you can set up the way you want.
 
@@ -154,31 +163,52 @@ Now, the modern data stack is structured differently than traditional legacy too
 
 The modern data stack is essentially the productionization of the different layers of the data integration flow. DBT (Data Build Tool) plays a key role in this by enabling teams to perform data transformations inside the data warehouse. The creators of DBT developed it as a tool to streamline and standardize the transformation process, making it more efficient and integrated within the data workflow.
 
-### slowly changing dimensions SCD
+### slowly changing dimensions SCD - `dim SCR`
 
 Think of these as particular data, but it changes rarely and unpredictably, requiring a specific approach to handle referential integrity. when data is changing the source database How that change is reflected in the corresponding data warehouse table decides what data is maintained for further accessibility by the business.
+
 In some cases, storing history data might not be worthwhile, as it might have become obsolete or entirely useless. But for some businesses, historic facts might remain relevant in the future. For example, for historical analyses has simply erasing it would cause the loss of valuable data. There are a number of approaches to considering the data management and data warehousing of seeds called the seed types. Some acid types are used more frequently than others, and there is a reason for that. In the following steps, we will walk through SCD type zero to three and look at some benefits and drawbacks.
 
-> **SCD Type 0**: We want to implement it if some detail may not become worthwhile to maintain anymore for the business.The dimension change is only applied to the source stable and is not transferred to the data warehouse stable.
+> **SCD Type 0**
+> We want to implement it if some detail may not become worthwhile to maintain anymore for the business.The dimension change is only applied to the source stable and is not transferred to the data warehouse stable.
 > ![](/img/dbt/12.png)
-> * For Airbnb, think of a scenario when a property owner changes his specs, no, he was provided to Airbnb when he first joined the platform.
-> Back in 2008, when Airbnb launched businesses, they still used tax numbers to some extent as Airbnb gathered these facts numbers of its clients. By 2010's faxing went entirely out of fashion. Hence, there is no point for Airbnb to apply changes to facts data in its data warehouses anymore. In this case, Airbnb will use seed type zero and simply keep updating the facts data column in the data warehouse table.
 >
-
-> **SCD Type 1** : In some cases, when a dying engine changes, only the new value could be important. The reason for the change could be that the original data has become obsolete. In this case, we want to make sure that the new value is transferred to the data warehouse. While there is no point in maintaining historical data. In these scenarios, SCD Type 1 will be our choice, which consists of applying the same dimension change to the corresponding record in a data warehouse as the change that was applied to the record in teh sourde table.
+>In SCD Type 0, the values in the dimensions do not change once they are established. This means that any updates to the data source are not reflected in the data warehouse. This technique is used to maintain historically accurate data as it was at the time of the initial load. Example Scenario with Airbnb:
+> * `Context:` Imagine a property owner provides their specifications when they first join Airbnb.
+> * `Evolution`: In 2008, Airbnb used fax numbers to collect certain data from their customers.
+> * `Change in Relevance`: By 2010, the use of fax had become obsolete, making those data irrelevant.
+> * `Implementation of SCD Type 0`: In this case, Airbnb decides not to update historical records in their data warehouses. The original specifications of the property owner and the initially collected data (e.g., fax numbers) remain unchanged in the database, even if the owner updates their information or if data collection methods evolve.
+> * `Key Points`: No Updates: Once data is entered into the data warehouse, it does not change.
+Historical Preservation: The data reflects the information as it was at the time of initial capture.
+>
+> 
+> **SCD Type 1** 
+> In some cases, when a dimension changes, only the new value is important. The reason for the change might be that the original data has become obsolete. In this case, we want to ensure that the new value is transferred to the data warehouse, while there is no point in maintaining historical data. In these scenarios, SCD Type 1 will be our choice, which consists of applying the same dimension change to the corresponding record in a data warehouse as the change that was applied to the record in the source table.
 > ![](/img/dbt/13.png)
-> * When looking for accommodation on Airbnb, you can filter for accommodation with air conditioning, and property owners can provide whether they have air conditioning installed at their place. Now, imagine a situation when a property owner started marketing his flat on Airbnb a while ago, when his flat didn't have air conditioning. But since then he's stalled or decided to install air conditioning at his place to please customers, and therefore he updated his information of its listing to show that his base now has air conditioning installed.
-> * For Airbnb, it is no longer relevant that the property did not used to have air conditioning.It only matters that it does now. And so Airbnb will use SCD Type 1 and apply the same data change to their records in the source and the data warehouse staple.
-
-> **SCD Type 2** : There are also situations when both the current and the history data might be important for our business. Besides the current value, history data might also be used for reporting or could be necessary to maintain for future validation. The first approach revealed look at two tackling such a situation is SCD Type 2, when a dimension change leads to an additional rule being added to the data warehouse table four for the new data. But the original or previous data is maintained, so we have a whole overview of what happened. The benefit of actually type two is that all historical historical data is saved after each change, so all historic data remains recoverable from the data warehouse.
+>Example Scenario with Airbnb:
+> * `Context`: When looking for accommodation on Airbnb, you can filter for accommodations with air conditioning, and property owners can indicate whether they have air conditioning installed.
+> * `Scenario`: Imagine a situation where a property owner started listing his flat on Airbnb when it didn't have air conditioning. Later, the owner installs air conditioning and updates the listing to reflect this change.
+> * `Implementation of SCD Type 1`: For Airbnb, it is no longer relevant that the property did not use to have air conditioning. It only matters that it does now. Therefore, Airbnb will use SCD Type 1 and apply the same data change to their records in the source and the data warehouse.
+> 
+> **SCD Type 2** 
+> In some situations, both current and historical data are important for the business. Historical data might be used for reporting or necessary for future validation. SCD Type 2 handles this by adding a new record to the data warehouse table whenever a dimension changes, preserving the previous data. This way, all historical data remains recoverable.
 > ![](/img/dbt/14.png)
-> * Additional columns are added to each, according to data warehouse stable, to indicate the time range of validity of the data and to show whether the record contains the current data.
-> * Consider rental pricing data for Airbnb property owners may increase or decrease their rental prices whenever they wish. Airbnb wants to perform detailed analysts on changes in the rental prices to understand the market, and so they must maintain all historical data on rental prices.
-> * If a property owner changes the rental price of their flat on Airbnb, Airbnb will store both the current and historic rental price. In this case, using gas, the SCD Type 2 can be a good choice for Airbnb as it will transfer the current data to the data warehouse while also making sure historic data is maintained from SCD Type 2.
-> * It becomes less obvious which day to use, so we will have to dive deeper into understanding versus best the purpose of what we are trying to achieve.
-> * The benefit of SCD type two is that all historic data is maintained, and that is and that it remains easily accessible. But it also increases the amount of data stored. In cases where the number of records is very high to begin with, using SCD Type 2 might not be viable as it might make processing speed unreasonably high.
- 
-
+> Example Scenario with Airbnb:
+>
+>`Context:` Airbnb property owners can change their rental prices whenever they wish. Airbnb wants to analyze these changes to understand market trends, which requires maintaining all historical rental price data.
+>
+>Implementation of SCD Type 2:
+>
+>`Additional Columns:` Extra columns are added to indicate the validity period of the data and whether the record contains current data.
+>`Scenario:` If a property owner changes the rental price of their flat on Airbnb, Airbnb will store both the current and historical rental prices.
+>`Benefit:` All historical data is maintained and easily accessible, providing a complete overview of changes over time.
+>`Key Points:`
+>`Historical Preservation:` All historical data is kept after each change, making it recoverable from the data warehouse.
+>`Increased Storage:` Maintaining historical data increases the amount of data stored. For very high record volumes, this might not be viable due to potential processing speed issues.
+>
+>This approach allows for detailed analysis of historical data but requires careful management of data volume and processing capabilities.
+> 
+>
 > **SCD Type 3** : 
 > There can be scenarios been keeping some history data sufficient. For example, if processing speed is a concern. In these cases, we can decide to do a trade off between not maintaining or history data for the sake of keeping the number of records in our data warehouse stable lower. 
 > In case of silly type three, Collins new set of additional rules are used for recording the dimension changes, this type will not maintain historic values other than the original and the current values. So if a dimension changes or it happens more than once, all in the original and the current values will be recoverable from the date of our house. 
